@@ -1,0 +1,13 @@
+{
+  "name": "pocketlib-api",
+  "version": "0.1.0",
+  "main": "server.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@apollo/server": "^4.7.5",
+    "graphql": "^16.7.1"
+  }
+}
