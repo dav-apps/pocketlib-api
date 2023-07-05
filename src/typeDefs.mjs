@@ -11,7 +11,13 @@ export const typeDefs = `#graphql
 		facebookUsername: String
 		instagramUsername: String
 		twitterUsername: String
+		logo: PublisherLogo
 		authors: [Author]
+	}
+	type PublisherLogo {
+		uuid: String!
+		url: String!
+		blurhash: String
 	}
 	type Author {
 		uuid: String!
