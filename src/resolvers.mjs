@@ -49,7 +49,11 @@ export const resolvers = {
 					result.push({
 						uuid: obj.uuid,
 						firstName: obj.properties.first_name,
-						lastName: obj.properties.last_name
+						lastName: obj.properties.last_name,
+						websiteUrl: obj.properties.website_url,
+						facebookUsername: obj.properties.facebook_username,
+						instagramUsername: obj.properties.instagram_username,
+						twitterUsername: obj.properties.twitter_username
 					})
 				}
 
@@ -79,7 +83,12 @@ export const resolvers = {
 					authors.push({
 						uuid: response.data.uuid,
 						firstName: response.data.properties.first_name,
-						lastName: response.data.properties.last_name
+						lastName: response.data.properties.last_name,
+						websiteUrl: response.data.properties.website_url,
+						facebookUsername: response.data.properties.facebook_username,
+						instagramUsername:
+							response.data.properties.instagram_username,
+						twitterUsername: response.data.properties.twitter_username
 					})
 				} catch (error) {
 					console.error(error.response.data)

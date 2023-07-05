@@ -5,7 +5,7 @@ export const typeDefs = `#graphql
 	}
 	type Publisher {
 		uuid: String!
-		name: String
+		name: String!
 		description: String
 		websiteUrl: String
 		facebookUsername: String
@@ -15,7 +15,11 @@ export const typeDefs = `#graphql
 	}
 	type Author {
 		uuid: String!
-		firstName: String
-		lastName: String
+		firstName: String!
+		lastName: String!
+		websiteUrl: String
+		facebookUsername: String
+		instagramUsername: String
+		twitterUsername: String
 	}
 `
