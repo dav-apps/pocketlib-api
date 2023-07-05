@@ -8,7 +8,7 @@ export const resolvers = {
 					method: "get",
 					url: "http://localhost:3111/v2/table_objects",
 					params: {
-						table_id: 33
+						table_name: "Publisher"
 					}
 				})
 
@@ -29,14 +29,31 @@ export const resolvers = {
 				return []
 			}
 		},
-		allAuthors: () => {
-			return [
-				{
-					uuid: "weqweqweqwe",
-					firstName: "Lemony",
-					lastName: "Snicket"
+		allAuthors: async () => {
+			try {
+				let response = await axios({
+					method: "get",
+					url: "http://localhost:3111/v2/table_objects",
+					params: {
+						table_name: "Author"
+					}
+				})
+
+				let result = []
+
+				for (let obj of response.data.table_objects) {
+					result.push({
+						uuid: obj.uuid,
+						firstName: obj.properties.first_name,
+						lastName: obj.properties.last_name
+					})
 				}
-			]
+
+				return result
+			} catch (error) {
+				console.error(error.response.data)
+				return []
+			}
 		}
 	},
 	Publisher: {
