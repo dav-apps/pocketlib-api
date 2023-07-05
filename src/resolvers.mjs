@@ -19,6 +19,10 @@ export const resolvers = {
 						uuid: obj.uuid,
 						name: obj.properties.name,
 						description: obj.properties.description,
+						websiteUrl: obj.properties.website_url,
+						facebookUsername: obj.properties.facebook_username,
+						instagramUsername: obj.properties.instagram_username,
+						twitterUsername: obj.properties.twitter_username,
 						authors: obj.properties.authors
 					})
 				}
