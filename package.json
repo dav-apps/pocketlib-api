@@ -1,14 +1,16 @@
 {
-  "name": "pocketlib-api",
-  "version": "0.1.0",
-  "main": "server.mjs",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "license": "MIT",
-  "dependencies": {
-    "@apollo/server": "^4.7.5",
-    "axios": "^1.4.0",
-    "graphql": "^16.7.1"
-  }
+	"name": "pocketlib-api",
+	"version": "0.1.0",
+	"main": "server.mjs",
+	"scripts": {
+		"dev": "nodemon server.mjs",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"license": "MIT",
+	"dependencies": {
+		"@apollo/server": "^4.7.5",
+		"axios": "^1.4.0",
+		"graphql": "^16.7.1",
+		"nodemon": "^2.0.22"
+	}
 }
