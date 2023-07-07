@@ -12,7 +12,7 @@ export const resolvers = {
 					}
 				})
 
-				let result = []
+				let result: any[] = []
 
 				for (let obj of response.data.table_objects) {
 					result.push({
@@ -44,7 +44,7 @@ export const resolvers = {
 					}
 				})
 
-				let result = []
+				let result: any[] = []
 
 				for (let obj of response.data.table_objects) {
 					result.push({
@@ -93,7 +93,7 @@ export const resolvers = {
 			}
 
 			let authorUuids = publisher.authors.split(",")
-			let authors = []
+			let authors: any[] = []
 
 			for (let uuid of authorUuids) {
 				try {
