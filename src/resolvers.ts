@@ -1,120 +1,69 @@
-import axios from "axios"
+import { Publisher, Author } from "./types.js"
+import {
+	convertTableObjectToPublisher,
+	convertTableObjectToPublisherLogo,
+	convertTableObjectToAuthor
+} from "./utils.js"
+import { getTableObject, listTableObjects } from "./services/apiService.js"
 
 export const resolvers = {
 	Query: {
 		allPublishers: async () => {
-			try {
-				let response = await axios({
-					method: "get",
-					url: "http://localhost:3111/v2/table_objects",
-					params: {
-						table_name: "Publisher"
-					}
-				})
+			let tableObjects = await listTableObjects({
+				tableName: "Publisher"
+			})
 
-				let result: any[] = []
+			let result: Publisher[] = []
 
-				for (let obj of response.data.table_objects) {
-					result.push({
-						uuid: obj.uuid,
-						name: obj.properties.name,
-						description: obj.properties.description,
-						websiteUrl: obj.properties.website_url,
-						facebookUsername: obj.properties.facebook_username,
-						instagramUsername: obj.properties.instagram_username,
-						twitterUsername: obj.properties.twitter_username,
-						logo: obj.properties.logo,
-						authors: obj.properties.authors
-					})
-				}
-
-				return result
-			} catch (error) {
-				console.error(error.response.data)
-				return []
+			for (let obj of tableObjects) {
+				result.push(convertTableObjectToPublisher(obj))
 			}
+
+			return result
 		},
 		allAuthors: async () => {
-			try {
-				let response = await axios({
-					method: "get",
-					url: "http://localhost:3111/v2/table_objects",
-					params: {
-						table_name: "Author"
-					}
-				})
+			let tableObjects = await listTableObjects({
+				tableName: "Author"
+			})
 
-				let result: any[] = []
+			let result: Author[] = []
 
-				for (let obj of response.data.table_objects) {
-					result.push({
-						uuid: obj.uuid,
-						firstName: obj.properties.first_name,
-						lastName: obj.properties.last_name,
-						websiteUrl: obj.properties.website_url,
-						facebookUsername: obj.properties.facebook_username,
-						instagramUsername: obj.properties.instagram_username,
-						twitterUsername: obj.properties.twitter_username
-					})
-				}
-
-				return result
-			} catch (error) {
-				console.error(error.response.data)
-				return []
+			for (let obj of tableObjects) {
+				result.push(convertTableObjectToAuthor(obj))
 			}
+
+			return result
 		}
 	},
 	Publisher: {
-		logo: async publisher => {
-			if (publisher.logo == null) {
+		logo: async (publisher: Publisher) => {
+			const uuid = publisher.logo as string
+
+			if (uuid == null) {
 				return null
 			}
 
-			try {
-				let response = await axios({
-					method: "get",
-					url: `http://localhost:3111/v2/table_objects/${publisher.logo}`
-				})
+			let tableObject = await getTableObject(uuid)
 
-				return {
-					uuid: response.data.uuid,
-					url: `https://dav-backend-dev.fra1.cdn.digitaloceanspaces.com/${response.data.uuid}`,
-					blurhash: response.data.blurhash
-				}
-			} catch (error) {
-				console.error(error.response.data)
+			if (tableObject != null) {
+				return convertTableObjectToPublisherLogo(tableObject)
+			} else {
 				return null
 			}
 		},
-		authors: async publisher => {
+		authors: async (publisher: Publisher) => {
 			if (publisher.authors == null) {
 				return []
 			}
 
-			let authorUuids = publisher.authors.split(",")
-			let authors: any[] = []
+			let authorUuids = (publisher.authors as string).split(",")
+			let authors: Author[] = []
 
 			for (let uuid of authorUuids) {
-				try {
-					let response = await axios({
-						method: "get",
-						url: `http://localhost:3111/v2/table_objects/${uuid}`
-					})
+				let author = await getTableObject(uuid)
+				if (author == null) continue
 
-					authors.push({
-						uuid: response.data.uuid,
-						firstName: response.data.properties.first_name,
-						lastName: response.data.properties.last_name,
-						websiteUrl: response.data.properties.website_url,
-						facebookUsername: response.data.properties.facebook_username,
-						instagramUsername:
-							response.data.properties.instagram_username,
-						twitterUsername: response.data.properties.twitter_username
-					})
-				} catch (error) {
-					console.error(error.response.data)
-				}
+				authors.push(convertTableObjectToAuthor(author))
 			}
 
 			return authors

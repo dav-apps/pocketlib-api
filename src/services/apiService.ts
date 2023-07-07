@@ -2,10 +2,29 @@ import axios, { AxiosRequestConfig } from "axios"
 import { apiBaseUrl } from "../constants.js"
 import { TableObject } from "../types.js"
 
+export async function getTableObject(uuid: string): Promise<TableObject> {
+	try {
+		let response = await axios({
+			method: "get",
+			url: `${apiBaseUrl}/v2/table_objects/${uuid}`
+		})
+
+		return {
+			uuid: response.data.uuid,
+			userId: response.data.userId,
+			tableId: response.data.tableId,
+			properties: response.data.properties
+		}
+	} catch (error) {
+		console.error(error.response?.data || error)
+		return null
+	}
+}
+
 export async function listTableObjects(properties: {
 	tableName?: string
 	userId?: number
-}) {
+}): Promise<TableObject[]> {
 	try {
 		let params: AxiosRequestConfig = {}
 
@@ -32,7 +51,7 @@ export async function listTableObjects(properties: {
 
 		return result
 	} catch (error) {
-		console.error(error.response.data)
+		console.error(error.response?.data || error)
 		return []
 	}
 }
