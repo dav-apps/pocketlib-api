@@ -2,6 +2,7 @@
 	"name": "pocketlib-api",
 	"version": "0.1.0",
 	"main": "server.mjs",
+	"type": "module",
 	"scripts": {
 		"dev": "nodemon server.mjs",
 		"test": "echo \"Error: no test specified\" && exit 1"
@@ -12,5 +13,8 @@
 		"axios": "^1.4.0",
 		"graphql": "^16.7.1",
 		"nodemon": "^2.0.22"
+	},
+	"devDependencies": {
+		"typescript": "^5.1.6"
 	}
 }
