@@ -2,6 +2,7 @@ export const typeDefs = `#graphql
 	type Query {
 		allPublishers: [Publisher]
 		allAuthors: [Author]
+		listCategories(language: String): [Category]!
 	}
 	type Publisher {
 		uuid: String!
@@ -27,5 +28,16 @@ export const typeDefs = `#graphql
 		facebookUsername: String
 		instagramUsername: String
 		twitterUsername: String
+	}
+	type Category {
+		uuid: String!
+		key: String!
+		name: CategoryName!
+		names: [CategoryName]!
+	}
+	type CategoryName {
+		uuid: String!
+		name: String!
+		language: String!
 	}
 `

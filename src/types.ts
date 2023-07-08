@@ -32,3 +32,15 @@ export interface Author {
 	instagramUsername: string
 	twitterUsername: string
 }
+
+export interface Category {
+	uuid: string
+	key: string
+	names: CategoryName[] | string
+}
+
+export interface CategoryName {
+	uuid: string
+	name: string
+	language: string
+}

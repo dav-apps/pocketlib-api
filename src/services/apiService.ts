@@ -11,8 +11,8 @@ export async function getTableObject(uuid: string): Promise<TableObject> {
 
 		return {
 			uuid: response.data.uuid,
-			userId: response.data.userId,
-			tableId: response.data.tableId,
+			userId: response.data.user_id,
+			tableId: response.data.table_id,
 			properties: response.data.properties
 		}
 	} catch (error) {

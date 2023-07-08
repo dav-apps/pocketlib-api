@@ -35,3 +35,22 @@ export function convertTableObjectToAuthor(obj: TableObject): Author {
 		twitterUsername: obj.properties.twitter_username as string
 	}
 }
+
+
+export function convertTableObjectToCategory(obj: TableObject): Category {
+	return {
+		uuid: obj.uuid,
+		key: obj.properties.key as string,
+		names: obj.properties.names as string
+	}
+}
+
+export function convertTableObjectToCategoryName(
+	obj: TableObject
+): CategoryName {
+	return {
+		uuid: obj.uuid,
+		name: obj.properties.name as string,
+		language: obj.properties.language as string
+	}
+}

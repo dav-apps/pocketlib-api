@@ -1,8 +1,9 @@
-import { Publisher, Author } from "./types.js"
+import { Publisher, Author, Category, CategoryName } from "./types.js"
 import {
 	convertTableObjectToPublisher,
 	convertTableObjectToPublisherLogo,
-	convertTableObjectToAuthor
+	convertTableObjectToCategory,
+	convertTableObjectToCategoryName
 } from "./utils.js"
 import { getTableObject, listTableObjects } from "./services/apiService.js"
 
@@ -30,6 +31,19 @@ export const resolvers = {
 
 			for (let obj of tableObjects) {
 				result.push(convertTableObjectToAuthor(obj))
+			}
+
+			return result
+		},
+		listCategories: async (parent: any, args: { language?: string }) => {
+			let tableObjects = await listTableObjects({
+				tableName: "Category"
+			})
+
+			let result: Category[] = []
+
+			for (let obj of tableObjects) {
+				result.push(convertTableObjectToCategory(obj))
 			}
 
 			return result
@@ -67,6 +81,42 @@ export const resolvers = {
 			}
 
 			return authors
+		}
+	},
+	Category: {
+		name: async (category: Category, args: any, context: any, info: any) => {
+			const namesString = category.names as string
+
+			if (namesString == null) {
+				return null
+			}
+
+			// Get all names
+			let nameUuids = namesString.split(",")
+			let names: CategoryName[] = []
+
+			for (let uuid of nameUuids) {
+				let nameObj = await getTableObject(uuid)
+				if (nameObj == null) continue
+
+				names.push(convertTableObjectToCategoryName(nameObj))
+			}
+
+			// Get the optimal name for the given language
+			let language = info?.variableValues?.language || "en"
+			let name = names.find(n => n.language == language)
+
+			if (name != null) {
+				return name
+			}
+
+			name = names.find(n => n.language == "en")
+
+			if (name != null) {
+				return name
+			}
+
+			return names[0]
 		}
 	}
 }
