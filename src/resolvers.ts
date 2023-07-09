@@ -1,7 +1,14 @@
-import { Publisher, Author, Category, CategoryName } from "./types.js"
+import {
+	Publisher,
+	Author,
+	Category,
+	CategoryName,
+	TableObject
+} from "./types.js"
 import {
 	convertTableObjectToPublisher,
 	convertTableObjectToPublisherLogo,
+	convertTableObjectToAuthor,
 	convertTableObjectToCategory,
 	convertTableObjectToCategoryName
 } from "./utils.js"
@@ -22,10 +29,24 @@ export const resolvers = {
 
 			return result
 		},
-		allAuthors: async () => {
-			let tableObjects = await listTableObjects({
-				tableName: "Author"
-			})
+		listAuthors: async (
+			parent: any,
+			args: { limit?: number; latest?: boolean }
+		) => {
+			let tableObjects: TableObject[] = []
+			let limit = args.limit || 10
+
+			if (args.latest) {
+				tableObjects = await listTableObjects({
+					limit,
+					collectionName: "latest_authors"
+				})
+			} else {
+				tableObjects = await listTableObjects({
+					limit,
+					tableName: "Author"
+				})
+			}
 
 			let result: Author[] = []
 

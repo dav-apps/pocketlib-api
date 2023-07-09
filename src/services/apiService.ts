@@ -21,21 +21,26 @@ export async function getTableObject(uuid: string): Promise<TableObject> {
 	}
 }
 
-export async function listTableObjects(properties: {
+export async function listTableObjects(params: {
+	limit?: number
+	collectionName?: string
 	tableName?: string
 	userId?: number
 }): Promise<TableObject[]> {
 	try {
-		let params: AxiosRequestConfig = {}
+		let requestParams: AxiosRequestConfig = {}
 
-		if (properties.tableName != null)
-			params["table_name"] = properties.tableName
-		if (properties.userId != null) params["user_id"] = properties.userId
+		if (params.limit != null) requestParams["limit"] = params.limit
+		if (params.collectionName != null)
+			requestParams["collection_name"] = params.collectionName
+		if (params.tableName != null)
+			requestParams["table_name"] = params.tableName
+		if (params.userId != null) requestParams["user_id"] = params.userId
 
 		let response = await axios({
 			method: "get",
 			url: `${apiBaseUrl}/v2/table_objects`,
-			params
+			params: requestParams
 		})
 
 		let result: TableObject[] = []

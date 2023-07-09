@@ -1,7 +1,7 @@
 export const typeDefs = `#graphql
 	type Query {
 		allPublishers: [Publisher]
-		allAuthors: [Author]
+		listAuthors(limit: Int, latest: Boolean): [Author]
 		listCategories(language: String): [Category]!
 	}
 	type Publisher {
