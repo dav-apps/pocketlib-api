@@ -1,6 +1,7 @@
 import {
 	Publisher,
 	Author,
+	StoreBook,
 	Category,
 	CategoryName,
 	TableObject
@@ -10,6 +11,7 @@ import {
 	convertTableObjectToPublisherLogo,
 	convertTableObjectToAuthor,
 	convertTableObjectToAuthorProfileImage,
+	convertTableObjectToStoreBookCollection,
 	convertTableObjectToStoreBook,
 	convertTableObjectToStoreBookRelease,
 	convertTableObjectToCategory,
@@ -113,10 +115,7 @@ export const resolvers = {
 	Publisher: {
 		logo: async (publisher: Publisher) => {
 			const uuid = publisher.logo as string
-
-			if (uuid == null) {
-				return null
-			}
+			if (uuid == null) return null
 
 			let tableObject = await getTableObject(uuid)
 			if (tableObject == null) return null
@@ -144,10 +143,7 @@ export const resolvers = {
 	Author: {
 		profileImage: async (author: Author) => {
 			const uuid = author.profileImage as string
-
-			if (uuid == null) {
-				return null
-			}
+			if (uuid == null) return null
 
 			let tableObject = await getTableObject(uuid)
 			if (tableObject == null) return null
@@ -155,13 +151,21 @@ export const resolvers = {
 			return convertTableObjectToAuthorProfileImage(tableObject)
 		}
 	},
+	StoreBook: {
+		collection: async (storeBook: StoreBook) => {
+			const uuid = storeBook.collection as string
+			if (uuid == null) return null
+
+			let tableObject = await getTableObject(uuid)
+			if (tableObject == null) return null
+
+			return convertTableObjectToStoreBookCollection(tableObject)
+		}
+	},
 	Category: {
 		name: async (category: Category, args: any, context: any, info: any) => {
 			const namesString = category.names as string
-
-			if (namesString == null) {
-				return null
-			}
+			if (namesString == null) return null
 
 			// Get all names
 			let nameUuids = namesString.split(",")
