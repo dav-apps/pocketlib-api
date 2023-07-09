@@ -1,4 +1,12 @@
-import { TableObject, Publisher, PublisherLogo, Author } from "./types.js"
+import {
+	TableObject,
+	Publisher,
+	PublisherLogo,
+	Author,
+	AuthorProfileImage,
+	Category,
+	CategoryName
+} from "./types.js"
 
 export function convertTableObjectToPublisher(obj: TableObject): Publisher {
 	return {
@@ -19,7 +27,7 @@ export function convertTableObjectToPublisherLogo(
 ): PublisherLogo {
 	return {
 		uuid: obj.uuid,
-		url: `https://dav-backend-dev.fra1.cdn.digitaloceanspaces.com/${obj.uuid}`,
+		url: `https://dav-backend.fra1.cdn.digitaloceanspaces.com/${obj.uuid}`,
 		blurhash: obj.properties.blurhash as string
 	}
 }
@@ -32,7 +40,18 @@ export function convertTableObjectToAuthor(obj: TableObject): Author {
 		websiteUrl: obj.properties.website_url as string,
 		facebookUsername: obj.properties.facebook_username as string,
 		instagramUsername: obj.properties.instagram_username as string,
-		twitterUsername: obj.properties.twitter_username as string
+		twitterUsername: obj.properties.twitter_username as string,
+		profileImage: obj.properties.profile_image as string
+	}
+}
+
+export function convertTableObjectToAuthorProfileImage(
+	obj: TableObject
+): AuthorProfileImage {
+	return {
+		uuid: obj.uuid,
+		url: `https://dav-backend.fra1.cdn.digitaloceanspaces.com/${obj.uuid}`,
+		blurhash: obj.properties.blurhash as string
 	}
 }
 

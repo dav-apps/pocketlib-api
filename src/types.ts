@@ -31,6 +31,14 @@ export interface Author {
 	facebookUsername: string
 	instagramUsername: string
 	twitterUsername: string
+	profileImage: AuthorProfileImage | string
+}
+
+export interface AuthorProfileImage {
+	uuid: string
+	url: string
+	blurhash: string
+}
 }
 
 export interface Category {

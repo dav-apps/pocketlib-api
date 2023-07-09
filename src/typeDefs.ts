@@ -28,6 +28,13 @@ export const typeDefs = `#graphql
 		facebookUsername: String
 		instagramUsername: String
 		twitterUsername: String
+		profileImage: AuthorProfileImage
+	}
+	type AuthorProfileImage {
+		uuid: String!
+		url: String!
+		blurhash: String!
+	}
 	}
 	type Category {
 		uuid: String!

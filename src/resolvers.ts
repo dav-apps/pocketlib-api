@@ -9,6 +9,7 @@ import {
 	convertTableObjectToPublisher,
 	convertTableObjectToPublisherLogo,
 	convertTableObjectToAuthor,
+	convertTableObjectToAuthorProfileImage,
 	convertTableObjectToCategory,
 	convertTableObjectToCategoryName
 } from "./utils.js"
@@ -82,9 +83,9 @@ export const resolvers = {
 
 			if (tableObject != null) {
 				return convertTableObjectToPublisherLogo(tableObject)
-			} else {
-				return null
 			}
+
+			return null
 		},
 		authors: async (publisher: Publisher) => {
 			if (publisher.authors == null) {
@@ -102,6 +103,23 @@ export const resolvers = {
 			}
 
 			return authors
+		}
+	},
+	Author: {
+		profileImage: async (author: Author) => {
+			const uuid = author.profileImage as string
+
+			if (uuid == null) {
+				return null
+			}
+
+			let tableObject = await getTableObject(uuid)
+
+			if (tableObject != null) {
+				return convertTableObjectToAuthorProfileImage(tableObject)
+			}
+
+			return null
 		}
 	},
 	Category: {
