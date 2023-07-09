@@ -10,6 +10,8 @@ import {
 	convertTableObjectToPublisherLogo,
 	convertTableObjectToAuthor,
 	convertTableObjectToAuthorProfileImage,
+	convertTableObjectToStoreBook,
+	convertTableObjectToStoreBookRelease,
 	convertTableObjectToCategory,
 	convertTableObjectToCategoryName
 } from "./utils.js"
@@ -17,7 +19,7 @@ import { getTableObject, listTableObjects } from "./services/apiService.js"
 
 export const resolvers = {
 	Query: {
-		allPublishers: async () => {
+		listPublishers: async () => {
 			let tableObjects = await listTableObjects({
 				tableName: "Publisher"
 			})
@@ -57,6 +59,43 @@ export const resolvers = {
 
 			return result
 		},
+		retrieveStoreBook: async (parent: any, args: { uuid: string }) => {
+			const uuid = args.uuid
+
+			if (uuid == null) {
+				return null
+			}
+
+			let tableObject = await getTableObject(uuid)
+			if (tableObject == null) return null
+
+			const storeBookTableObject = convertTableObjectToStoreBook(tableObject)
+
+			// Get the latest release of the StoreBook
+			const releasesString = storeBookTableObject.releases as string
+
+			if (releasesString != null) {
+				let releaseUuids = releasesString.split(",")
+
+				for (let uuid of releaseUuids) {
+					let releaseTableObject = await getTableObject(uuid)
+					if (releaseTableObject == null) continue
+
+					let release =
+						convertTableObjectToStoreBookRelease(releaseTableObject)
+
+					if (release.status == "published") {
+						storeBookTableObject.title = release.title
+						storeBookTableObject.description = release.description
+						storeBookTableObject.price = release.price
+						storeBookTableObject.isbn = release.isbn
+						storeBookTableObject.categories = release.categories
+					}
+				}
+			}
+
+			return storeBookTableObject
+		},
 		listCategories: async (parent: any, args: { language?: string }) => {
 			let tableObjects = await listTableObjects({
 				tableName: "Category"
@@ -80,12 +119,9 @@ export const resolvers = {
 			}
 
 			let tableObject = await getTableObject(uuid)
+			if (tableObject == null) return null
 
-			if (tableObject != null) {
-				return convertTableObjectToPublisherLogo(tableObject)
-			}
-
-			return null
+			return convertTableObjectToPublisherLogo(tableObject)
 		},
 		authors: async (publisher: Publisher) => {
 			if (publisher.authors == null) {
@@ -114,12 +150,9 @@ export const resolvers = {
 			}
 
 			let tableObject = await getTableObject(uuid)
+			if (tableObject == null) return null
 
-			if (tableObject != null) {
-				return convertTableObjectToAuthorProfileImage(tableObject)
-			}
-
-			return null
+			return convertTableObjectToAuthorProfileImage(tableObject)
 		}
 	},
 	Category: {

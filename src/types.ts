@@ -39,6 +39,46 @@ export interface AuthorProfileImage {
 	url: string
 	blurhash: string
 }
+
+export interface StoreBookCollection {
+	uuid: string
+}
+
+export interface StoreBook {
+	uuid: string
+	collection: StoreBookCollection | string
+	title: string
+	description: string
+	language: string
+	price: number
+	isbn: string
+	status: string
+	cover: string
+	file: string
+	categories: Category[] | string
+	releases: StoreBookRelease[] | string
+}
+
+export interface StoreBookRelease {
+	uuid: string
+	storeBook: StoreBook | string
+	releaseName: string
+	releaseNotes: string
+	publishedAt: string
+	title: string
+	description: string
+	price: number
+	isbn: string
+	status: string
+	categories: Category[] | string
+}
+
+export interface StoreBookCover {
+	uuid: string
+}
+
+export interface StoreBookFile {
+	uuid: string
 }
 
 export interface Category {

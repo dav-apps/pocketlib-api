@@ -1,7 +1,8 @@
 export const typeDefs = `#graphql
 	type Query {
-		allPublishers: [Publisher]
+		listPublishers: [Publisher]
 		listAuthors(limit: Int, latest: Boolean): [Author]
+		retrieveStoreBook(uuid: String!): StoreBook
 		listCategories(language: String): [Category]!
 	}
 	type Publisher {
@@ -13,7 +14,7 @@ export const typeDefs = `#graphql
 		instagramUsername: String
 		twitterUsername: String
 		logo: PublisherLogo
-		authors: [Author]
+		authors: [Author!]!
 	}
 	type PublisherLogo {
 		uuid: String!
@@ -35,12 +36,47 @@ export const typeDefs = `#graphql
 		url: String!
 		blurhash: String!
 	}
+	type StoreBookCollection {
+		uuid: String!
+	}
+	type StoreBook {
+		uuid: String!
+		collection: StoreBookCollection!
+		title: String!
+		description: String
+		language: String!
+		price: Int!
+		isbn: String
+		status: String
+		cover: StoreBookCover
+		file: StoreBookFile
+		categories: [Category!]!
+		releases: [StoreBookRelease!]!
+	}
+	type StoreBookRelease {
+		uuid: String!
+		storeBook: StoreBook!
+		releaseName: String!
+		releaseNotes: String
+		publishedAt: String
+		title: String!
+		description: String
+		price: Int!
+		isbn: String
+		status: String
+		categories: [Category!]!
+	}
+	type StoreBookCover {
+		uuid: String!
+	}
+	type StoreBookFile {
+		uuid: String!
 	}
 	type Category {
 		uuid: String!
 		key: String!
 		name: CategoryName!
-		names: [CategoryName]!
+		names: [CategoryName!]!
 	}
 	type CategoryName {
 		uuid: String!
