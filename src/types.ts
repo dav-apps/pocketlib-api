@@ -42,6 +42,7 @@ export interface AuthorProfileImage {
 
 export interface StoreBookCollection {
 	uuid: string
+	author: Author | string
 }
 
 export interface StoreBook {

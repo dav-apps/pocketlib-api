@@ -1,6 +1,7 @@
 import {
 	Publisher,
 	Author,
+	StoreBookCollection,
 	StoreBook,
 	Category,
 	CategoryName,
@@ -149,6 +150,17 @@ export const resolvers = {
 			if (tableObject == null) return null
 
 			return convertTableObjectToAuthorProfileImage(tableObject)
+		}
+	},
+	StoreBookCollection: {
+		author: async (storeBookCollection: StoreBookCollection) => {
+			const uuid = storeBookCollection.author as string
+			if (uuid == null) return null
+
+			let tableObject = await getTableObject(uuid)
+			if (tableObject == null) return null
+
+			return convertTableObjectToAuthor(tableObject)
 		}
 	},
 	StoreBook: {

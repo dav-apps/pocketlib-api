@@ -38,6 +38,7 @@ export const typeDefs = `#graphql
 	}
 	type StoreBookCollection {
 		uuid: String!
+		author: Author!
 	}
 	type StoreBook {
 		uuid: String!
