@@ -1,3 +1,17 @@
+export interface User {
+	id: number
+	email: string
+	firstName: string
+	confirmed: boolean
+	totalStorage: number
+	usedStorage: number
+	plan: number
+	dev: boolean
+	provider: boolean
+	profileImage: string
+	profileImageEtag: string
+}
+
 export interface TableObject {
 	uuid: string
 	userId: number

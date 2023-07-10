@@ -1,6 +1,35 @@
 import axios, { AxiosRequestConfig } from "axios"
 import { apiBaseUrl } from "../constants.js"
-import { TableObject } from "../types.js"
+import { User, TableObject } from "../types.js"
+
+export async function getUser(token: string): Promise<User> {
+	try {
+		let response = await axios({
+			method: "get",
+			url: `${apiBaseUrl}/v1/user`,
+			headers: {
+				Authorization: token
+			}
+		})
+
+		return {
+			id: response.data.id,
+			email: response.data.email,
+			firstName: response.data.first_name,
+			confirmed: response.data.confirmed,
+			totalStorage: response.data.total_storage,
+			usedStorage: response.data.used_storage,
+			plan: response.data.plan,
+			dev: response.data.dev,
+			provider: response.data.provider,
+			profileImage: response.data.profile_image,
+			profileImageEtag: response.data.profile_image_etag
+		}
+	} catch (error) {
+		console.error(error)
+		return null
+	}
+}
 
 export async function getTableObject(uuid: string): Promise<TableObject> {
 	try {
