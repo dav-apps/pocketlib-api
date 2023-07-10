@@ -3,6 +3,7 @@ import {
 	Author,
 	StoreBookCollection,
 	StoreBook,
+	StoreBookRelease,
 	Category,
 	CategoryName,
 	TableObject
@@ -15,6 +16,8 @@ import {
 	convertTableObjectToStoreBookCollection,
 	convertTableObjectToStoreBook,
 	convertTableObjectToStoreBookRelease,
+	convertTableObjectToStoreBookCover,
+	convertTableObjectToStoreBookFile,
 	convertTableObjectToCategory,
 	convertTableObjectToCategoryName
 } from "./utils.js"
@@ -92,6 +95,8 @@ export const resolvers = {
 						storeBookTableObject.description = release.description
 						storeBookTableObject.price = release.price
 						storeBookTableObject.isbn = release.isbn
+						storeBookTableObject.cover = release.cover
+						storeBookTableObject.file = release.file
 						storeBookTableObject.categories = release.categories
 					}
 				}
@@ -172,6 +177,26 @@ export const resolvers = {
 			if (tableObject == null) return null
 
 			return convertTableObjectToStoreBookCollection(tableObject)
+		}
+	},
+	StoreBookRelease: {
+		cover: async (storeBookRelease: StoreBookRelease) => {
+			const uuid = storeBookRelease.cover as string
+			if (uuid == null) return null
+
+			let tableObject = await getTableObject(uuid)
+			if (tableObject == null) return null
+
+			return convertTableObjectToStoreBookCover(tableObject)
+		},
+		file: async (storeBookRelease: StoreBookRelease) => {
+			const uuid = storeBookRelease.file as string
+			if (uuid == null) return null
+
+			let tableObject = await getTableObject(uuid)
+			if (tableObject == null) return null
+
+			return convertTableObjectToStoreBookFile(tableObject)
 		}
 	},
 	Category: {

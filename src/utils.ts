@@ -100,6 +100,8 @@ export function convertTableObjectToStoreBookRelease(
 		price: obj.properties.price as number,
 		isbn: obj.properties.isbn as string,
 		status: obj.properties.status as string,
+		cover: obj.properties.cover as string,
+		file: obj.properties.file as string,
 		categories: obj.properties.categories as string
 	}
 }
@@ -108,7 +110,10 @@ export function convertTableObjectToStoreBookCover(
 	obj: TableObject
 ): StoreBookCover {
 	return {
-		uuid: obj.uuid
+		uuid: obj.uuid,
+		url: `https://dav-backend.fra1.cdn.digitaloceanspaces.com/${obj.uuid}`,
+		aspectRatio: obj.properties.aspect_ratio as string,
+		blurhash: obj.properties.blurhash as string
 	}
 }
 
@@ -116,7 +121,8 @@ export function convertTableObjectToStoreBookFile(
 	obj: TableObject
 ): StoreBookFile {
 	return {
-		uuid: obj.uuid
+		uuid: obj.uuid,
+		fileName: obj.properties.file_name as string
 	}
 }
 

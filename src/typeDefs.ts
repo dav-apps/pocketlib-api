@@ -65,13 +65,19 @@ export const typeDefs = `#graphql
 		price: Int!
 		isbn: String
 		status: String
+		cover: StoreBookCover
+		file: StoreBookFile
 		categories: [Category!]!
 	}
 	type StoreBookCover {
 		uuid: String!
+		url: String!
+		aspectRatio: String!
+		blurhash: String!
 	}
 	type StoreBookFile {
 		uuid: String!
+		fileName: String
 	}
 	type Category {
 		uuid: String!

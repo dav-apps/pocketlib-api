@@ -54,8 +54,8 @@ export interface StoreBook {
 	price: number
 	isbn: string
 	status: string
-	cover: string
-	file: string
+	cover: StoreBookCover | string
+	file: StoreBookFile | string
 	categories: Category[] | string
 	releases: StoreBookRelease[] | string
 }
@@ -71,15 +71,21 @@ export interface StoreBookRelease {
 	price: number
 	isbn: string
 	status: string
+	cover: StoreBookCover | string
+	file: StoreBookFile | string
 	categories: Category[] | string
 }
 
 export interface StoreBookCover {
 	uuid: string
+	url: string
+	aspectRatio: string
+	blurhash: string
 }
 
 export interface StoreBookFile {
 	uuid: string
+	fileName: string
 }
 
 export interface Category {
