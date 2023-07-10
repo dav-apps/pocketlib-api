@@ -12,6 +12,8 @@
 	"license": "MIT",
 	"dependencies": {
 		"@apollo/server": "^4.7.5",
+		"@graphql-tools/schema": "^10.0.0",
+		"@graphql-tools/utils": "^10.0.3",
 		"axios": "^1.4.0",
 		"graphql": "^16.7.1",
 		"nodemon": "^2.0.22"
