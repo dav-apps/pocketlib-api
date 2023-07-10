@@ -177,6 +177,24 @@ export const resolvers = {
 			if (tableObject == null) return null
 
 			return convertTableObjectToStoreBookCollection(tableObject)
+		},
+		cover: async (storeBook: StoreBook) => {
+			const uuid = storeBook.cover as string
+			if (uuid == null) return null
+
+			let tableObject = await getTableObject(uuid)
+			if (tableObject == null) return null
+
+			return convertTableObjectToStoreBookCover(tableObject)
+		},
+		file: async (storeBook: StoreBook) => {
+			const uuid = storeBook.file as string
+			if (uuid == null) return null
+
+			let tableObject = await getTableObject(uuid)
+			if (tableObject == null) return null
+
+			return convertTableObjectToStoreBookFile(tableObject)
 		}
 	},
 	StoreBookRelease: {
