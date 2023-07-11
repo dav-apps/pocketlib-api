@@ -1,12 +1,13 @@
 import {
+	ResolverContext,
+	TableObject,
 	Publisher,
 	Author,
 	StoreBookCollection,
 	StoreBook,
 	StoreBookRelease,
 	Category,
-	CategoryName,
-	TableObject
+	CategoryName
 } from "./types.js"
 import {
 	convertTableObjectToPublisher,
@@ -195,6 +196,26 @@ export const resolvers = {
 			if (tableObject == null) return null
 
 			return convertTableObjectToStoreBookFile(tableObject)
+		},
+		inLibrary: async (
+			storeBook: StoreBook,
+			args: any,
+			context: ResolverContext
+		) => {
+			if (context.user == null) {
+				return null
+			}
+
+			let tableObjects = await listTableObjects({
+				caching: false,
+				userId: context.user.id,
+				tableName: "Book",
+				propertyName: "store_book",
+				propertyValue: storeBook.uuid,
+				exact: true
+			})
+
+			return tableObjects.length > 0
 		}
 	},
 	StoreBookRelease: {
