@@ -31,11 +31,17 @@ export async function getUser(token: string): Promise<User> {
 	}
 }
 
-export async function getTableObject(uuid: string): Promise<TableObject> {
+export async function getTableObject(
+	uuid: string,
+	caching = true
+): Promise<TableObject> {
 	try {
 		let response = await axios({
 			method: "get",
-			url: `${apiBaseUrl}/v2/table_objects/${uuid}`
+			url: `${apiBaseUrl}/v2/table_objects/${uuid}`,
+			params: {
+				caching
+			}
 		})
 
 		return {
@@ -51,10 +57,14 @@ export async function getTableObject(uuid: string): Promise<TableObject> {
 }
 
 export async function listTableObjects(params: {
+	caching?: boolean
 	limit?: number
 	collectionName?: string
 	tableName?: string
 	userId?: number
+	propertyName?: string
+	propertyValue?: string
+	exact?: boolean
 }): Promise<TableObject[]> {
 	try {
 		let requestParams: AxiosRequestConfig = {}
@@ -65,6 +75,12 @@ export async function listTableObjects(params: {
 		if (params.tableName != null)
 			requestParams["table_name"] = params.tableName
 		if (params.userId != null) requestParams["user_id"] = params.userId
+		if (params.propertyName != null)
+			requestParams["property_name"] = params.propertyName
+		if (params.propertyValue != null)
+			requestParams["property_value"] = params.propertyValue
+		if (params.exact != null) requestParams["exact"] = params.exact
+		if (params.caching != null) requestParams["caching"] = params.caching
 
 		let response = await axios({
 			method: "get",
