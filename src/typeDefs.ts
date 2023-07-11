@@ -1,4 +1,5 @@
 export const typeDefs = `#graphql
+	directive @auth(role: String) on FIELD_DEFINITION
 	type Query {
 		listPublishers: [Publisher]
 		listAuthors(limit: Int, latest: Boolean): [Author]
