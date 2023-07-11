@@ -201,6 +201,22 @@ export const resolvers = {
 
 			return convertTableObjectToStoreBookFile(tableObject)
 		},
+		categories: async (storeBook: StoreBook) => {
+			let categoryUuidsString = storeBook.categories as string
+			if (categoryUuidsString == null) return []
+
+			let categoryUuids = categoryUuidsString.split(",")
+			let categories: Category[] = []
+
+			for (let uuid of categoryUuids) {
+				let tableObject = await getTableObject(uuid)
+				if (tableObject == null) continue
+
+				categories.push(convertTableObjectToCategory(tableObject))
+			}
+
+			return categories
+		},
 		inLibrary: async (
 			storeBook: StoreBook,
 			args: any,
@@ -221,7 +237,11 @@ export const resolvers = {
 
 			return tableObjects.length > 0
 		},
-		purchased: async (storeBook: StoreBook, args: any, context: ResolverContext) => {
+		purchased: async (
+			storeBook: StoreBook,
+			args: any,
+			context: ResolverContext
+		) => {
 			if (context.user == null) {
 				return null
 			}
