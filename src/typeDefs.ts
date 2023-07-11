@@ -52,9 +52,10 @@ export const typeDefs = `#graphql
 		status: String
 		cover: StoreBookCover
 		file: StoreBookFile
-		inLibrary: Boolean @auth(role: "USER")
 		categories: [Category!]!
 		releases: [StoreBookRelease!]!
+		inLibrary: Boolean @auth(role: "USER")
+		purchased: Boolean @auth(role: "USER")
 	}
 	type StoreBookRelease {
 		uuid: String!

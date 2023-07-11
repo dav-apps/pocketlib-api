@@ -81,9 +81,10 @@ export function convertTableObjectToStoreBook(obj: TableObject): StoreBook {
 		status: obj.properties.status as string,
 		cover: null,
 		file: null,
-		inLibrary: null,
 		categories: null,
-		releases: obj.properties.releases as string
+		releases: obj.properties.releases as string,
+		inLibrary: null,
+		purchased: null
 	}
 }
 

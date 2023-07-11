@@ -22,7 +22,11 @@ import {
 	convertTableObjectToCategory,
 	convertTableObjectToCategoryName
 } from "./utils.js"
-import { getTableObject, listTableObjects } from "./services/apiService.js"
+import {
+	getTableObject,
+	listTableObjects,
+	listPurchasesOfTableObject
+} from "./services/apiService.js"
 
 export const resolvers = {
 	Query: {
@@ -216,6 +220,18 @@ export const resolvers = {
 			})
 
 			return tableObjects.length > 0
+		},
+		purchased: async (storeBook: StoreBook, args: any, context: ResolverContext) => {
+			if (context.user == null) {
+				return null
+			}
+
+			let purchases = await listPurchasesOfTableObject({
+				uuid: storeBook.uuid,
+				userId: context.user.id
+			})
+
+			return purchases.length >= 0
 		}
 	},
 	StoreBookRelease: {

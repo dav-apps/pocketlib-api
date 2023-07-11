@@ -92,9 +92,10 @@ export interface StoreBook {
 	status: string
 	cover: StoreBookCover | string
 	file: StoreBookFile | string
-	inLibrary: boolean
 	categories: Category[] | string
 	releases: StoreBookRelease[] | string
+	inLibrary: boolean
+	purchased: boolean
 }
 
 export interface StoreBookRelease {
