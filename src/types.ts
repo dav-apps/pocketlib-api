@@ -3,6 +3,7 @@ export interface ResolverContext {
 	user?: User
 }
 
+//#region Platform models
 export interface User {
 	id: number
 	email: string
@@ -24,6 +25,22 @@ export interface TableObject {
 	properties: { [key: string]: string | number | boolean }
 }
 
+export interface Purchase {
+	id: number
+	userId: number
+	uuid: string
+	paymentIntentId: string
+	providerName: string
+	providerImage: string
+	productName: string
+	productImage: string
+	price: number
+	currency: string
+	completed: boolean
+}
+//#endregion
+
+//#region PocketLib models
 export interface Publisher {
 	uuid: string
 	name: string
@@ -119,3 +136,4 @@ export interface CategoryName {
 	name: string
 	language: string
 }
+//#endregion

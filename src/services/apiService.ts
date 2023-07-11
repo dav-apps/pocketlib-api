@@ -1,6 +1,6 @@
 import axios, { AxiosRequestConfig } from "axios"
 import { apiBaseUrl } from "../constants.js"
-import { User, TableObject } from "../types.js"
+import { User, TableObject, Purchase } from "../types.js"
 
 export async function getUser(token: string): Promise<User> {
 	try {
@@ -26,7 +26,7 @@ export async function getUser(token: string): Promise<User> {
 			profileImageEtag: response.data.profile_image_etag
 		}
 	} catch (error) {
-		console.error(error)
+		console.error(error.response?.data || error)
 		return null
 	}
 }
@@ -96,6 +96,46 @@ export async function listTableObjects(params: {
 				userId: obj.user_id,
 				tableId: obj.table_id,
 				properties: obj.properties
+			})
+		}
+
+		return result
+	} catch (error) {
+		console.error(error.response?.data || error)
+		return []
+	}
+}
+
+export async function listPurchasesOfTableObject(params: {
+	uuid: string
+	userId?: number
+}): Promise<Purchase[]> {
+	try {
+		let requestParams: AxiosRequestConfig = {}
+
+		if (params.userId != null) requestParams["user_id"] = params.userId
+
+		let response = await axios({
+			method: "get",
+			url: `${apiBaseUrl}/v2/table_objects/${params.uuid}/purchases`,
+			params: requestParams
+		})
+
+		let result: Purchase[] = []
+
+		for (let purchase of response.data.purchases) {
+			result.push({
+				id: purchase.id,
+				userId: purchase.user_id,
+				uuid: purchase.uuid,
+				paymentIntentId: purchase.payment_intent_id,
+				providerName: purchase.provider_name,
+				providerImage: purchase.provider_image,
+				productName: purchase.product_name,
+				productImage: purchase.product_image,
+				price: purchase.price,
+				currency: purchase.currency,
+				completed: purchase.completed
 			})
 		}
 
