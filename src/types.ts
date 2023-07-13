@@ -61,6 +61,7 @@ export interface PublisherLogo {
 
 export interface Author {
 	uuid: string
+	publisher: string
 	firstName: string
 	lastName: string
 	websiteUrl: string

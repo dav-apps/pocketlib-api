@@ -41,6 +41,7 @@ export function convertTableObjectToPublisherLogo(
 export function convertTableObjectToAuthor(obj: TableObject): Author {
 	return {
 		uuid: obj.uuid,
+		publisher: obj.properties.publisher as string,
 		firstName: obj.properties.first_name as string,
 		lastName: obj.properties.last_name as string,
 		websiteUrl: obj.properties.website_url as string,

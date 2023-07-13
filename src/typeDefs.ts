@@ -24,6 +24,7 @@ export const typeDefs = `#graphql
 	}
 	type Author {
 		uuid: String!
+		publisher: Publisher
 		firstName: String!
 		lastName: String!
 		websiteUrl: String

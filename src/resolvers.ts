@@ -154,6 +154,15 @@ export const resolvers = {
 		}
 	},
 	Author: {
+		publisher: async (author: Author) => {
+			const uuid = author.publisher
+			if (uuid == null) return null
+
+			let tableObject = await getTableObject(uuid)
+			if (tableObject == null) return null
+
+			return convertTableObjectToPublisher(tableObject)
+		},
 		profileImage: async (author: Author) => {
 			const uuid = author.profileImage
 			if (uuid == null) return null
