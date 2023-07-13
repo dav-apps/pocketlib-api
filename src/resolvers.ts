@@ -4,6 +4,7 @@ import {
 	Publisher,
 	Author,
 	StoreBookCollection,
+	StoreBookSeries,
 	StoreBook,
 	StoreBookRelease,
 	Category,
@@ -15,6 +16,7 @@ import {
 	convertTableObjectToAuthor,
 	convertTableObjectToAuthorProfileImage,
 	convertTableObjectToStoreBookCollection,
+	convertTableObjectToStoreBookSeries,
 	convertTableObjectToStoreBook,
 	convertTableObjectToStoreBookRelease,
 	convertTableObjectToStoreBookCover,
@@ -160,6 +162,22 @@ export const resolvers = {
 			if (tableObject == null) return null
 
 			return convertTableObjectToAuthorProfileImage(tableObject)
+		},
+		series: async (author: Author) => {
+			let seriesUuidsString = author.series as string
+			if (seriesUuidsString == null) return []
+
+			let seriesUuids = seriesUuidsString.split(",")
+			let series: StoreBookSeries[] = []
+
+			for (let uuid of seriesUuids) {
+				let tableObject = await getTableObject(uuid)
+				if (tableObject == null) continue
+
+				series.push(convertTableObjectToStoreBookSeries(tableObject))
+			}
+
+			return series
 		}
 	},
 	StoreBookCollection: {

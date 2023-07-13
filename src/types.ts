@@ -68,6 +68,7 @@ export interface Author {
 	instagramUsername: string
 	twitterUsername: string
 	profileImage: AuthorProfileImage | string
+	series: StoreBookSeries[] | string
 }
 
 export interface AuthorProfileImage {
@@ -79,6 +80,14 @@ export interface AuthorProfileImage {
 export interface StoreBookCollection {
 	uuid: string
 	author: Author | string
+}
+
+export interface StoreBookSeries {
+	uuid: string
+	author: Author | string
+	name: string
+	language: string
+	storeBooks: StoreBook[] | string
 }
 
 export interface StoreBook {

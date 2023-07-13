@@ -31,6 +31,7 @@ export const typeDefs = `#graphql
 		instagramUsername: String
 		twitterUsername: String
 		profileImage: AuthorProfileImage
+		series: [StoreBookSeries!]!
 	}
 	type AuthorProfileImage {
 		uuid: String!
@@ -40,6 +41,13 @@ export const typeDefs = `#graphql
 	type StoreBookCollection {
 		uuid: String!
 		author: Author!
+	}
+	type StoreBookSeries {
+		uuid: String!
+		author: Author!
+		name: String!
+		language: String!
+		storeBooks: [StoreBook!]!
 	}
 	type StoreBook {
 		uuid: String!

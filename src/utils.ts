@@ -5,6 +5,7 @@ import {
 	Author,
 	AuthorProfileImage,
 	StoreBookCollection,
+	StoreBookSeries,
 	StoreBook,
 	StoreBookRelease,
 	StoreBookCover,
@@ -46,7 +47,8 @@ export function convertTableObjectToAuthor(obj: TableObject): Author {
 		facebookUsername: obj.properties.facebook_username as string,
 		instagramUsername: obj.properties.instagram_username as string,
 		twitterUsername: obj.properties.twitter_username as string,
-		profileImage: obj.properties.profile_image as string
+		profileImage: obj.properties.profile_image as string,
+		series: obj.properties.series as string
 	}
 }
 
@@ -66,6 +68,18 @@ export function convertTableObjectToStoreBookCollection(
 	return {
 		uuid: obj.uuid,
 		author: obj.properties.author as string
+	}
+}
+
+export function convertTableObjectToStoreBookSeries(
+	obj: TableObject
+): StoreBookSeries {
+	return {
+		uuid: obj.uuid,
+		author: obj.properties.author as string,
+		name: obj.properties.name as string,
+		language: obj.properties.language as string,
+		storeBooks: obj.properties.store_books as string
 	}
 }
 
