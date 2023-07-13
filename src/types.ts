@@ -49,8 +49,8 @@ export interface Publisher {
 	facebookUsername: string
 	instagramUsername: string
 	twitterUsername: string
-	logo: PublisherLogo | string
-	authors: Author[] | string
+	logo: string
+	authors: string
 }
 
 export interface PublisherLogo {
@@ -67,8 +67,8 @@ export interface Author {
 	facebookUsername: string
 	instagramUsername: string
 	twitterUsername: string
-	profileImage: AuthorProfileImage | string
-	series: StoreBookSeries[] | string
+	profileImage: string
+	series: string
 }
 
 export interface AuthorProfileImage {
@@ -79,37 +79,37 @@ export interface AuthorProfileImage {
 
 export interface StoreBookCollection {
 	uuid: string
-	author: Author | string
+	author: string
 }
 
 export interface StoreBookSeries {
 	uuid: string
-	author: Author | string
+	author: string
 	name: string
 	language: string
-	storeBooks: StoreBook[] | string
+	storeBooks: string
 }
 
 export interface StoreBook {
 	uuid: string
-	collection: StoreBookCollection | string
+	collection: string
 	title: string
 	description: string
 	language: string
 	price: number
 	isbn: string
 	status: string
-	cover: StoreBookCover | string
-	file: StoreBookFile | string
-	categories: Category[] | string
-	releases: StoreBookRelease[] | string
+	cover: string
+	file: string
+	categories: string
+	releases: string
 	inLibrary: boolean
 	purchased: boolean
 }
 
 export interface StoreBookRelease {
 	uuid: string
-	storeBook: StoreBook | string
+	storeBook: string
 	releaseName: string
 	releaseNotes: string
 	publishedAt: string
@@ -118,9 +118,9 @@ export interface StoreBookRelease {
 	price: number
 	isbn: string
 	status: string
-	cover: StoreBookCover | string
-	file: StoreBookFile | string
-	categories: Category[] | string
+	cover: string
+	file: string
+	categories: string
 }
 
 export interface StoreBookCover {
@@ -138,7 +138,7 @@ export interface StoreBookFile {
 export interface Category {
 	uuid: string
 	key: string
-	names: CategoryName[] | string
+	names: string
 }
 
 export interface CategoryName {
