@@ -62,6 +62,7 @@ export const typeDefs = `#graphql
 		file: StoreBookFile
 		categories: [Category!]!
 		releases: [StoreBookRelease!]!
+		series: [StoreBookSeries!]!
 		inLibrary: Boolean @auth(role: "USER")
 		purchased: Boolean @auth(role: "USER")
 	}

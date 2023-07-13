@@ -235,6 +235,21 @@ export const resolvers = {
 
 			return categories
 		},
+		series: async (storeBook: StoreBook) => {
+			let tableObjects = await listTableObjects({
+				tableName: "StoreBookSeries",
+				propertyName: "store_books",
+				propertyValue: storeBook.uuid
+			})
+
+			let series: StoreBookSeries[] = []
+
+			for (let tableObject of tableObjects) {
+				series.push(convertTableObjectToStoreBookSeries(tableObject))
+			}
+
+			return series
+		},
 		inLibrary: async (
 			storeBook: StoreBook,
 			args: any,
