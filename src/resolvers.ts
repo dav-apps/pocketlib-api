@@ -85,7 +85,7 @@ export const resolvers = {
 			const storeBookTableObject = convertTableObjectToStoreBook(tableObject)
 
 			// Get the latest release of the StoreBook
-			const releasesString = storeBookTableObject.releases as string
+			const releasesString = storeBookTableObject.releases
 
 			if (releasesString != null) {
 				let releaseUuids = releasesString.split(",")
@@ -127,7 +127,7 @@ export const resolvers = {
 	},
 	Publisher: {
 		logo: async (publisher: Publisher) => {
-			const uuid = publisher.logo as string
+			const uuid = publisher.logo
 			if (uuid == null) return null
 
 			let tableObject = await getTableObject(uuid)
@@ -140,7 +140,7 @@ export const resolvers = {
 				return []
 			}
 
-			let authorUuids = (publisher.authors as string).split(",")
+			let authorUuids = publisher.authors.split(",")
 			let authors: Author[] = []
 
 			for (let uuid of authorUuids) {
@@ -155,7 +155,7 @@ export const resolvers = {
 	},
 	Author: {
 		profileImage: async (author: Author) => {
-			const uuid = author.profileImage as string
+			const uuid = author.profileImage
 			if (uuid == null) return null
 
 			let tableObject = await getTableObject(uuid)
@@ -164,7 +164,7 @@ export const resolvers = {
 			return convertTableObjectToAuthorProfileImage(tableObject)
 		},
 		series: async (author: Author) => {
-			let seriesUuidsString = author.series as string
+			let seriesUuidsString = author.series
 			if (seriesUuidsString == null) return []
 
 			let seriesUuids = seriesUuidsString.split(",")
@@ -182,7 +182,7 @@ export const resolvers = {
 	},
 	StoreBookCollection: {
 		author: async (storeBookCollection: StoreBookCollection) => {
-			const uuid = storeBookCollection.author as string
+			const uuid = storeBookCollection.author
 			if (uuid == null) return null
 
 			let tableObject = await getTableObject(uuid)
@@ -193,7 +193,7 @@ export const resolvers = {
 	},
 	StoreBook: {
 		collection: async (storeBook: StoreBook) => {
-			const uuid = storeBook.collection as string
+			const uuid = storeBook.collection
 			if (uuid == null) return null
 
 			let tableObject = await getTableObject(uuid)
@@ -202,7 +202,7 @@ export const resolvers = {
 			return convertTableObjectToStoreBookCollection(tableObject)
 		},
 		cover: async (storeBook: StoreBook) => {
-			const uuid = storeBook.cover as string
+			const uuid = storeBook.cover
 			if (uuid == null) return null
 
 			let tableObject = await getTableObject(uuid)
@@ -211,7 +211,7 @@ export const resolvers = {
 			return convertTableObjectToStoreBookCover(tableObject)
 		},
 		file: async (storeBook: StoreBook) => {
-			const uuid = storeBook.file as string
+			const uuid = storeBook.file
 			if (uuid == null) return null
 
 			let tableObject = await getTableObject(uuid)
@@ -220,7 +220,7 @@ export const resolvers = {
 			return convertTableObjectToStoreBookFile(tableObject)
 		},
 		categories: async (storeBook: StoreBook) => {
-			let categoryUuidsString = storeBook.categories as string
+			let categoryUuidsString = storeBook.categories
 			if (categoryUuidsString == null) return []
 
 			let categoryUuids = categoryUuidsString.split(",")
@@ -289,7 +289,7 @@ export const resolvers = {
 	},
 	StoreBookRelease: {
 		cover: async (storeBookRelease: StoreBookRelease) => {
-			const uuid = storeBookRelease.cover as string
+			const uuid = storeBookRelease.cover
 			if (uuid == null) return null
 
 			let tableObject = await getTableObject(uuid)
@@ -298,7 +298,7 @@ export const resolvers = {
 			return convertTableObjectToStoreBookCover(tableObject)
 		},
 		file: async (storeBookRelease: StoreBookRelease) => {
-			const uuid = storeBookRelease.file as string
+			const uuid = storeBookRelease.file
 			if (uuid == null) return null
 
 			let tableObject = await getTableObject(uuid)
@@ -309,7 +309,7 @@ export const resolvers = {
 	},
 	Category: {
 		name: async (category: Category, args: any, context: any, info: any) => {
-			const namesString = category.names as string
+			const namesString = category.names
 			if (namesString == null) return null
 
 			// Get all names
