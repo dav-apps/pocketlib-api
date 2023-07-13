@@ -45,6 +45,15 @@ export const resolvers = {
 
 			return result
 		},
+		retrieveAuthor: async (parent: any, args: { uuid: string }) => {
+			const uuid = args.uuid
+			if (uuid == null) return null
+
+			let tableObject = await getTableObject(uuid)
+			if (tableObject == null) return null
+
+			return convertTableObjectToAuthor(tableObject)
+		},
 		listAuthors: async (
 			parent: any,
 			args: { limit?: number; latest?: boolean }
@@ -74,10 +83,7 @@ export const resolvers = {
 		},
 		retrieveStoreBook: async (parent: any, args: { uuid: string }) => {
 			const uuid = args.uuid
-
-			if (uuid == null) {
-				return null
-			}
+			if (uuid == null) return null
 
 			let tableObject = await getTableObject(uuid)
 			if (tableObject == null) return null
