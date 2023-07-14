@@ -32,6 +32,15 @@ import {
 
 export const resolvers = {
 	Query: {
+		retrievePublisher: async (parent: any, args: { uuid: string }) => {
+			const uuid = args.uuid
+			if (uuid == null) return null
+
+			let tableObject = await getTableObject(uuid)
+			if (tableObject == null) return null
+
+			return convertTableObjectToPublisher(tableObject)
+		},
 		listPublishers: async () => {
 			let tableObjects = await listTableObjects({
 				tableName: "Publisher"
