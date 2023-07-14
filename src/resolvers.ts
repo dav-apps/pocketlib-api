@@ -5,6 +5,7 @@ import {
 	Author,
 	AuthorBio,
 	StoreBookCollection,
+	StoreBookCollectionName,
 	StoreBookSeries,
 	StoreBook,
 	StoreBookRelease,
@@ -18,6 +19,7 @@ import {
 	convertTableObjectToAuthorBio,
 	convertTableObjectToAuthorProfileImage,
 	convertTableObjectToStoreBookCollection,
+	convertTableObjectToStoreBookCollectionName,
 	convertTableObjectToStoreBookSeries,
 	convertTableObjectToStoreBook,
 	convertTableObjectToStoreBookRelease,
@@ -231,6 +233,22 @@ export const resolvers = {
 			if (tableObject == null) return null
 
 			return convertTableObjectToAuthor(tableObject)
+		},
+		names: async (storeBookCollection: StoreBookCollection) => {
+			let nameUuidsString = storeBookCollection.names
+			if (nameUuidsString == null) return []
+
+			let nameUuids = nameUuidsString.split(",")
+			let names: StoreBookCollectionName[] = []
+
+			for (let uuid of nameUuids) {
+				let tableObject = await getTableObject(uuid)
+				if (tableObject == null) continue
+
+				names.push(convertTableObjectToStoreBookCollectionName(tableObject))
+			}
+
+			return names
 		}
 	},
 	StoreBook: {

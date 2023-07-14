@@ -1,5 +1,6 @@
 export const typeDefs = `#graphql
 	directive @auth(role: String) on FIELD_DEFINITION
+
 	type Query {
 		retrievePublisher(uuid: String!): Publisher
 		listPublishers: [Publisher]
@@ -8,6 +9,7 @@ export const typeDefs = `#graphql
 		retrieveStoreBook(uuid: String!): StoreBook
 		listCategories(language: String): [Category]!
 	}
+
 	type Publisher {
 		uuid: String!
 		name: String!
@@ -19,11 +21,13 @@ export const typeDefs = `#graphql
 		logo: PublisherLogo
 		authors: [Author!]!
 	}
+
 	type PublisherLogo {
 		uuid: String!
 		url: String!
 		blurhash: String
 	}
+
 	type Author {
 		uuid: String!
 		publisher: Publisher
@@ -37,20 +41,31 @@ export const typeDefs = `#graphql
 		bios: [AuthorBio!]!
 		series: [StoreBookSeries!]!
 	}
+
 	type AuthorBio {
 		uuid: String!
 		bio: String!
 		language: String!
 	}
+
 	type AuthorProfileImage {
 		uuid: String!
 		url: String!
 		blurhash: String!
 	}
+
 	type StoreBookCollection {
 		uuid: String!
 		author: Author!
+		names: [StoreBookCollectionName!]!
 	}
+
+	type StoreBookCollectionName {
+		uuid: String!
+		name: String!
+		language: String!
+	}
+
 	type StoreBookSeries {
 		uuid: String!
 		author: Author!
@@ -58,6 +73,7 @@ export const typeDefs = `#graphql
 		language: String!
 		storeBooks: [StoreBook!]!
 	}
+
 	type StoreBook {
 		uuid: String!
 		collection: StoreBookCollection!
@@ -75,6 +91,7 @@ export const typeDefs = `#graphql
 		inLibrary: Boolean @auth(role: "USER")
 		purchased: Boolean @auth(role: "USER")
 	}
+
 	type StoreBookRelease {
 		uuid: String!
 		storeBook: StoreBook!
@@ -90,22 +107,26 @@ export const typeDefs = `#graphql
 		file: StoreBookFile
 		categories: [Category!]!
 	}
+
 	type StoreBookCover {
 		uuid: String!
 		url: String!
 		aspectRatio: String!
 		blurhash: String!
 	}
+
 	type StoreBookFile {
 		uuid: String!
 		fileName: String
 	}
+
 	type Category {
 		uuid: String!
 		key: String!
 		name: CategoryName!
 		names: [CategoryName!]!
 	}
+
 	type CategoryName {
 		uuid: String!
 		name: String!

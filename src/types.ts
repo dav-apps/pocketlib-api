@@ -88,6 +88,13 @@ export interface AuthorProfileImage {
 export interface StoreBookCollection {
 	uuid: string
 	author: string
+	names: string
+}
+
+export interface StoreBookCollectionName {
+	uuid: string
+	name: string
+	language: string
 }
 
 export interface StoreBookSeries {

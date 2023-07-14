@@ -6,6 +6,7 @@ import {
 	AuthorBio,
 	AuthorProfileImage,
 	StoreBookCollection,
+	StoreBookCollectionName,
 	StoreBookSeries,
 	StoreBook,
 	StoreBookRelease,
@@ -78,7 +79,18 @@ export function convertTableObjectToStoreBookCollection(
 ): StoreBookCollection {
 	return {
 		uuid: obj.uuid,
-		author: obj.properties.author as string
+		author: obj.properties.author as string,
+		names: obj.properties.names as string
+	}
+}
+
+export function convertTableObjectToStoreBookCollectionName(
+	obj: TableObject
+): StoreBookCollectionName {
+	return {
+		uuid: obj.uuid,
+		name: obj.properties.name as string,
+		language: obj.properties.language as string
 	}
 }
 
