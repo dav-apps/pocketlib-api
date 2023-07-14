@@ -234,6 +234,42 @@ export const resolvers = {
 
 			return convertTableObjectToAuthor(tableObject)
 		},
+		name: async (
+			storeBookCollection: StoreBookCollection,
+			args: any,
+			context: any,
+			info: any
+		) => {
+			const namesString = storeBookCollection.names
+			if (namesString == null) return null
+
+			// Get all names
+			let nameUuids = namesString.split(",")
+			let names: StoreBookCollectionName[] = []
+
+			for (let uuid of nameUuids) {
+				let nameObj = await getTableObject(uuid)
+				if (nameObj == null) continue
+
+				names.push(convertTableObjectToStoreBookCollectionName(nameObj))
+			}
+
+			// Get the optimal name for the given language
+			let language = info?.variableValues?.language || "en"
+			let name = names.find(n => n.language == language)
+
+			if (name != null) {
+				return name
+			}
+
+			name = names.find(n => n.language == "en")
+
+			if (name != null) {
+				return name
+			}
+
+			return names[0]
+		},
 		names: async (storeBookCollection: StoreBookCollection) => {
 			let nameUuidsString = storeBookCollection.names
 			if (nameUuidsString == null) return []
