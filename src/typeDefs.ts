@@ -39,6 +39,7 @@ export const typeDefs = `#graphql
 		twitterUsername: String
 		profileImage: AuthorProfileImage
 		bios: [AuthorBio!]!
+		collections: [StoreBookCollection!]!
 		series: [StoreBookSeries!]!
 	}
 

@@ -52,6 +52,7 @@ export function convertTableObjectToAuthor(obj: TableObject): Author {
 		twitterUsername: obj.properties.twitter_username as string,
 		profileImage: obj.properties.profile_image as string,
 		bios: obj.properties.bios as string,
+		collections: obj.properties.collections as string,
 		series: obj.properties.series as string
 	}
 }

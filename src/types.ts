@@ -70,6 +70,7 @@ export interface Author {
 	twitterUsername: string
 	profileImage: string
 	bios: string
+	collections: string
 	series: string
 }
 

@@ -207,6 +207,24 @@ export const resolvers = {
 
 			return bios
 		},
+		collections: async (author: Author) => {
+			let collectionUuidsString = author.collections
+			if (collectionUuidsString == null) return []
+
+			let collectionUuids = collectionUuidsString.split(",")
+			let collections: StoreBookCollection[] = []
+
+			for (let uuid of collectionUuids) {
+				let tableObject = await getTableObject(uuid)
+				if (tableObject == null) continue
+
+				collections.push(
+					convertTableObjectToStoreBookCollection(tableObject)
+				)
+			}
+
+			return collections
+		},
 		series: async (author: Author) => {
 			let seriesUuidsString = author.series
 			if (seriesUuidsString == null) return []
