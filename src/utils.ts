@@ -3,6 +3,7 @@ import {
 	Publisher,
 	PublisherLogo,
 	Author,
+	AuthorBio,
 	AuthorProfileImage,
 	StoreBookCollection,
 	StoreBookSeries,
@@ -49,7 +50,16 @@ export function convertTableObjectToAuthor(obj: TableObject): Author {
 		instagramUsername: obj.properties.instagram_username as string,
 		twitterUsername: obj.properties.twitter_username as string,
 		profileImage: obj.properties.profile_image as string,
+		bios: obj.properties.bios as string,
 		series: obj.properties.series as string
+	}
+}
+
+export function convertTableObjectToAuthorBio(obj: TableObject): AuthorBio {
+	return {
+		uuid: obj.uuid,
+		bio: obj.properties.bio as string,
+		language: obj.properties.language as string
 	}
 }
 

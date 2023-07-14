@@ -34,7 +34,13 @@ export const typeDefs = `#graphql
 		instagramUsername: String
 		twitterUsername: String
 		profileImage: AuthorProfileImage
+		bios: [AuthorBio!]!
 		series: [StoreBookSeries!]!
+	}
+	type AuthorBio {
+		uuid: String!
+		bio: String!
+		language: String!
 	}
 	type AuthorProfileImage {
 		uuid: String!

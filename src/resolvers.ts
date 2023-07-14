@@ -3,6 +3,7 @@ import {
 	TableObject,
 	Publisher,
 	Author,
+	AuthorBio,
 	StoreBookCollection,
 	StoreBookSeries,
 	StoreBook,
@@ -14,6 +15,7 @@ import {
 	convertTableObjectToPublisher,
 	convertTableObjectToPublisherLogo,
 	convertTableObjectToAuthor,
+	convertTableObjectToAuthorBio,
 	convertTableObjectToAuthorProfileImage,
 	convertTableObjectToStoreBookCollection,
 	convertTableObjectToStoreBookSeries,
@@ -186,6 +188,22 @@ export const resolvers = {
 			if (tableObject == null) return null
 
 			return convertTableObjectToAuthorProfileImage(tableObject)
+		},
+		bios: async (author: Author) => {
+			let bioUuidsString = author.bios
+			if (bioUuidsString == null) return []
+
+			let bioUuids = bioUuidsString.split(",")
+			let bios: AuthorBio[] = []
+
+			for (let uuid of bioUuids) {
+				let tableObject = await getTableObject(uuid)
+				if (tableObject == null) continue
+
+				bios.push(convertTableObjectToAuthorBio(tableObject))
+			}
+
+			return bios
 		},
 		series: async (author: Author) => {
 			let seriesUuidsString = author.series

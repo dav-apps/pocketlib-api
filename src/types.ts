@@ -69,7 +69,14 @@ export interface Author {
 	instagramUsername: string
 	twitterUsername: string
 	profileImage: string
+	bios: string
 	series: string
+}
+
+export interface AuthorBio {
+	uuid: string
+	bio: string
+	language: string
 }
 
 export interface AuthorProfileImage {
