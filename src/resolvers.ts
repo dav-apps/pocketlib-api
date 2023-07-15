@@ -185,6 +185,39 @@ export const resolvers = {
 
 			return convertTableObjectToPublisher(tableObject)
 		},
+		bio: async (author: Author, args: any, context: any, info: any) => {
+			const biosString = author.bios
+			if (biosString == null) return null
+
+			// Get all bios
+			let bioUuids = biosString.split(",")
+			let bios: AuthorBio[] = []
+
+			for (let uuid of bioUuids) {
+				let bioObj = await getTableObject(uuid)
+				if (bioObj == null) continue
+
+				bios.push(convertTableObjectToAuthorBio(bioObj))
+			}
+
+			// Find the optimal bio for the given languages
+			let languages = info?.variableValues?.languages || ["en"]
+			let selectedBios: AuthorBio[] = []
+
+			for (let lang of languages) {
+				let bio = bios.find(b => b.language == lang)
+
+				if (bio != null) {
+					selectedBios.push(bio)
+				}
+			}
+
+			if (selectedBios.length > 0) {
+				return selectedBios[0]
+			}
+
+			return bios[0]
+		},
 		profileImage: async (author: Author) => {
 			const uuid = author.profileImage
 			if (uuid == null) return null
