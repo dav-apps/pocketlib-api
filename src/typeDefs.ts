@@ -3,11 +3,11 @@ export const typeDefs = `#graphql
 
 	type Query {
 		retrievePublisher(uuid: String!): Publisher
-		listPublishers: [Publisher]
+		listPublishers: PublisherList!
 		retrieveAuthor(uuid: String!): Author
-		listAuthors(latest: Boolean, languages: [String!], limit: Int, offset: Int): [Author]
+		listAuthors(latest: Boolean, languages: [String!], limit: Int, offset: Int): AuthorList!
 		retrieveStoreBook(uuid: String!, languages: [String!]): StoreBook
-		listCategories(languages: [String!]): [Category]!
+		listCategories(languages: [String!]): CategoryList!
 	}
 
 	type Publisher {
@@ -20,6 +20,11 @@ export const typeDefs = `#graphql
 		twitterUsername: String
 		logo: PublisherLogo
 		authors: [Author!]!
+	}
+
+	type PublisherList {
+		total: Int!
+		items: [Publisher!]!
 	}
 
 	type PublisherLogo {
@@ -42,6 +47,11 @@ export const typeDefs = `#graphql
 		bios: [AuthorBio!]!
 		collections: [StoreBookCollection!]!
 		series: [StoreBookSeries!]!
+	}
+
+	type AuthorList {
+		total: Int!
+		items: [Author!]!
 	}
 
 	type AuthorBio {
@@ -128,6 +138,11 @@ export const typeDefs = `#graphql
 		key: String!
 		name: CategoryName!
 		names: [CategoryName!]!
+	}
+
+	type CategoryList {
+		total: Int!
+		items: [Category!]!
 	}
 
 	type CategoryName {

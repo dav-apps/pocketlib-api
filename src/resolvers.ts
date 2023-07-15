@@ -1,5 +1,6 @@
 import {
 	ResolverContext,
+	List,
 	TableObject,
 	Publisher,
 	Author,
@@ -45,18 +46,21 @@ export const resolvers = {
 
 			return convertTableObjectToPublisher(tableObject)
 		},
-		listPublishers: async () => {
-			let tableObjects = await listTableObjects({
+		listPublishers: async (): Promise<List<Publisher>> => {
+			let response = await listTableObjects({
 				tableName: "Publisher"
 			})
 
 			let result: Publisher[] = []
 
-			for (let obj of tableObjects) {
+			for (let obj of response.items) {
 				result.push(convertTableObjectToPublisher(obj))
 			}
 
-			return result
+			return {
+				total: response.total,
+				items: result
+			}
 		},
 		retrieveAuthor: async (parent: any, args: { uuid: string }) => {
 			const uuid = args.uuid
@@ -70,23 +74,30 @@ export const resolvers = {
 		listAuthors: async (
 			parent: any,
 			args: { latest?: boolean; limit?: number; offset?: number }
-		) => {
+		): Promise<List<Author>> => {
+			let total = 0
 			let tableObjects: TableObject[] = []
 			let limit = args.limit || 10
 			let offset = args.offset || 0
 
 			if (args.latest) {
-				tableObjects = await listTableObjects({
+				let response = await listTableObjects({
 					limit,
 					offset,
 					collectionName: "latest_authors"
 				})
+
+				total = response.total
+				tableObjects = response.items
 			} else {
-				tableObjects = await listTableObjects({
+				let response = await listTableObjects({
 					limit,
 					offset,
 					tableName: "Author"
 				})
+
+				total = response.total
+				tableObjects = response.items
 			}
 
 			let result: Author[] = []
@@ -95,7 +106,10 @@ export const resolvers = {
 				result.push(convertTableObjectToAuthor(obj))
 			}
 
-			return result
+			return {
+				total: total,
+				items: result
+			}
 		},
 		retrieveStoreBook: async (parent: any, args: { uuid: string }) => {
 			const uuid = args.uuid
@@ -133,18 +147,21 @@ export const resolvers = {
 
 			return storeBookTableObject
 		},
-		listCategories: async () => {
-			let tableObjects = await listTableObjects({
+		listCategories: async (): Promise<List<Category>> => {
+			let response = await listTableObjects({
 				tableName: "Category"
 			})
 
 			let result: Category[] = []
 
-			for (let obj of tableObjects) {
+			for (let obj of response.items) {
 				result.push(convertTableObjectToCategory(obj))
 			}
 
-			return result
+			return {
+				total: response.total,
+				items: result
+			}
 		}
 	},
 	Publisher: {
@@ -388,7 +405,7 @@ export const resolvers = {
 			return categories
 		},
 		series: async (storeBook: StoreBook) => {
-			let tableObjects = await listTableObjects({
+			let response = await listTableObjects({
 				tableName: "StoreBookSeries",
 				propertyName: "store_books",
 				propertyValue: storeBook.uuid
@@ -396,7 +413,7 @@ export const resolvers = {
 
 			let series: StoreBookSeries[] = []
 
-			for (let tableObject of tableObjects) {
+			for (let tableObject of response.items) {
 				series.push(convertTableObjectToStoreBookSeries(tableObject))
 			}
 
@@ -411,7 +428,7 @@ export const resolvers = {
 				return null
 			}
 
-			let tableObjects = await listTableObjects({
+			let response = await listTableObjects({
 				caching: false,
 				userId: context.user.id,
 				tableName: "Book",
@@ -420,7 +437,7 @@ export const resolvers = {
 				exact: true
 			})
 
-			return tableObjects.length > 0
+			return response.items.length > 0
 		},
 		purchased: async (
 			storeBook: StoreBook,

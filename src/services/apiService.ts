@@ -1,6 +1,6 @@
 import axios, { AxiosRequestConfig } from "axios"
 import { apiBaseUrl } from "../constants.js"
-import { User, TableObject, Purchase } from "../types.js"
+import { List, User, TableObject, Purchase } from "../types.js"
 
 export async function getUser(token: string): Promise<User> {
 	try {
@@ -66,7 +66,7 @@ export async function listTableObjects(params: {
 	propertyName?: string
 	propertyValue?: string
 	exact?: boolean
-}): Promise<TableObject[]> {
+}): Promise<List<TableObject>> {
 	try {
 		let requestParams: AxiosRequestConfig = {}
 
@@ -92,7 +92,7 @@ export async function listTableObjects(params: {
 
 		let result: TableObject[] = []
 
-		for (let obj of response.data.table_objects) {
+		for (let obj of response.data.items) {
 			result.push({
 				uuid: obj.uuid,
 				userId: obj.user_id,
@@ -101,10 +101,13 @@ export async function listTableObjects(params: {
 			})
 		}
 
-		return result
+		return {
+			total: response.data.total,
+			items: result
+		}
 	} catch (error) {
 		console.error(error.response?.data || error)
-		return []
+		return { total: 0, items: [] }
 	}
 }
 

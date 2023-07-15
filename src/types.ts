@@ -3,6 +3,11 @@ export interface ResolverContext {
 	user?: User
 }
 
+export interface List<T> {
+	total: number
+	items: T[]
+}
+
 //#region Platform models
 export interface User {
 	id: number
