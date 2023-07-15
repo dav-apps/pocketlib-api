@@ -130,7 +130,7 @@ export const resolvers = {
 
 			return storeBookTableObject
 		},
-		listCategories: async (parent: any, args: { language?: string }) => {
+		listCategories: async () => {
 			let tableObjects = await listTableObjects({
 				tableName: "Category"
 			})
@@ -272,18 +272,20 @@ export const resolvers = {
 				names.push(convertTableObjectToStoreBookCollectionName(nameObj))
 			}
 
-			// Get the optimal name for the given language
-			let language = info?.variableValues?.language || "en"
-			let name = names.find(n => n.language == language)
+			// Find the optimal name for the given languages
+			let languages = info?.variableValues?.languages || ["en"]
+			let selectedNames: StoreBookCollectionName[] = []
 
-			if (name != null) {
-				return name
+			for (let lang of languages) {
+				let name = names.find(n => n.language == lang)
+
+				if (name != null) {
+					selectedNames.push(name)
+				}
 			}
 
-			name = names.find(n => n.language == "en")
-
-			if (name != null) {
-				return name
+			if (selectedNames.length > 0) {
+				return selectedNames[0]
 			}
 
 			return names[0]
@@ -437,18 +439,20 @@ export const resolvers = {
 				names.push(convertTableObjectToCategoryName(nameObj))
 			}
 
-			// Get the optimal name for the given language
-			let language = info?.variableValues?.language || "en"
-			let name = names.find(n => n.language == language)
+			// Find the optimal name for the given languages
+			let languages = info?.variableValues?.languages || ["en"]
+			let selectedNames: CategoryName[] = []
 
-			if (name != null) {
-				return name
+			for (let lang of languages) {
+				let name = names.find(n => n.language == lang)
+
+				if (name != null) {
+					selectedNames.push(name)
+				}
 			}
 
-			name = names.find(n => n.language == "en")
-
-			if (name != null) {
-				return name
+			if (selectedNames.length > 0) {
+				return selectedNames[0]
 			}
 
 			return names[0]
