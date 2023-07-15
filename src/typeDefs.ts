@@ -5,7 +5,7 @@ export const typeDefs = `#graphql
 		retrievePublisher(uuid: String!): Publisher
 		listPublishers: [Publisher]
 		retrieveAuthor(uuid: String!): Author
-		listAuthors(limit: Int, latest: Boolean): [Author]
+		listAuthors(latest: Boolean, limit: Int, offset: Int): [Author]
 		retrieveStoreBook(uuid: String!, languages: [String!]): StoreBook
 		listCategories(languages: [String!]): [Category]!
 	}

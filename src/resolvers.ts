@@ -69,19 +69,22 @@ export const resolvers = {
 		},
 		listAuthors: async (
 			parent: any,
-			args: { limit?: number; latest?: boolean }
+			args: { latest?: boolean; limit?: number; offset?: number }
 		) => {
 			let tableObjects: TableObject[] = []
 			let limit = args.limit || 10
+			let offset = args.offset || 0
 
 			if (args.latest) {
 				tableObjects = await listTableObjects({
 					limit,
+					offset,
 					collectionName: "latest_authors"
 				})
 			} else {
 				tableObjects = await listTableObjects({
 					limit,
+					offset,
 					tableName: "Author"
 				})
 			}

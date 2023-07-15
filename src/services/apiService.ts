@@ -59,6 +59,7 @@ export async function getTableObject(
 export async function listTableObjects(params: {
 	caching?: boolean
 	limit?: number
+	offset?: number
 	collectionName?: string
 	tableName?: string
 	userId?: number
@@ -70,6 +71,7 @@ export async function listTableObjects(params: {
 		let requestParams: AxiosRequestConfig = {}
 
 		if (params.limit != null) requestParams["limit"] = params.limit
+		if (params.offset != null) requestParams["offset"] = params.offset
 		if (params.collectionName != null)
 			requestParams["collection_name"] = params.collectionName
 		if (params.tableName != null)
