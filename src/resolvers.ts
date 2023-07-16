@@ -654,6 +654,40 @@ export const resolvers = {
 			if (tableObject == null) return null
 
 			return convertTableObjectToStoreBookFile(tableObject)
+		},
+		categories: async (
+			storeBookRelease: StoreBookRelease,
+			args: { limit?: number; offset?: number }
+		): Promise<List<Category>> => {
+			let categoryUuidsString = storeBookRelease.categories
+
+			if (categoryUuidsString == null) {
+				return {
+					total: 0,
+					items: []
+				}
+			}
+
+			let limit = args.limit || 10
+			if (limit <= 0) limit = 10
+
+			let offset = args.offset || 0
+			if (offset < 0) offset = 0
+
+			let categoryUuids = categoryUuidsString.split(",")
+			let categories: Category[] = []
+
+			for (let uuid of categoryUuids) {
+				let tableObject = await getTableObject(uuid)
+				if (tableObject == null) continue
+
+				categories.push(convertTableObjectToCategory(tableObject))
+			}
+
+			return {
+				total: categories.length,
+				items: categories.slice(offset, limit + offset)
+			}
 		}
 	},
 	Category: {
