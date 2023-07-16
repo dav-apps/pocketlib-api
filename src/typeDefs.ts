@@ -119,8 +119,7 @@ export const typeDefs = `#graphql
 		cover: StoreBookCover
 		file: StoreBookFile
 		categories(limit: Int, offset: Int): CategoryList!
-		releases: [StoreBookRelease!]!
-		series: [StoreBookSeries!]!
+		series(limit: Int, offset: Int): StoreBookSeriesList!
 		inLibrary: Boolean @auth(role: "USER")
 		purchased: Boolean @auth(role: "USER")
 	}

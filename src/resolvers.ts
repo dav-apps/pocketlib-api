@@ -572,12 +572,21 @@ export const resolvers = {
 				items: categories.slice(offset, limit + offset)
 			}
 		},
-		series: async (storeBook: StoreBook) => {
+		series: async (
+			storeBook: StoreBook,
+			args: { limit?: number; offset?: number }
+		): Promise<List<StoreBookSeries>> => {
 			let response = await listTableObjects({
 				tableName: "StoreBookSeries",
 				propertyName: "store_books",
 				propertyValue: storeBook.uuid
 			})
+
+			let limit = args.limit || 10
+			if (limit <= 0) limit = 10
+
+			let offset = args.offset || 0
+			if (offset < 0) offset = 0
 
 			let series: StoreBookSeries[] = []
 
@@ -585,7 +594,10 @@ export const resolvers = {
 				series.push(convertTableObjectToStoreBookSeries(tableObject))
 			}
 
-			return series
+			return {
+				total: series.length,
+				items: series.slice(offset, limit + offset)
+			}
 		},
 		inLibrary: async (
 			storeBook: StoreBook,
