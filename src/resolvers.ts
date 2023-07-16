@@ -176,7 +176,7 @@ export const resolvers = {
 		},
 		authors: async (
 			publisher: Publisher,
-			args: any
+			args: { limit?: number; offset?: number }
 		): Promise<List<Author>> => {
 			if (publisher.authors == null) {
 				return {
@@ -260,11 +260,27 @@ export const resolvers = {
 
 			return convertTableObjectToAuthorProfileImage(tableObject)
 		},
-		bios: async (author: Author) => {
+		bios: async (
+			author: Author,
+			args: { limit?: number; offset?: number }
+		): Promise<List<AuthorBio>> => {
 			let bioUuidsString = author.bios
-			if (bioUuidsString == null) return []
 
-			let bioUuids = bioUuidsString.split(",")
+			if (bioUuidsString == null) {
+				return {
+					total: 0,
+					items: []
+				}
+			}
+
+			let limit = args.limit || 10
+			if (limit <= 0) limit = 10
+
+			let offset = args.offset || 0
+			if (offset < 0) offset = 0
+
+			let allBioUuids = bioUuidsString.split(",")
+			let bioUuids = allBioUuids.slice(offset, limit + offset)
 			let bios: AuthorBio[] = []
 
 			for (let uuid of bioUuids) {
@@ -274,7 +290,10 @@ export const resolvers = {
 				bios.push(convertTableObjectToAuthorBio(tableObject))
 			}
 
-			return bios
+			return {
+				total: allBioUuids.length,
+				items: bios
+			}
 		},
 		collections: async (author: Author) => {
 			let collectionUuidsString = author.collections
