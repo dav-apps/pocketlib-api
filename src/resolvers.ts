@@ -723,6 +723,37 @@ export const resolvers = {
 			}
 
 			return names[0]
+		},
+		names: async (category: Category, args: { limit?: number; offset?: number }): Promise<List<CategoryName>> => {
+			let categoryNameUuidsString = category.names
+
+			if (categoryNameUuidsString == null) {
+				return {
+					total: 0,
+					items: []
+				}
+			}
+
+			let limit = args.limit || 10
+			if (limit <= 0) limit = 10
+
+			let offset = args.offset || 0
+			if (offset < 0) offset = 0
+
+			let categoryNameUuids = categoryNameUuidsString.split(",")
+			let categoryNames: CategoryName[] = []
+
+			for (let uuid of categoryNameUuids) {
+				let tableObject = await getTableObject(uuid)
+				if (tableObject == null) continue
+
+				categoryNames.push(convertTableObjectToCategoryName(tableObject))
+			}
+
+			return {
+				total: categoryNames.length,
+				items: categoryNames.slice(offset, limit + offset)
+			}
 		}
 	}
 }

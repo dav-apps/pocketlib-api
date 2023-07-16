@@ -161,7 +161,7 @@ export const typeDefs = `#graphql
 		uuid: String!
 		key: String!
 		name: CategoryName!
-		names: [CategoryName!]!
+		names(limit: Int, offset: Int): CategoryNameList!
 	}
 
 	type CategoryList {
@@ -173,5 +173,10 @@ export const typeDefs = `#graphql
 		uuid: String!
 		name: String!
 		language: String!
+	}
+
+	type CategoryNameList {
+		total: Int!
+		items: [CategoryName!]!
 	}
 `
