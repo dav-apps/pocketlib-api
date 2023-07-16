@@ -99,7 +99,7 @@ export const typeDefs = `#graphql
 		author: Author!
 		name: String!
 		language: String!
-		storeBooks: [StoreBook!]!
+		storeBooks(limit: Int, offset: Int): StoreBookList!
 	}
 
 	type StoreBookSeriesList {
@@ -123,6 +123,11 @@ export const typeDefs = `#graphql
 		series: [StoreBookSeries!]!
 		inLibrary: Boolean @auth(role: "USER")
 		purchased: Boolean @auth(role: "USER")
+	}
+
+	type StoreBookList {
+		total: Int!
+		items: [StoreBook!]!
 	}
 
 	type StoreBookRelease {

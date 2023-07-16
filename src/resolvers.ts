@@ -447,6 +447,69 @@ export const resolvers = {
 			}
 		}
 	},
+	StoreBookSeries: {
+		storeBooks: async (
+			storeBookSeries: StoreBookSeries,
+			args: { limit?: number; offset?: number }
+		): Promise<List<StoreBook>> => {
+			let storeBookUuidsString = storeBookSeries.storeBooks
+
+			if (storeBookUuidsString == null) {
+				return {
+					total: 0,
+					items: []
+				}
+			}
+
+			let limit = args.limit || 10
+			if (limit <= 0) limit = 10
+
+			let offset = args.offset || 0
+			if (offset < 0) offset = 0
+
+			let storeBookUuids = storeBookUuidsString.split(",")
+			let storeBooks: StoreBook[] = []
+
+			for (let uuid of storeBookUuids) {
+				let tableObject = await getTableObject(uuid)
+				if (tableObject == null) continue
+
+				let storeBook = convertTableObjectToStoreBook(tableObject)
+
+				// Get the latest release of the StoreBook
+				const releasesString = storeBook.releases
+
+				if (releasesString != null) {
+					let releaseUuids = releasesString.split(",")
+
+					for (let releaseUuid of releaseUuids) {
+						let releaseTableObject = await getTableObject(releaseUuid)
+						if (releaseTableObject == null) continue
+
+						let release =
+							convertTableObjectToStoreBookRelease(releaseTableObject)
+
+						if (release.status == "published") {
+							storeBook.title = release.title
+							storeBook.description = release.description
+							storeBook.price = release.price
+							storeBook.isbn = release.isbn
+							storeBook.cover = release.cover
+							storeBook.file = release.file
+							storeBook.categories = release.categories
+						}
+					}
+				}
+
+				storeBooks.push(storeBook)
+			}
+
+			return {
+				total: storeBooks.length,
+				items: storeBooks.slice(offset, limit + offset)
+			}
+		}
+	},
 	StoreBook: {
 		collection: async (storeBook: StoreBook) => {
 			const uuid = storeBook.collection
