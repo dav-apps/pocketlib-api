@@ -538,9 +538,24 @@ export const resolvers = {
 
 			return convertTableObjectToStoreBookFile(tableObject)
 		},
-		categories: async (storeBook: StoreBook) => {
+		categories: async (
+			storeBook: StoreBook,
+			args: { limit?: number; offset?: number }
+		): Promise<List<Category>> => {
 			let categoryUuidsString = storeBook.categories
-			if (categoryUuidsString == null) return []
+
+			if (categoryUuidsString == null) {
+				return {
+					total: 0,
+					items: []
+				}
+			}
+
+			let limit = args.limit || 10
+			if (limit <= 0) limit = 10
+
+			let offset = args.offset || 0
+			if (offset < 0) offset = 0
 
 			let categoryUuids = categoryUuidsString.split(",")
 			let categories: Category[] = []
@@ -552,7 +567,10 @@ export const resolvers = {
 				categories.push(convertTableObjectToCategory(tableObject))
 			}
 
-			return categories
+			return {
+				total: categories.length,
+				items: categories.slice(offset, limit + offset)
+			}
 		},
 		series: async (storeBook: StoreBook) => {
 			let response = await listTableObjects({
