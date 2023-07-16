@@ -53,9 +53,20 @@ export const resolvers = {
 
 			return convertTableObjectToPublisher(tableObject)
 		},
-		listPublishers: async (): Promise<List<Publisher>> => {
+		listPublishers: async (
+			parent: any,
+			args: { limit?: number; offset?: number }
+		): Promise<List<Publisher>> => {
+			let limit = args.limit || 10
+			if (limit <= 0) limit = 10
+
+			let offset = args.offset || 0
+			if (offset < 0) offset = 0
+
 			let response = await listTableObjects({
-				tableName: "Publisher"
+				tableName: "Publisher",
+				limit,
+				offset
 			})
 
 			let result: Publisher[] = []
@@ -87,8 +98,12 @@ export const resolvers = {
 		): Promise<List<Author>> => {
 			let total = 0
 			let tableObjects: TableObject[] = []
+
 			let limit = args.limit || 10
+			if (limit <= 0) limit = 10
+
 			let offset = args.offset || 0
+			if (offset < 0) offset = 0
 
 			if (args.latest) {
 				let response = await listTableObjects({
@@ -160,9 +175,20 @@ export const resolvers = {
 
 			return storeBookTableObject
 		},
-		listCategories: async (): Promise<List<Category>> => {
+		listCategories: async (
+			parent: any,
+			args: { limit?: number; offset?: number }
+		): Promise<List<Category>> => {
+			let limit = args.limit || 10
+			if (limit <= 0) limit = 10
+
+			let offset = args.offset || 0
+			if (offset < 0) offset = 0
+
 			let response = await listTableObjects({
-				tableName: "Category"
+				tableName: "Category",
+				limit,
+				offset
 			})
 
 			let result: Category[] = []

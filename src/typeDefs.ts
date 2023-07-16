@@ -3,11 +3,11 @@ export const typeDefs = `#graphql
 
 	type Query {
 		retrievePublisher(uuid: String!): Publisher
-		listPublishers: PublisherList!
+		listPublishers(limit: Int, offset: Int): PublisherList!
 		retrieveAuthor(uuid: String!): Author
 		listAuthors(latest: Boolean, languages: [String!], limit: Int, offset: Int): AuthorList!
 		retrieveStoreBook(uuid: String!, languages: [String!]): StoreBook
-		listCategories(languages: [String!]): CategoryList!
+		listCategories(languages: [String!], limit: Int, offset: Int): CategoryList!
 	}
 
 	type Publisher {
