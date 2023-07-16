@@ -3,12 +3,16 @@ import {
 	List,
 	TableObject,
 	Publisher,
+	PublisherLogo,
 	Author,
 	AuthorBio,
+	AuthorProfileImage,
 	StoreBookCollection,
 	StoreBookCollectionName,
 	StoreBookSeries,
 	StoreBook,
+	StoreBookCover,
+	StoreBookFile,
 	StoreBookRelease,
 	Category,
 	CategoryName
@@ -37,7 +41,10 @@ import {
 
 export const resolvers = {
 	Query: {
-		retrievePublisher: async (parent: any, args: { uuid: string }) => {
+		retrievePublisher: async (
+			parent: any,
+			args: { uuid: string }
+		): Promise<Publisher> => {
 			const uuid = args.uuid
 			if (uuid == null) return null
 
@@ -62,7 +69,10 @@ export const resolvers = {
 				items: result
 			}
 		},
-		retrieveAuthor: async (parent: any, args: { uuid: string }) => {
+		retrieveAuthor: async (
+			parent: any,
+			args: { uuid: string }
+		): Promise<Author> => {
 			const uuid = args.uuid
 			if (uuid == null) return null
 
@@ -111,7 +121,10 @@ export const resolvers = {
 				items: result
 			}
 		},
-		retrieveStoreBook: async (parent: any, args: { uuid: string }) => {
+		retrieveStoreBook: async (
+			parent: any,
+			args: { uuid: string }
+		): Promise<StoreBook> => {
 			const uuid = args.uuid
 			if (uuid == null) return null
 
@@ -165,7 +178,7 @@ export const resolvers = {
 		}
 	},
 	Publisher: {
-		logo: async (publisher: Publisher) => {
+		logo: async (publisher: Publisher): Promise<PublisherLogo> => {
 			const uuid = publisher.logo
 			if (uuid == null) return null
 
@@ -208,7 +221,7 @@ export const resolvers = {
 		}
 	},
 	Author: {
-		publisher: async (author: Author) => {
+		publisher: async (author: Author): Promise<Publisher> => {
 			const uuid = author.publisher
 			if (uuid == null) return null
 
@@ -217,7 +230,12 @@ export const resolvers = {
 
 			return convertTableObjectToPublisher(tableObject)
 		},
-		bio: async (author: Author, args: any, context: any, info: any) => {
+		bio: async (
+			author: Author,
+			args: any,
+			context: any,
+			info: any
+		): Promise<AuthorBio> => {
 			const biosString = author.bios
 			if (biosString == null) return null
 
@@ -250,7 +268,7 @@ export const resolvers = {
 
 			return bios[0]
 		},
-		profileImage: async (author: Author) => {
+		profileImage: async (author: Author): Promise<AuthorProfileImage> => {
 			const uuid = author.profileImage
 			if (uuid == null) return null
 
@@ -365,7 +383,9 @@ export const resolvers = {
 		}
 	},
 	StoreBookCollection: {
-		author: async (storeBookCollection: StoreBookCollection) => {
+		author: async (
+			storeBookCollection: StoreBookCollection
+		): Promise<Author> => {
 			const uuid = storeBookCollection.author
 			if (uuid == null) return null
 
@@ -379,7 +399,7 @@ export const resolvers = {
 			args: any,
 			context: any,
 			info: any
-		) => {
+		): Promise<StoreBookCollectionName> => {
 			const namesString = storeBookCollection.names
 			if (namesString == null) return null
 
@@ -511,7 +531,9 @@ export const resolvers = {
 		}
 	},
 	StoreBook: {
-		collection: async (storeBook: StoreBook) => {
+		collection: async (
+			storeBook: StoreBook
+		): Promise<StoreBookCollection> => {
 			const uuid = storeBook.collection
 			if (uuid == null) return null
 
@@ -520,7 +542,7 @@ export const resolvers = {
 
 			return convertTableObjectToStoreBookCollection(tableObject)
 		},
-		cover: async (storeBook: StoreBook) => {
+		cover: async (storeBook: StoreBook): Promise<StoreBookCover> => {
 			const uuid = storeBook.cover
 			if (uuid == null) return null
 
@@ -529,7 +551,7 @@ export const resolvers = {
 
 			return convertTableObjectToStoreBookCover(tableObject)
 		},
-		file: async (storeBook: StoreBook) => {
+		file: async (storeBook: StoreBook): Promise<StoreBookFile> => {
 			const uuid = storeBook.file
 			if (uuid == null) return null
 
@@ -603,7 +625,7 @@ export const resolvers = {
 			storeBook: StoreBook,
 			args: any,
 			context: ResolverContext
-		) => {
+		): Promise<boolean> => {
 			if (context.user == null) {
 				return null
 			}
@@ -623,7 +645,7 @@ export const resolvers = {
 			storeBook: StoreBook,
 			args: any,
 			context: ResolverContext
-		) => {
+		): Promise<boolean> => {
 			if (context.user == null) {
 				return null
 			}
@@ -637,7 +659,9 @@ export const resolvers = {
 		}
 	},
 	StoreBookRelease: {
-		cover: async (storeBookRelease: StoreBookRelease) => {
+		cover: async (
+			storeBookRelease: StoreBookRelease
+		): Promise<StoreBookCover> => {
 			const uuid = storeBookRelease.cover
 			if (uuid == null) return null
 
@@ -646,7 +670,9 @@ export const resolvers = {
 
 			return convertTableObjectToStoreBookCover(tableObject)
 		},
-		file: async (storeBookRelease: StoreBookRelease) => {
+		file: async (
+			storeBookRelease: StoreBookRelease
+		): Promise<StoreBookFile> => {
 			const uuid = storeBookRelease.file
 			if (uuid == null) return null
 
@@ -691,7 +717,12 @@ export const resolvers = {
 		}
 	},
 	Category: {
-		name: async (category: Category, args: any, context: any, info: any) => {
+		name: async (
+			category: Category,
+			args: any,
+			context: any,
+			info: any
+		): Promise<CategoryName> => {
 			const namesString = category.names
 			if (namesString == null) return null
 
@@ -724,7 +755,10 @@ export const resolvers = {
 
 			return names[0]
 		},
-		names: async (category: Category, args: { limit?: number; offset?: number }): Promise<List<CategoryName>> => {
+		names: async (
+			category: Category,
+			args: { limit?: number; offset?: number }
+		): Promise<List<CategoryName>> => {
 			let categoryNameUuidsString = category.names
 
 			if (categoryNameUuidsString == null) {
