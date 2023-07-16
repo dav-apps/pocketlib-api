@@ -191,8 +191,7 @@ export const resolvers = {
 			let offset = args.offset || 0
 			if (offset < 0) offset = 0
 
-			let allAuthorUuids = publisher.authors.split(",")
-			let authorUuids = allAuthorUuids.slice(offset, limit + offset)
+			let authorUuids = publisher.authors.split(",")
 			let authors: Author[] = []
 
 			for (let uuid of authorUuids) {
@@ -203,8 +202,8 @@ export const resolvers = {
 			}
 
 			return {
-				total: allAuthorUuids.length,
-				items: authors
+				total: authors.length,
+				items: authors.slice(offset, limit + offset)
 			}
 		}
 	},
@@ -279,8 +278,7 @@ export const resolvers = {
 			let offset = args.offset || 0
 			if (offset < 0) offset = 0
 
-			let allBioUuids = bioUuidsString.split(",")
-			let bioUuids = allBioUuids.slice(offset, limit + offset)
+			let bioUuids = bioUuidsString.split(",")
 			let bios: AuthorBio[] = []
 
 			for (let uuid of bioUuids) {
@@ -291,13 +289,28 @@ export const resolvers = {
 			}
 
 			return {
-				total: allBioUuids.length,
-				items: bios
+				total: bios.length,
+				items: bios.slice(offset, limit + offset)
 			}
 		},
-		collections: async (author: Author) => {
+		collections: async (
+			author: Author,
+			args: { limit?: number; offset?: number }
+		): Promise<List<StoreBookCollection>> => {
 			let collectionUuidsString = author.collections
-			if (collectionUuidsString == null) return []
+
+			if (collectionUuidsString == null) {
+				return {
+					total: 0,
+					items: []
+				}
+			}
+
+			let limit = args.limit || 10
+			if (limit <= 0) limit = 10
+
+			let offset = args.offset || 0
+			if (offset < 0) offset = 0
 
 			let collectionUuids = collectionUuidsString.split(",")
 			let collections: StoreBookCollection[] = []
@@ -311,7 +324,10 @@ export const resolvers = {
 				)
 			}
 
-			return collections
+			return {
+				total: collections.length,
+				items: collections.slice(offset, limit + offset)
+			}
 		},
 		series: async (author: Author) => {
 			let seriesUuidsString = author.series

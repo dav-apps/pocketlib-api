@@ -45,7 +45,7 @@ export const typeDefs = `#graphql
 		twitterUsername: String
 		profileImage: AuthorProfileImage
 		bios(limit: Int, offset: Int): AuthorBioList!
-		collections: [StoreBookCollection!]!
+		collections(limit: Int, offset: Int): StoreBookCollectionList!
 		series: [StoreBookSeries!]!
 	}
 
@@ -76,6 +76,11 @@ export const typeDefs = `#graphql
 		author: Author!
 		name: StoreBookCollectionName!
 		names: [StoreBookCollectionName!]!
+	}
+
+	type StoreBookCollectionList {
+		total: Int!
+		items: [StoreBookCollection!]!
 	}
 
 	type StoreBookCollectionName {
