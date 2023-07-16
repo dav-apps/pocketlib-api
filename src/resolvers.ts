@@ -329,9 +329,24 @@ export const resolvers = {
 				items: collections.slice(offset, limit + offset)
 			}
 		},
-		series: async (author: Author) => {
+		series: async (
+			author: Author,
+			args: { limit?: number; offset?: number }
+		): Promise<List<StoreBookSeries>> => {
 			let seriesUuidsString = author.series
-			if (seriesUuidsString == null) return []
+
+			if (seriesUuidsString == null) {
+				return {
+					total: 0,
+					items: []
+				}
+			}
+
+			let limit = args.limit || 10
+			if (limit <= 0) limit = 10
+
+			let offset = args.offset || 0
+			if (offset < 0) offset = 0
 
 			let seriesUuids = seriesUuidsString.split(",")
 			let series: StoreBookSeries[] = []
@@ -343,7 +358,10 @@ export const resolvers = {
 				series.push(convertTableObjectToStoreBookSeries(tableObject))
 			}
 
-			return series
+			return {
+				total: series.length,
+				items: series.slice(offset, limit + offset)
+			}
 		}
 	},
 	StoreBookCollection: {

@@ -46,7 +46,7 @@ export const typeDefs = `#graphql
 		profileImage: AuthorProfileImage
 		bios(limit: Int, offset: Int): AuthorBioList!
 		collections(limit: Int, offset: Int): StoreBookCollectionList!
-		series: [StoreBookSeries!]!
+		series(limit: Int, offset: Int): StoreBookSeriesList!
 	}
 
 	type AuthorList {
@@ -95,6 +95,11 @@ export const typeDefs = `#graphql
 		name: String!
 		language: String!
 		storeBooks: [StoreBook!]!
+	}
+
+	type StoreBookSeriesList {
+		total: Int!
+		items: [StoreBookSeries!]!
 	}
 
 	type StoreBook {
