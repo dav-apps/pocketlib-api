@@ -412,9 +412,24 @@ export const resolvers = {
 
 			return names[0]
 		},
-		names: async (storeBookCollection: StoreBookCollection) => {
+		names: async (
+			storeBookCollection: StoreBookCollection,
+			args: { limit?: number; offset?: number }
+		): Promise<List<StoreBookCollectionName>> => {
 			let nameUuidsString = storeBookCollection.names
-			if (nameUuidsString == null) return []
+
+			if (nameUuidsString == null) {
+				return {
+					total: 0,
+					items: []
+				}
+			}
+
+			let limit = args.limit || 10
+			if (limit <= 0) limit = 10
+
+			let offset = args.offset || 0
+			if (offset < 0) offset = 0
 
 			let nameUuids = nameUuidsString.split(",")
 			let names: StoreBookCollectionName[] = []
@@ -426,7 +441,10 @@ export const resolvers = {
 				names.push(convertTableObjectToStoreBookCollectionName(tableObject))
 			}
 
-			return names
+			return {
+				total: names.length,
+				items: names.slice(offset, limit + offset)
+			}
 		}
 	},
 	StoreBook: {

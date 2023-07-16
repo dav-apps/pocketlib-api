@@ -75,7 +75,7 @@ export const typeDefs = `#graphql
 		uuid: String!
 		author: Author!
 		name: StoreBookCollectionName!
-		names: [StoreBookCollectionName!]!
+		names(limit: Int, offset: Int): StoreBookCollectionNameList!
 	}
 
 	type StoreBookCollectionList {
@@ -87,6 +87,11 @@ export const typeDefs = `#graphql
 		uuid: String!
 		name: String!
 		language: String!
+	}
+
+	type StoreBookCollectionNameList {
+		total: Int!
+		items: [StoreBookCollectionName!]!
 	}
 
 	type StoreBookSeries {
