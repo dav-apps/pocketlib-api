@@ -174,12 +174,25 @@ export const resolvers = {
 
 			return convertTableObjectToPublisherLogo(tableObject)
 		},
-		authors: async (publisher: Publisher) => {
+		authors: async (
+			publisher: Publisher,
+			args: any
+		): Promise<List<Author>> => {
 			if (publisher.authors == null) {
-				return []
+				return {
+					total: 0,
+					items: []
+				}
 			}
 
-			let authorUuids = publisher.authors.split(",")
+			let limit = args.limit || 10
+			if (limit <= 0) limit = 10
+
+			let offset = args.offset || 0
+			if (offset < 0) offset = 0
+
+			let allAuthorUuids = publisher.authors.split(",")
+			let authorUuids = allAuthorUuids.slice(offset, limit + offset)
 			let authors: Author[] = []
 
 			for (let uuid of authorUuids) {
@@ -189,7 +202,10 @@ export const resolvers = {
 				authors.push(convertTableObjectToAuthor(author))
 			}
 
-			return authors
+			return {
+				total: allAuthorUuids.length,
+				items: authors
+			}
 		}
 	},
 	Author: {

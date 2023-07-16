@@ -19,7 +19,7 @@ export const typeDefs = `#graphql
 		instagramUsername: String
 		twitterUsername: String
 		logo: PublisherLogo
-		authors: [Author!]!
+		authors(limit: Int, offset: Int): AuthorList!
 	}
 
 	type PublisherList {
