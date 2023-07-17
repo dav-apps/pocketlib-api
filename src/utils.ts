@@ -109,7 +109,8 @@ export function convertTableObjectToStoreBookCollection(
 	return {
 		uuid: obj.uuid,
 		author: obj.properties.author as string,
-		names: obj.properties.names as string
+		names: obj.properties.names as string,
+		storeBooks: obj.properties.books as string
 	}
 }
 

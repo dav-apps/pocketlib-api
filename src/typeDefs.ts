@@ -77,6 +77,7 @@ export const typeDefs = `#graphql
 		author: Author!
 		name: StoreBookCollectionName!
 		names(limit: Int, offset: Int): StoreBookCollectionNameList!
+		storeBooks(limit: Int, offset: Int): StoreBookList!
 	}
 
 	type StoreBookCollectionList {

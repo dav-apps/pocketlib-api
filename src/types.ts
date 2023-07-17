@@ -95,6 +95,7 @@ export interface StoreBookCollection {
 	uuid: string
 	author: string
 	names: string
+	storeBooks: string
 }
 
 export interface StoreBookCollectionName {

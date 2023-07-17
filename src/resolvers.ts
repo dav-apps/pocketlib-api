@@ -504,6 +504,39 @@ export const resolvers = {
 				total: names.length,
 				items: names.slice(offset, limit + offset)
 			}
+		},
+		storeBooks: async (storeBookCollection: StoreBookCollection, args: { limit?: number, offset?: number }): Promise<List<StoreBook>> => {
+			let storeBookUuidsString = storeBookCollection.storeBooks
+
+			if (storeBookUuidsString == null) {
+				return {
+					total: 0,
+					items: []
+				}
+			}
+
+			let limit = args.limit || 10
+			if (limit <= 0) limit = 10
+
+			let offset = args.offset || 0
+			if (offset < 0) offset = 0
+
+			let storeBookUuids = storeBookUuidsString.split(",")
+			let storeBooks: StoreBook[] = []
+
+			for (let uuid of storeBookUuids) {
+				let tableObject = await getTableObject(uuid)
+				if (tableObject == null) continue
+
+				let storeBook = convertTableObjectToStoreBook(tableObject)
+				await loadStoreBookData(storeBook)
+				storeBooks.push(storeBook)
+			}
+
+			return {
+				total: storeBooks.length,
+				items: storeBooks.slice(offset, limit + offset)
+			}
 		}
 	},
 	StoreBookSeries: {
