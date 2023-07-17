@@ -120,6 +120,7 @@ export const typeDefs = `#graphql
 		file: StoreBookFile
 		categories(limit: Int, offset: Int): CategoryList!
 		series(limit: Int, offset: Int): StoreBookSeriesList!
+		releases(limit: Int, offset: Int): StoreBookReleaseList! @auth(role: "AUTHOR")
 		inLibrary: Boolean @auth(role: "USER")
 		purchased: Boolean @auth(role: "USER")
 	}
@@ -143,6 +144,11 @@ export const typeDefs = `#graphql
 		cover: StoreBookCover
 		file: StoreBookFile
 		categories(limit: Int, offset: Int): CategoryList!
+	}
+
+	type StoreBookReleaseList {
+		total: Int!
+		items: [StoreBookRelease!]!
 	}
 
 	type StoreBookCover {

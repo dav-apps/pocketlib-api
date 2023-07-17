@@ -647,6 +647,40 @@ export const resolvers = {
 				items: series.slice(offset, limit + offset)
 			}
 		},
+		releases: async (
+			storeBook: StoreBook,
+			args: { limit?: number; offset?: number }
+		): Promise<List<StoreBookRelease>> => {
+			let releaseUuidsString = storeBook.releases
+
+			if (releaseUuidsString == null) {
+				return {
+					total: 0,
+					items: []
+				}
+			}
+
+			let limit = args.limit || 10
+			if (limit <= 0) limit = 10
+
+			let offset = args.offset || 0
+			if (offset < 0) offset = 0
+
+			let releaseUuids = releaseUuidsString.split(",")
+			let releases: StoreBookRelease[] = []
+
+			for (let uuid of releaseUuids) {
+				let tableObject = await getTableObject(uuid)
+				if (tableObject == null) continue
+
+				releases.push(convertTableObjectToStoreBookRelease(tableObject))
+			}
+
+			return {
+				total: releases.length,
+				items: releases.slice(offset, limit + offset)
+			}
+		},
 		inLibrary: async (
 			storeBook: StoreBook,
 			args: any,
