@@ -132,7 +132,7 @@ export const resolvers = {
 			}
 
 			return {
-				total: total,
+				total,
 				items: result
 			}
 		},
@@ -146,10 +146,10 @@ export const resolvers = {
 			let tableObject = await getTableObject(uuid)
 			if (tableObject == null) return null
 
-			const storeBookTableObject = convertTableObjectToStoreBook(tableObject)
+			const storeBook = convertTableObjectToStoreBook(tableObject)
 
 			// Get the latest release of the StoreBook
-			const releasesString = storeBookTableObject.releases
+			const releasesString = storeBook.releases
 
 			if (releasesString != null) {
 				let releaseUuids = releasesString.split(",")
@@ -162,18 +162,80 @@ export const resolvers = {
 						convertTableObjectToStoreBookRelease(releaseTableObject)
 
 					if (release.status == "published") {
-						storeBookTableObject.title = release.title
-						storeBookTableObject.description = release.description
-						storeBookTableObject.price = release.price
-						storeBookTableObject.isbn = release.isbn
-						storeBookTableObject.cover = release.cover
-						storeBookTableObject.file = release.file
-						storeBookTableObject.categories = release.categories
+						storeBook.title = release.title
+						storeBook.description = release.description
+						storeBook.price = release.price
+						storeBook.isbn = release.isbn
+						storeBook.cover = release.cover
+						storeBook.file = release.file
+						storeBook.categories = release.categories
 					}
 				}
 			}
 
-			return storeBookTableObject
+			return storeBook
+		},
+		listStoreBooks: async (
+			parent: any,
+			args: { latest?: boolean; limit?: number; offset?: number }
+		): Promise<List<StoreBook>> => {
+			let total = 0
+			let tableObjects: TableObject[] = []
+
+			let limit = args.limit || 10
+			if (limit <= 0) limit = 10
+
+			let offset = args.offset || 0
+			if (offset < 0) offset = 0
+
+			if (args.latest) {
+				let response = await listTableObjects({
+					limit,
+					offset,
+					collectionName: "latest_books"
+				})
+
+				total = response.total
+				tableObjects = response.items
+			}
+
+			let result: StoreBook[] = []
+
+			for (let obj of tableObjects) {
+				let storeBook = convertTableObjectToStoreBook(obj)
+
+				// Get the latest release of the StoreBook
+				const releasesString = storeBook.releases
+
+				if (releasesString != null) {
+					let releaseUuids = releasesString.split(",")
+
+					for (let uuid of releaseUuids) {
+						let releaseTableObject = await getTableObject(uuid)
+						if (releaseTableObject == null) continue
+
+						let release =
+							convertTableObjectToStoreBookRelease(releaseTableObject)
+
+						if (release.status == "published") {
+							storeBook.title = release.title
+							storeBook.description = release.description
+							storeBook.price = release.price
+							storeBook.isbn = release.isbn
+							storeBook.cover = release.cover
+							storeBook.file = release.file
+							storeBook.categories = release.categories
+						}
+					}
+				}
+
+				result.push(storeBook)
+			}
+
+			return {
+				total,
+				items: result
+			}
 		},
 		listCategories: async (
 			parent: any,
