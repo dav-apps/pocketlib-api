@@ -15,7 +15,35 @@ import {
 	Category,
 	CategoryName
 } from "./types.js"
+import { getTableObject } from "./services/apiService.js"
 
+export async function loadStoreBookData(storeBook: StoreBook) {
+	// Get the latest release of the StoreBook
+	const releasesString = storeBook.releases
+
+	if (releasesString != null) {
+		let releaseUuids = releasesString.split(",")
+
+		for (let uuid of releaseUuids) {
+			let releaseTableObject = await getTableObject(uuid)
+			if (releaseTableObject == null) continue
+
+			let release = convertTableObjectToStoreBookRelease(releaseTableObject)
+
+			if (release.status == "published") {
+				storeBook.title = release.title
+				storeBook.description = release.description
+				storeBook.price = release.price
+				storeBook.isbn = release.isbn
+				storeBook.cover = release.cover
+				storeBook.file = release.file
+				storeBook.categories = release.categories
+			}
+		}
+	}
+}
+
+//#region Converter functions
 export function convertTableObjectToPublisher(obj: TableObject): Publisher {
 	return {
 		uuid: obj.uuid,
@@ -183,3 +211,4 @@ export function convertTableObjectToCategoryName(
 		language: obj.properties.language as string
 	}
 }
+//#endregion

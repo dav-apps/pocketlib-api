@@ -18,6 +18,7 @@ import {
 	CategoryName
 } from "./types.js"
 import {
+	loadStoreBookData,
 	convertTableObjectToPublisher,
 	convertTableObjectToPublisherLogo,
 	convertTableObjectToAuthor,
@@ -147,32 +148,7 @@ export const resolvers = {
 			if (tableObject == null) return null
 
 			const storeBook = convertTableObjectToStoreBook(tableObject)
-
-			// Get the latest release of the StoreBook
-			const releasesString = storeBook.releases
-
-			if (releasesString != null) {
-				let releaseUuids = releasesString.split(",")
-
-				for (let uuid of releaseUuids) {
-					let releaseTableObject = await getTableObject(uuid)
-					if (releaseTableObject == null) continue
-
-					let release =
-						convertTableObjectToStoreBookRelease(releaseTableObject)
-
-					if (release.status == "published") {
-						storeBook.title = release.title
-						storeBook.description = release.description
-						storeBook.price = release.price
-						storeBook.isbn = release.isbn
-						storeBook.cover = release.cover
-						storeBook.file = release.file
-						storeBook.categories = release.categories
-					}
-				}
-			}
-
+			await loadStoreBookData(storeBook)
 			return storeBook
 		},
 		listStoreBooks: async (
@@ -203,32 +179,7 @@ export const resolvers = {
 
 			for (let obj of tableObjects) {
 				let storeBook = convertTableObjectToStoreBook(obj)
-
-				// Get the latest release of the StoreBook
-				const releasesString = storeBook.releases
-
-				if (releasesString != null) {
-					let releaseUuids = releasesString.split(",")
-
-					for (let uuid of releaseUuids) {
-						let releaseTableObject = await getTableObject(uuid)
-						if (releaseTableObject == null) continue
-
-						let release =
-							convertTableObjectToStoreBookRelease(releaseTableObject)
-
-						if (release.status == "published") {
-							storeBook.title = release.title
-							storeBook.description = release.description
-							storeBook.price = release.price
-							storeBook.isbn = release.isbn
-							storeBook.cover = release.cover
-							storeBook.file = release.file
-							storeBook.categories = release.categories
-						}
-					}
-				}
-
+				await loadStoreBookData(storeBook)
 				result.push(storeBook)
 			}
 
@@ -583,32 +534,7 @@ export const resolvers = {
 				if (tableObject == null) continue
 
 				let storeBook = convertTableObjectToStoreBook(tableObject)
-
-				// Get the latest release of the StoreBook
-				const releasesString = storeBook.releases
-
-				if (releasesString != null) {
-					let releaseUuids = releasesString.split(",")
-
-					for (let releaseUuid of releaseUuids) {
-						let releaseTableObject = await getTableObject(releaseUuid)
-						if (releaseTableObject == null) continue
-
-						let release =
-							convertTableObjectToStoreBookRelease(releaseTableObject)
-
-						if (release.status == "published") {
-							storeBook.title = release.title
-							storeBook.description = release.description
-							storeBook.price = release.price
-							storeBook.isbn = release.isbn
-							storeBook.cover = release.cover
-							storeBook.file = release.file
-							storeBook.categories = release.categories
-						}
-					}
-				}
-
+				await loadStoreBookData(storeBook)
 				storeBooks.push(storeBook)
 			}
 
