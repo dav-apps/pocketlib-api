@@ -4,7 +4,7 @@ import {
 	convertTableObjectToPublisherLogo,
 	convertTableObjectToAuthor
 } from "../utils.js"
-import { getTableObject } from "../services/apiService.js"
+import { getTableObject, listTableObjects } from "../services/apiService.js"
 
 export async function retrievePublisher(
 	parent: any,
@@ -17,6 +17,34 @@ export async function retrievePublisher(
 	if (tableObject == null) return null
 
 	return convertTableObjectToPublisher(tableObject)
+}
+
+export async function listPublishers(
+	parent: any,
+	args: { limit?: number; offset?: number }
+): Promise<List<Publisher>> {
+	let limit = args.limit || 10
+	if (limit <= 0) limit = 10
+
+	let offset = args.offset || 0
+	if (offset < 0) offset = 0
+
+	let response = await listTableObjects({
+		tableName: "Publisher",
+		limit,
+		offset
+	})
+
+	let result: Publisher[] = []
+
+	for (let obj of response.items) {
+		result.push(convertTableObjectToPublisher(obj))
+	}
+
+	return {
+		total: response.total,
+		items: result
+	}
 }
 
 export async function logo(publisher: Publisher): Promise<PublisherLogo> {
