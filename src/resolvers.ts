@@ -167,12 +167,14 @@ export const resolvers = {
 			parent: any,
 			args: {
 				latest?: boolean
+				categories?: string[]
 				languages?: string[]
 				limit?: number
 				offset?: number
 			}
 		): Promise<List<StoreBook>> => {
 			let total = 0
+			let serverPagination = false
 			let tableObjects: TableObject[] = []
 
 			let limit = args.limit || 10
@@ -192,6 +194,51 @@ export const resolvers = {
 
 				total = response.total
 				tableObjects = response.items
+				serverPagination = true
+			} else if (args.categories != null) {
+				let storeBookUuids: string[] = []
+
+				for (let key of args.categories) {
+					// Find the category table object
+					let categoriesResponse = await listTableObjects({
+						tableName: "Category",
+						propertyName: "key",
+						propertyValue: key,
+						exact: true
+					})
+
+					if (categoriesResponse.items.length == 0) {
+						continue
+					}
+
+					let category = categoriesResponse.items[0]
+
+					// Find StoreBookReleases with the category
+					let storeBookReleasesResponse = await listTableObjects({
+						tableName: "StoreBookRelease",
+						propertyName: "categories",
+						propertyValue: category.uuid,
+						exact: false
+					})
+
+					for (let storeBookRelease of storeBookReleasesResponse.items) {
+						let storeBookUuid = storeBookRelease.properties
+							.store_book as string
+						if (storeBookUuid == null) continue
+
+						// Check if the store book is already in the list
+						if (!storeBookUuids.includes(storeBookUuid)) {
+							storeBookUuids.push(storeBookUuid)
+						}
+					}
+				}
+
+				for (let uuid of storeBookUuids) {
+					let tableObject = await getTableObject(uuid)
+					if (tableObject == null) continue
+
+					tableObjects.push(tableObject)
+				}
 			}
 
 			let result: StoreBook[] = []
@@ -205,9 +252,16 @@ export const resolvers = {
 				}
 			}
 
-			return {
-				total,
-				items: result
+			if (serverPagination) {
+				return {
+					total,
+					items: result
+				}
+			} else {
+				return {
+					total: result.length,
+					items: result.slice(offset, limit + offset)
+				}
 			}
 		},
 		listCategories: async (
