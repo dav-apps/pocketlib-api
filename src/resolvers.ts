@@ -137,6 +137,18 @@ export const resolvers = {
 				items: result
 			}
 		},
+		retrieveStoreBookSeries: async (
+			parent: any,
+			args: { uuid: string }
+		): Promise<StoreBookSeries> => {
+			const uuid = args.uuid
+			if (uuid == null) return null
+
+			let tableObject = await getTableObject(uuid)
+			if (tableObject == null) return null
+
+			return convertTableObjectToStoreBookSeries(tableObject)
+		},
 		retrieveStoreBook: async (
 			parent: any,
 			args: { uuid: string }
