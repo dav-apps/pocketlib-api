@@ -1,21 +1,9 @@
-import {
-	List,
-	StoreBookCover,
-	StoreBookFile,
-	StoreBookRelease,
-	Category
-} from "./types.js"
-import {
-	convertTableObjectToStoreBookCover,
-	convertTableObjectToStoreBookFile,
-	convertTableObjectToCategory
-} from "./utils.js"
-import { getTableObject } from "./services/apiService.js"
 import * as publisherResolvers from "./resolvers/publisher.js"
 import * as authorResolvers from "./resolvers/author.js"
 import * as storeBookCollectionResolvers from "./resolvers/storeBookCollection.js"
 import * as storeBookSeriesResolvers from "./resolvers/storeBookSeries.js"
 import * as storeBookResolvers from "./resolvers/storeBook.js"
+import * as storeBookReleaseResolvers from "./resolvers/storeBookRelease.js"
 import * as categoryResolvers from "./resolvers/category.js"
 
 export const resolvers = {
@@ -63,62 +51,9 @@ export const resolvers = {
 		purchased: storeBookResolvers.purchased
 	},
 	StoreBookRelease: {
-		cover: async (
-			storeBookRelease: StoreBookRelease
-		): Promise<StoreBookCover> => {
-			const uuid = storeBookRelease.cover
-			if (uuid == null) return null
-
-			let tableObject = await getTableObject(uuid)
-			if (tableObject == null) return null
-
-			return convertTableObjectToStoreBookCover(tableObject)
-		},
-		file: async (
-			storeBookRelease: StoreBookRelease
-		): Promise<StoreBookFile> => {
-			const uuid = storeBookRelease.file
-			if (uuid == null) return null
-
-			let tableObject = await getTableObject(uuid)
-			if (tableObject == null) return null
-
-			return convertTableObjectToStoreBookFile(tableObject)
-		},
-		categories: async (
-			storeBookRelease: StoreBookRelease,
-			args: { limit?: number; offset?: number }
-		): Promise<List<Category>> => {
-			let categoryUuidsString = storeBookRelease.categories
-
-			if (categoryUuidsString == null) {
-				return {
-					total: 0,
-					items: []
-				}
-			}
-
-			let limit = args.limit || 10
-			if (limit <= 0) limit = 10
-
-			let offset = args.offset || 0
-			if (offset < 0) offset = 0
-
-			let categoryUuids = categoryUuidsString.split(",")
-			let categories: Category[] = []
-
-			for (let uuid of categoryUuids) {
-				let tableObject = await getTableObject(uuid)
-				if (tableObject == null) continue
-
-				categories.push(convertTableObjectToCategory(tableObject))
-			}
-
-			return {
-				total: categories.length,
-				items: categories.slice(offset, limit + offset)
-			}
-		}
+		cover: storeBookReleaseResolvers.cover,
+		file: storeBookReleaseResolvers.file,
+		categories: storeBookReleaseResolvers.categories
 	},
 	Category: {
 		name: categoryResolvers.name,
