@@ -3,7 +3,6 @@ import {
 	List,
 	TableObject,
 	Publisher,
-	PublisherLogo,
 	Author,
 	AuthorBio,
 	AuthorProfileImage,
@@ -20,7 +19,6 @@ import {
 import {
 	loadStoreBookData,
 	convertTableObjectToPublisher,
-	convertTableObjectToPublisherLogo,
 	convertTableObjectToAuthor,
 	convertTableObjectToAuthorBio,
 	convertTableObjectToAuthorProfileImage,
@@ -39,21 +37,11 @@ import {
 	listTableObjects,
 	listPurchasesOfTableObject
 } from "./services/apiService.js"
+import * as publisherResolvers from "./resolvers/publisher.js"
 
 export const resolvers = {
 	Query: {
-		retrievePublisher: async (
-			parent: any,
-			args: { uuid: string }
-		): Promise<Publisher> => {
-			const uuid = args.uuid
-			if (uuid == null) return null
-
-			let tableObject = await getTableObject(uuid)
-			if (tableObject == null) return null
-
-			return convertTableObjectToPublisher(tableObject)
-		},
+		retrievePublisher: publisherResolvers.retrievePublisher,
 		listPublishers: async (
 			parent: any,
 			args: { limit?: number; offset?: number }
@@ -305,47 +293,8 @@ export const resolvers = {
 		}
 	},
 	Publisher: {
-		logo: async (publisher: Publisher): Promise<PublisherLogo> => {
-			const uuid = publisher.logo
-			if (uuid == null) return null
-
-			let tableObject = await getTableObject(uuid)
-			if (tableObject == null) return null
-
-			return convertTableObjectToPublisherLogo(tableObject)
-		},
-		authors: async (
-			publisher: Publisher,
-			args: { limit?: number; offset?: number }
-		): Promise<List<Author>> => {
-			if (publisher.authors == null) {
-				return {
-					total: 0,
-					items: []
-				}
-			}
-
-			let limit = args.limit || 10
-			if (limit <= 0) limit = 10
-
-			let offset = args.offset || 0
-			if (offset < 0) offset = 0
-
-			let authorUuids = publisher.authors.split(",")
-			let authors: Author[] = []
-
-			for (let uuid of authorUuids) {
-				let author = await getTableObject(uuid)
-				if (author == null) continue
-
-				authors.push(convertTableObjectToAuthor(author))
-			}
-
-			return {
-				total: authors.length,
-				items: authors.slice(offset, limit + offset)
-			}
-		}
+		logo: publisherResolvers.logo,
+		authors: publisherResolvers.authors
 	},
 	Author: {
 		publisher: async (author: Author): Promise<Publisher> => {
