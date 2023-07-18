@@ -137,6 +137,18 @@ export const resolvers = {
 				items: result
 			}
 		},
+		retrieveStoreBookCollection: async (
+			parent: any,
+			args: { uuid: string; languages?: string[] }
+		): Promise<StoreBookCollection> => {
+			const uuid = args.uuid
+			if (uuid == null) return null
+
+			let tableObject = await getTableObject(uuid)
+			if (tableObject == null) return null
+
+			return convertTableObjectToStoreBookCollection(tableObject)
+		},
 		retrieveStoreBookSeries: async (
 			parent: any,
 			args: { uuid: string }
