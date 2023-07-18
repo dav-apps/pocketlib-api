@@ -2,9 +2,7 @@ import {
 	ResolverContext,
 	List,
 	TableObject,
-	Author,
 	StoreBookCollection,
-	StoreBookCollectionName,
 	StoreBookSeries,
 	StoreBook,
 	StoreBookCover,
@@ -15,9 +13,7 @@ import {
 } from "./types.js"
 import {
 	loadStoreBookData,
-	convertTableObjectToAuthor,
 	convertTableObjectToStoreBookCollection,
-	convertTableObjectToStoreBookCollectionName,
 	convertTableObjectToStoreBookSeries,
 	convertTableObjectToStoreBook,
 	convertTableObjectToStoreBookRelease,
@@ -33,6 +29,7 @@ import {
 } from "./services/apiService.js"
 import * as publisherResolvers from "./resolvers/publisher.js"
 import * as authorResolvers from "./resolvers/author.js"
+import * as storeBookCollectionResolvers from "./resolvers/storeBookCollection.js"
 
 export const resolvers = {
 	Query: {
@@ -40,18 +37,8 @@ export const resolvers = {
 		listPublishers: publisherResolvers.listPublishers,
 		retrieveAuthor: authorResolvers.retrieveAuthor,
 		listAuthors: authorResolvers.listAuthors,
-		retrieveStoreBookCollection: async (
-			parent: any,
-			args: { uuid: string; languages?: string[] }
-		): Promise<StoreBookCollection> => {
-			const uuid = args.uuid
-			if (uuid == null) return null
-
-			let tableObject = await getTableObject(uuid)
-			if (tableObject == null) return null
-
-			return convertTableObjectToStoreBookCollection(tableObject)
-		},
+		retrieveStoreBookCollection:
+			storeBookCollectionResolvers.retrieveStoreBookCollection,
 		retrieveStoreBookSeries: async (
 			parent: any,
 			args: { uuid: string }
@@ -220,125 +207,10 @@ export const resolvers = {
 		series: authorResolvers.series
 	},
 	StoreBookCollection: {
-		author: async (
-			storeBookCollection: StoreBookCollection
-		): Promise<Author> => {
-			const uuid = storeBookCollection.author
-			if (uuid == null) return null
-
-			let tableObject = await getTableObject(uuid)
-			if (tableObject == null) return null
-
-			return convertTableObjectToAuthor(tableObject)
-		},
-		name: async (
-			storeBookCollection: StoreBookCollection,
-			args: any,
-			context: any,
-			info: any
-		): Promise<StoreBookCollectionName> => {
-			const namesString = storeBookCollection.names
-			if (namesString == null) return null
-
-			// Get all names
-			let nameUuids = namesString.split(",")
-			let names: StoreBookCollectionName[] = []
-
-			for (let uuid of nameUuids) {
-				let nameObj = await getTableObject(uuid)
-				if (nameObj == null) continue
-
-				names.push(convertTableObjectToStoreBookCollectionName(nameObj))
-			}
-
-			// Find the optimal name for the given languages
-			let languages = info?.variableValues?.languages || ["en"]
-			let selectedNames: StoreBookCollectionName[] = []
-
-			for (let lang of languages) {
-				let name = names.find(n => n.language == lang)
-
-				if (name != null) {
-					selectedNames.push(name)
-				}
-			}
-
-			if (selectedNames.length > 0) {
-				return selectedNames[0]
-			}
-
-			return names[0]
-		},
-		names: async (
-			storeBookCollection: StoreBookCollection,
-			args: { limit?: number; offset?: number }
-		): Promise<List<StoreBookCollectionName>> => {
-			let nameUuidsString = storeBookCollection.names
-
-			if (nameUuidsString == null) {
-				return {
-					total: 0,
-					items: []
-				}
-			}
-
-			let limit = args.limit || 10
-			if (limit <= 0) limit = 10
-
-			let offset = args.offset || 0
-			if (offset < 0) offset = 0
-
-			let nameUuids = nameUuidsString.split(",")
-			let names: StoreBookCollectionName[] = []
-
-			for (let uuid of nameUuids) {
-				let tableObject = await getTableObject(uuid)
-				if (tableObject == null) continue
-
-				names.push(convertTableObjectToStoreBookCollectionName(tableObject))
-			}
-
-			return {
-				total: names.length,
-				items: names.slice(offset, limit + offset)
-			}
-		},
-		storeBooks: async (
-			storeBookCollection: StoreBookCollection,
-			args: { limit?: number; offset?: number }
-		): Promise<List<StoreBook>> => {
-			let storeBookUuidsString = storeBookCollection.storeBooks
-
-			if (storeBookUuidsString == null) {
-				return {
-					total: 0,
-					items: []
-				}
-			}
-
-			let limit = args.limit || 10
-			if (limit <= 0) limit = 10
-
-			let offset = args.offset || 0
-			if (offset < 0) offset = 0
-
-			let storeBookUuids = storeBookUuidsString.split(",")
-			let storeBooks: StoreBook[] = []
-
-			for (let uuid of storeBookUuids) {
-				let tableObject = await getTableObject(uuid)
-				if (tableObject == null) continue
-
-				let storeBook = convertTableObjectToStoreBook(tableObject)
-				await loadStoreBookData(storeBook)
-				storeBooks.push(storeBook)
-			}
-
-			return {
-				total: storeBooks.length,
-				items: storeBooks.slice(offset, limit + offset)
-			}
-		}
+		author: storeBookCollectionResolvers.author,
+		name: storeBookCollectionResolvers.name,
+		names: storeBookCollectionResolvers.names,
+		storeBooks: storeBookCollectionResolvers.storeBooks
 	},
 	StoreBookSeries: {
 		storeBooks: async (
