@@ -30,6 +30,7 @@ import {
 import * as publisherResolvers from "./resolvers/publisher.js"
 import * as authorResolvers from "./resolvers/author.js"
 import * as storeBookCollectionResolvers from "./resolvers/storeBookCollection.js"
+import * as storeBookSeriesResolvers from "./resolvers/storeBookSeries.js"
 
 export const resolvers = {
 	Query: {
@@ -39,18 +40,7 @@ export const resolvers = {
 		listAuthors: authorResolvers.listAuthors,
 		retrieveStoreBookCollection:
 			storeBookCollectionResolvers.retrieveStoreBookCollection,
-		retrieveStoreBookSeries: async (
-			parent: any,
-			args: { uuid: string }
-		): Promise<StoreBookSeries> => {
-			const uuid = args.uuid
-			if (uuid == null) return null
-
-			let tableObject = await getTableObject(uuid)
-			if (tableObject == null) return null
-
-			return convertTableObjectToStoreBookSeries(tableObject)
-		},
+		retrieveStoreBookSeries: storeBookSeriesResolvers.retrieveStoreBookSeries,
 		retrieveStoreBook: async (
 			parent: any,
 			args: { uuid: string }
@@ -213,42 +203,7 @@ export const resolvers = {
 		storeBooks: storeBookCollectionResolvers.storeBooks
 	},
 	StoreBookSeries: {
-		storeBooks: async (
-			storeBookSeries: StoreBookSeries,
-			args: { limit?: number; offset?: number }
-		): Promise<List<StoreBook>> => {
-			let storeBookUuidsString = storeBookSeries.storeBooks
-
-			if (storeBookUuidsString == null) {
-				return {
-					total: 0,
-					items: []
-				}
-			}
-
-			let limit = args.limit || 10
-			if (limit <= 0) limit = 10
-
-			let offset = args.offset || 0
-			if (offset < 0) offset = 0
-
-			let storeBookUuids = storeBookUuidsString.split(",")
-			let storeBooks: StoreBook[] = []
-
-			for (let uuid of storeBookUuids) {
-				let tableObject = await getTableObject(uuid)
-				if (tableObject == null) continue
-
-				let storeBook = convertTableObjectToStoreBook(tableObject)
-				await loadStoreBookData(storeBook)
-				storeBooks.push(storeBook)
-			}
-
-			return {
-				total: storeBooks.length,
-				items: storeBooks.slice(offset, limit + offset)
-			}
-		}
+		storeBooks: storeBookSeriesResolvers.storeBooks
 	},
 	StoreBook: {
 		collection: async (
