@@ -153,7 +153,12 @@ export const resolvers = {
 		},
 		listStoreBooks: async (
 			parent: any,
-			args: { latest?: boolean; limit?: number; offset?: number }
+			args: {
+				latest?: boolean
+				languages?: string[]
+				limit?: number
+				offset?: number
+			}
 		): Promise<List<StoreBook>> => {
 			let total = 0
 			let tableObjects: TableObject[] = []
@@ -163,6 +168,8 @@ export const resolvers = {
 
 			let offset = args.offset || 0
 			if (offset < 0) offset = 0
+
+			let languages = args.languages || ["en"]
 
 			if (args.latest) {
 				let response = await listTableObjects({
@@ -179,8 +186,11 @@ export const resolvers = {
 
 			for (let obj of tableObjects) {
 				let storeBook = convertTableObjectToStoreBook(obj)
-				await loadStoreBookData(storeBook)
-				result.push(storeBook)
+
+				if (languages.includes(storeBook.language)) {
+					await loadStoreBookData(storeBook)
+					result.push(storeBook)
+				}
 			}
 
 			return {
@@ -505,7 +515,10 @@ export const resolvers = {
 				items: names.slice(offset, limit + offset)
 			}
 		},
-		storeBooks: async (storeBookCollection: StoreBookCollection, args: { limit?: number, offset?: number }): Promise<List<StoreBook>> => {
+		storeBooks: async (
+			storeBookCollection: StoreBookCollection,
+			args: { limit?: number; offset?: number }
+		): Promise<List<StoreBook>> => {
 			let storeBookUuidsString = storeBookCollection.storeBooks
 
 			if (storeBookUuidsString == null) {
