@@ -1,10 +1,10 @@
-import { List, StoreBookSeries, StoreBook } from "../types.js"
+import { List, TableObject, StoreBookSeries, StoreBook } from "../types.js"
 import {
 	loadStoreBookData,
 	convertTableObjectToStoreBookSeries,
 	convertTableObjectToStoreBook
 } from "../utils.js"
-import { getTableObject } from "../services/apiService.js"
+import { getTableObject, listTableObjects } from "../services/apiService.js"
 
 export async function retrieveStoreBookSeries(
 	parent: any,
@@ -17,6 +17,53 @@ export async function retrieveStoreBookSeries(
 	if (tableObject == null) return null
 
 	return convertTableObjectToStoreBookSeries(tableObject)
+}
+
+export async function listStoreBookSeries(
+	parent: any,
+	args: {
+		latest?: boolean
+		languages?: string[]
+		limit?: number
+		offset?: number
+	}
+): Promise<List<StoreBookSeries>> {
+	let total = 0
+	let tableObjects: TableObject[] = []
+
+	let limit = args.limit || 10
+	if (limit <= 0) limit = 10
+
+	let offset = args.offset || 0
+	if (offset < 0) offset = 0
+
+	let languages = args.languages || ["en"]
+
+	if (args.latest) {
+		let response = await listTableObjects({
+			limit,
+			offset,
+			collectionName: "latest_series"
+		})
+
+		total = response.total
+		tableObjects = response.items
+	}
+
+	let result: StoreBookSeries[] = []
+
+	for (let obj of tableObjects) {
+		let storeBookSeries = convertTableObjectToStoreBookSeries(obj)
+
+		if (languages.includes(storeBookSeries.language)) {
+			result.push(storeBookSeries)
+		}
+	}
+
+	return {
+		total,
+		items: result
+	}
 }
 
 export async function storeBooks(

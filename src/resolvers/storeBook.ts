@@ -51,8 +51,6 @@ export async function listStoreBooks(
 		offset?: number
 	}
 ): Promise<List<StoreBook>> {
-	let total = 0
-	let serverPagination = false
 	let tableObjects: TableObject[] = []
 
 	let limit = args.limit || 10
@@ -65,14 +63,10 @@ export async function listStoreBooks(
 
 	if (args.latest) {
 		let response = await listTableObjects({
-			limit,
-			offset,
 			collectionName: "latest_books"
 		})
 
-		total = response.total
 		tableObjects = response.items
-		serverPagination = true
 	} else if (args.categories != null) {
 		let storeBookUuids: string[] = []
 
@@ -129,16 +123,9 @@ export async function listStoreBooks(
 		}
 	}
 
-	if (serverPagination) {
-		return {
-			total,
-			items: result
-		}
-	} else {
-		return {
-			total: result.length,
-			items: result.slice(offset, limit + offset)
-		}
+	return {
+		total: result.length,
+		items: result.slice(offset, limit + offset)
 	}
 }
 

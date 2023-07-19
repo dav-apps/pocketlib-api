@@ -15,6 +15,7 @@ export const resolvers = {
 		retrieveStoreBookCollection:
 			storeBookCollectionResolvers.retrieveStoreBookCollection,
 		retrieveStoreBookSeries: storeBookSeriesResolvers.retrieveStoreBookSeries,
+		listStoreBookSeries: storeBookSeriesResolvers.listStoreBookSeries,
 		retrieveStoreBook: storeBookResolvers.retrieveStoreBook,
 		listStoreBooks: storeBookResolvers.listStoreBooks,
 		listCategories: categoryResolvers.listCategories
