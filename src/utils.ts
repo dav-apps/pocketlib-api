@@ -17,12 +17,15 @@ import {
 } from "./types.js"
 import { getTableObject } from "./services/apiService.js"
 
-export async function loadStoreBookData(storeBook: StoreBook) {
+export async function loadStoreBookData(
+	storeBook: StoreBook,
+	published: boolean = true
+) {
 	// Get the latest release of the StoreBook
 	const releasesString = storeBook.releases
 
 	if (releasesString != null) {
-		let releaseUuids = releasesString.split(",")
+		let releaseUuids = releasesString.split(",").reverse()
 
 		for (let uuid of releaseUuids) {
 			let releaseTableObject = await getTableObject(uuid)
@@ -30,7 +33,7 @@ export async function loadStoreBookData(storeBook: StoreBook) {
 
 			let release = convertTableObjectToStoreBookRelease(releaseTableObject)
 
-			if (release.status == "published") {
+			if (!published || (published && release.status == "published")) {
 				storeBook.title = release.title
 				storeBook.description = release.description
 				storeBook.price = release.price
@@ -38,6 +41,7 @@ export async function loadStoreBookData(storeBook: StoreBook) {
 				storeBook.cover = release.cover
 				storeBook.file = release.file
 				storeBook.categories = release.categories
+				break
 			}
 		}
 	}

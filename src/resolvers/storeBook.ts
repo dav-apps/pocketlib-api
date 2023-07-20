@@ -1,6 +1,7 @@
 import {
 	ResolverContext,
 	List,
+	User,
 	TableObject,
 	StoreBookCollection,
 	StoreBookSeries,
@@ -20,6 +21,7 @@ import {
 	convertTableObjectToStoreBookFile,
 	convertTableObjectToCategory
 } from "../utils.js"
+import { admins } from "../constants.js"
 import {
 	getTableObject,
 	listTableObjects,
@@ -46,10 +48,12 @@ export async function listStoreBooks(
 	args: {
 		latest?: boolean
 		categories?: string[]
+		inReview?: boolean
 		languages?: string[]
 		limit?: number
 		offset?: number
-	}
+	},
+	context: any
 ): Promise<List<StoreBook>> {
 	let tableObjects: TableObject[] = []
 
@@ -59,9 +63,11 @@ export async function listStoreBooks(
 	let offset = args.offset || 0
 	if (offset < 0) offset = 0
 
+	let latest = args.latest || false
+	let inReview = args.inReview || false
 	let languages = args.languages || ["en"]
 
-	if (args.latest) {
+	if (latest) {
 		let response = await listTableObjects({
 			collectionName: "latest_books"
 		})
@@ -110,6 +116,26 @@ export async function listStoreBooks(
 
 			tableObjects.push(tableObject)
 		}
+	} else if (inReview) {
+		// Check if the user is an admin
+		const user: User = context.user
+
+		if (user == null) {
+			throw new Error("You are not authenticated")
+		} else if (!admins.includes(user.id)) {
+			throw new Error("Action not allowed")
+		}
+
+		// Get the StoreBooks in review
+		let response = await listTableObjects({
+			caching: false,
+			tableName: "StoreBook",
+			propertyName: "status",
+			propertyValue: "review",
+			exact: true
+		})
+
+		tableObjects = response.items
 	}
 
 	let result: StoreBook[] = []
@@ -118,7 +144,7 @@ export async function listStoreBooks(
 		let storeBook = convertTableObjectToStoreBook(obj)
 
 		if (languages.includes(storeBook.language)) {
-			await loadStoreBookData(storeBook)
+			await loadStoreBookData(storeBook, !inReview)
 			result.push(storeBook)
 		}
 	}

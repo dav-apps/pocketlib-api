@@ -29,7 +29,7 @@ const authDirectiveTransformer = (schema, directiveName) => {
 					}
 
 					if (user != null && adminRole && !admins.includes(user.id)) {
-						throw new Error("Access not allowed")
+						throw new Error("Action not allowed")
 					}
 
 					if (user != null && authorRole && !admins.includes(user.id)) {
@@ -50,7 +50,7 @@ const authDirectiveTransformer = (schema, directiveName) => {
 						}
 
 						if (throwError) {
-							throw new Error("Access not allowed")
+							throw new Error("Action not allowed")
 						}
 					}
 
