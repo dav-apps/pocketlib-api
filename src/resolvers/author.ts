@@ -1,5 +1,6 @@
 import {
 	List,
+	User,
 	TableObject,
 	Publisher,
 	Author,
@@ -16,6 +17,7 @@ import {
 	convertTableObjectToStoreBookCollection,
 	convertTableObjectToStoreBookSeries
 } from "../utils.js"
+import { admins } from "../constants.js"
 import { getTableObject, listTableObjects } from "../services/apiService.js"
 
 export async function retrieveAuthor(
@@ -33,7 +35,14 @@ export async function retrieveAuthor(
 
 export async function listAuthors(
 	parent: any,
-	args: { latest?: boolean; limit?: number; offset?: number }
+	args: {
+		latest?: boolean
+		mine?: boolean
+		languages?: string[]
+		limit?: number
+		offset?: number
+	},
+	context: any
 ): Promise<List<Author>> {
 	let total = 0
 	let tableObjects: TableObject[] = []
@@ -44,7 +53,10 @@ export async function listAuthors(
 	let offset = args.offset || 0
 	if (offset < 0) offset = 0
 
-	if (args.latest) {
+	let latest = args.latest || false
+	let mine = (args.mine || false) && !latest
+
+	if (latest) {
 		let response = await listTableObjects({
 			limit,
 			offset,
@@ -52,6 +64,24 @@ export async function listAuthors(
 		})
 
 		total = response.total
+		tableObjects = response.items
+	} else if (mine) {
+		// Check if the user is an admin
+		const user: User = context.user
+
+		if (user == null) {
+			throw new Error("You are not authenticated")
+		} else if (!admins.includes(user.id)) {
+			throw new Error("Action not allowed")
+		}
+
+		// Get the authors of the user
+		let response = await listTableObjects({
+			userId: user.id,
+			tableName: "Author",
+			caching: false
+		})
+
 		tableObjects = response.items
 	} else {
 		let response = await listTableObjects({
@@ -66,13 +96,30 @@ export async function listAuthors(
 
 	let result: Author[] = []
 
-	for (let obj of tableObjects) {
-		result.push(convertTableObjectToAuthor(obj))
+	if (mine) {
+		for (let obj of tableObjects) {
+			let author = convertTableObjectToAuthor(obj)
+
+			if (author.publisher == null) {
+				result.push(author)
+			}
+		}
+	} else {
+		for (let obj of tableObjects) {
+			result.push(convertTableObjectToAuthor(obj))
+		}
 	}
 
-	return {
-		total,
-		items: result
+	if (mine) {
+		return {
+			total: result.length,
+			items: result.slice(offset, limit + offset)
+		}
+	} else {
+		return {
+			total,
+			items: result
+		}
 	}
 }
 

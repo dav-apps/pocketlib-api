@@ -7,6 +7,7 @@ export const typeDefs = `#graphql
 		retrieveAuthor(uuid: String!): Author
 		listAuthors(
 			latest: Boolean,
+			mine: Boolean,
 			languages: [String!],
 			limit: Int,
 			offset: Int
