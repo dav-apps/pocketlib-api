@@ -22,13 +22,41 @@ import { getTableObject, listTableObjects } from "../services/apiService.js"
 
 export async function retrieveAuthor(
 	parent: any,
-	args: { uuid: string }
+	args: { uuid: string },
+	context: any
 ): Promise<Author> {
 	const uuid = args.uuid
 	if (uuid == null) return null
 
-	let tableObject = await getTableObject(uuid)
-	if (tableObject == null) return null
+	let tableObject: TableObject = null
+
+	if (uuid == "mine") {
+		// Check if the user is an author
+		const user: User = context.user
+
+		if (user == null) {
+			throw new Error("You are not authenticated")
+		} else if (admins.includes(user.id)) {
+			throw new Error("You are an admin")
+		}
+
+		// Get the author of the user
+		let response = await listTableObjects({
+			caching: false,
+			limit: 1,
+			tableName: "Author",
+			userId: user.id
+		})
+
+		if (response.items.length == 1) {
+			tableObject = response.items[0]
+		} else {
+			return null
+		}
+	} else {
+		tableObject = await getTableObject(uuid)
+		if (tableObject == null) return null
+	}
 
 	return convertTableObjectToAuthor(tableObject)
 }
