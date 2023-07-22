@@ -1,5 +1,6 @@
 import * as publisherResolvers from "./resolvers/publisher.js"
 import * as authorResolvers from "./resolvers/author.js"
+import * as authorBioResolvers from "./resolvers/authorBio.js"
 import * as storeBookCollectionResolvers from "./resolvers/storeBookCollection.js"
 import * as storeBookSeriesResolvers from "./resolvers/storeBookSeries.js"
 import * as storeBookResolvers from "./resolvers/storeBook.js"
@@ -19,6 +20,9 @@ export const resolvers = {
 		retrieveStoreBook: storeBookResolvers.retrieveStoreBook,
 		listStoreBooks: storeBookResolvers.listStoreBooks,
 		listCategories: categoryResolvers.listCategories
+	},
+	Mutation: {
+		setAuthorBio: authorBioResolvers.setAuthorBio
 	},
 	Publisher: {
 		logo: publisherResolvers.logo,

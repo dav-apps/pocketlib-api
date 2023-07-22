@@ -8,6 +8,12 @@ export interface List<T> {
 	items: T[]
 }
 
+export interface UpdateResponse<T> {
+	success: boolean
+	errors: string[]
+	item?: T
+}
+
 //#region Platform models
 export interface User {
 	id: number

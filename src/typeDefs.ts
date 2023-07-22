@@ -32,6 +32,10 @@ export const typeDefs = `#graphql
 		listCategories(languages: [String!], limit: Int, offset: Int): CategoryList!
 	}
 
+	type Mutation {
+		setAuthorBio(uuid: String!, bio: String!, language: String!): AuthorBioUpdateResponse
+	}
+
 	type Publisher {
 		uuid: String!
 		name: String!
@@ -85,6 +89,12 @@ export const typeDefs = `#graphql
 	type AuthorBioList {
 		total: Int!
 		items: [AuthorBio!]!
+	}
+
+	type AuthorBioUpdateResponse {
+		success: Boolean!
+		errors: [String!]!
+		item: AuthorBio
 	}
 
 	type AuthorProfileImage {
