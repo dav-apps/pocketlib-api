@@ -222,7 +222,7 @@ export async function updateAuthor(
 		}
 
 		// Get the table object
-		authorTableObject = await getTableObject(args.uuid)
+		authorTableObject = await getTableObject(uuid)
 
 		if (authorTableObject == null) {
 			return {

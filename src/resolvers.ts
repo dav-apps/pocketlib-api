@@ -23,6 +23,7 @@ export const resolvers = {
 		listCategories: categoryResolvers.listCategories
 	},
 	Mutation: {
+		updatePublisher: publisherResolvers.updatePublisher,
 		updateAuthor: authorResolvers.updateAuthor,
 		setAuthorBio: authorBioResolvers.setAuthorBio,
 		setStoreBookCollectionName:

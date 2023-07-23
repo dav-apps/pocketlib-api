@@ -33,6 +33,15 @@ export const typeDefs = `#graphql
 	}
 
 	type Mutation {
+		updatePublisher(
+			uuid: String!
+			name: String
+			description: String
+			websiteUrl: String
+			facebookUsername: String
+			instagramUsername: String
+			twitterUsername: String
+		): PublisherUpdateResponse!
 		updateAuthor(
 			uuid: String!
 			firstName: String
@@ -41,7 +50,7 @@ export const typeDefs = `#graphql
 			facebookUsername: String
 			instagramUsername: String
 			twitterUsername: String
-		): AuthorUpdateResponse
+		): AuthorUpdateResponse!
 		setAuthorBio(
 			uuid: String!
 			bio: String!
@@ -51,7 +60,7 @@ export const typeDefs = `#graphql
 			uuid: String!
 			name: String!
 			language: String!
-		): StoreBookCollectionNameUpdateResponse
+		): StoreBookCollectionNameUpdateResponse!
 	}
 
 	type Publisher {
@@ -69,6 +78,12 @@ export const typeDefs = `#graphql
 	type PublisherList {
 		total: Int!
 		items: [Publisher!]!
+	}
+
+	type PublisherUpdateResponse {
+		success: Boolean!
+		errors: [String!]!
+		item: Publisher
 	}
 
 	type PublisherLogo {

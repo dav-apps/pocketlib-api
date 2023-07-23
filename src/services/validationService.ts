@@ -30,6 +30,12 @@ export function validateNameLength(name: string) {
 	}
 }
 
+export function validateDescriptionLength(description: string) {
+	if (description.length > 5700) {
+		return "description_too_long"
+	}
+}
+
 export function validateWebsiteUrl(websiteUrl: string) {
 	if (!urlRegex.test(websiteUrl)) {
 		return "website_url_invalid"
