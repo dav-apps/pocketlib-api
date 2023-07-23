@@ -1,15 +1,25 @@
-import { languages } from "../constants.js"
+import { languages, urlRegex } from "../constants.js"
 
-export function runValidations(...results: string[]) {
-	let errorMessages: string[] = []
-
-	for (let result of results) {
-		if (result != null) {
-			errorMessages.push(result)
-		}
+export function validateFirstNameLength(firstName: string) {
+	if (firstName.length < 2) {
+		return "first_name_too_short"
+	} else if (firstName.length > 20) {
+		return "first_name_too_long"
 	}
+}
 
-	return errorMessages
+export function validateLastNameLength(lastName: string) {
+	if (lastName.length < 2) {
+		return "last_name_too_short"
+	} else if (lastName.length > 20) {
+		return "last_name_too_long"
+	}
+}
+
+export function validateWebsiteUrlValidity(websiteUrl: string) {
+	if (!urlRegex.test(websiteUrl)) {
+		return "website_url_invalid"
+	}
 }
 
 export function validateBioLength(bio: string) {

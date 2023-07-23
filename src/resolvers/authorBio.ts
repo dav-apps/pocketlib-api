@@ -12,7 +12,6 @@ import {
 import { admins, authorBioTableId } from "../constants.js"
 import { getTableObject, listTableObjects } from "../services/apiService.js"
 import {
-	runValidations,
 	validateBioLength,
 	validateLanguage
 } from "../services/validationService.js"
@@ -58,7 +57,7 @@ export async function setAuthorBio(
 		if (user == null) {
 			throw new Error("not_authenticated")
 		} else if (!admins.includes(user.id)) {
-			throw new Error("action_not_allowed")
+			throw new Error("action_permitted")
 		}
 
 		// Get the author table object
@@ -73,15 +72,15 @@ export async function setAuthorBio(
 
 		// Check if the table object belongs to the user
 		if (authorTableObject.userId != user.id) {
-			throw new Error("action_not_allowed")
+			throw new Error("action_permitted")
 		}
 	}
 
 	// Validate the args
-	let errorMessages = runValidations(
+	let errorMessages = [
 		validateBioLength(args.bio),
 		validateLanguage(args.language)
-	)
+	].filter(e => e != null)
 
 	if (errorMessages.length > 0) {
 		return {

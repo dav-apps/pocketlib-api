@@ -1,5 +1,11 @@
 import {
+	isSuccessStatusCode,
+	ApiResponse,
+	TableObjectsController
+} from "dav-js"
+import {
 	List,
+	UpdateResponse,
 	User,
 	TableObject,
 	Publisher,
@@ -10,6 +16,9 @@ import {
 	StoreBookSeries
 } from "../types.js"
 import {
+	getFacebookUsername,
+	getInstagramUsername,
+	getTwitterUsername,
 	convertTableObjectToPublisher,
 	convertTableObjectToAuthor,
 	convertTableObjectToAuthorBio,
@@ -19,6 +28,11 @@ import {
 } from "../utils.js"
 import { admins } from "../constants.js"
 import { getTableObject, listTableObjects } from "../services/apiService.js"
+import {
+	validateFirstNameLength,
+	validateLastNameLength,
+	validateWebsiteUrlValidity
+} from "../services/validationService.js"
 
 export async function retrieveAuthor(
 	parent: any,
@@ -98,9 +112,9 @@ export async function listAuthors(
 		const user: User = context.user
 
 		if (user == null) {
-			throw new Error("You are not authenticated")
+			throw new Error("not_authenticated")
 		} else if (!admins.includes(user.id)) {
-			throw new Error("Action not allowed")
+			throw new Error("action_permitted")
 		}
 
 		// Get the authors of the user
@@ -148,6 +162,195 @@ export async function listAuthors(
 			total,
 			items: result
 		}
+	}
+}
+
+export async function updateAuthor(
+	parent: any,
+	args: {
+		uuid: string
+		firstName?: string
+		lastName?: string
+		websiteUrl?: string
+		facebookUsername?: string
+		instagramUsername?: string
+		twitterUsername?: string
+	},
+	context: any
+): Promise<UpdateResponse<Author>> {
+	const uuid = args.uuid
+	if (uuid == null) return null
+
+	let facebookUsername = getFacebookUsername(args.facebookUsername)
+	let instagramUsername = getInstagramUsername(args.instagramUsername)
+	let twitterUsername = getTwitterUsername(args.twitterUsername)
+
+	let authorTableObject: TableObject = null
+	const user: User = context.user
+	const accessToken = context.token as string
+
+	if (uuid == "mine") {
+		// Check if the user is an author
+		if (user == null) {
+			throw new Error("not_authenticated")
+		} else if (admins.includes(user.id)) {
+			throw new Error("action_permitted_for_admins")
+		}
+
+		// Get the author of the user
+		let response = await listTableObjects({
+			caching: false,
+			limit: 1,
+			tableName: "Author",
+			userId: user.id
+		})
+
+		if (response.items.length == 1) {
+			authorTableObject = response.items[0]
+		} else {
+			return {
+				success: false,
+				errors: ["action_only_for_authors"]
+			}
+		}
+	} else {
+		// Check if the user is an admin
+		if (user == null) {
+			throw new Error("not_authenticated")
+		} else if (!admins.includes(user.id)) {
+			throw new Error("action_permitted")
+		}
+
+		// Get the table object
+		authorTableObject = await getTableObject(args.uuid)
+
+		if (authorTableObject == null) {
+			return {
+				success: false,
+				errors: ["table_object_does_not_exist"]
+			}
+		}
+
+		// Check if the table object belongs to the user
+		if (authorTableObject.userId != user.id) {
+			throw new Error("action_permitted")
+		}
+	}
+
+	if (
+		args.firstName == null &&
+		args.lastName == null &&
+		args.websiteUrl == null &&
+		args.facebookUsername == null &&
+		args.instagramUsername == null &&
+		args.twitterUsername == null
+	) {
+		return {
+			success: true,
+			errors: [],
+			item: convertTableObjectToAuthor(authorTableObject)
+		}
+	}
+
+	// Validate the args
+	let errorMessages: string[] = []
+
+	if (args.firstName != null) {
+		errorMessages.push(validateFirstNameLength(args.firstName))
+	}
+
+	if (args.lastName != null) {
+		errorMessages.push(validateLastNameLength(args.lastName))
+	}
+
+	if (args.facebookUsername != null && facebookUsername == null) {
+		errorMessages.push("facebook_username_invalid")
+	}
+
+	if (args.instagramUsername != null && instagramUsername == null) {
+		errorMessages.push("instagram_username_invalid")
+	}
+
+	if (args.twitterUsername != null && twitterUsername == null) {
+		errorMessages.push("twitter_username_invalid")
+	}
+
+	if (args.websiteUrl != null) {
+		errorMessages.push(validateWebsiteUrlValidity(args.websiteUrl))
+	}
+
+	errorMessages = errorMessages.filter(e => e != null)
+
+	if (errorMessages.length > 0) {
+		return {
+			success: false,
+			errors: errorMessages
+		}
+	}
+
+	// Update the author
+	let properties = {}
+
+	if (args.firstName != null) {
+		properties["first_name"] = args.firstName
+	}
+
+	if (args.lastName != null) {
+		properties["last_name"] = args.lastName
+	}
+
+	if (facebookUsername != null) {
+		properties["facebook_username"] = facebookUsername
+	}
+
+	if (instagramUsername != null) {
+		properties["instagram_username"] = instagramUsername
+	}
+
+	if (twitterUsername != null) {
+		properties["twitter_username"] = twitterUsername
+	}
+
+	if (args.websiteUrl != null) {
+		properties["website_url"] = args.websiteUrl
+	}
+
+	let updateResponse = await TableObjectsController.UpdateTableObject({
+		accessToken,
+		uuid: authorTableObject.uuid,
+		properties
+	})
+
+	if (!isSuccessStatusCode(updateResponse.status)) {
+		return {
+			success: false,
+			errors: ["unexpected_error"]
+		}
+	}
+
+	let updateResponseData = (
+		updateResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
+	).data
+
+	// Convert from TableObjectResponseData to TableObject
+	let responseTableObject: TableObject = {
+		uuid: updateResponseData.tableObject.Uuid,
+		userId: user.id,
+		tableId: updateResponseData.tableObject.TableId,
+		properties: {}
+	}
+
+	for (let key of Object.keys(updateResponseData.tableObject.Properties)) {
+		let value = updateResponseData.tableObject.Properties[key]
+		responseTableObject.properties[key] = value.value
+	}
+
+	let newAuthor = convertTableObjectToAuthor(responseTableObject)
+
+	return {
+		success: true,
+		errors: [],
+		item: newAuthor
 	}
 }
 

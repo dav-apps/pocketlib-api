@@ -33,6 +33,15 @@ export const typeDefs = `#graphql
 	}
 
 	type Mutation {
+		updateAuthor(
+			uuid: String!
+			firstName: String
+			lastName: String
+			websiteUrl: String
+			facebookUsername: String
+			instagramUsername: String
+			twitterUsername: String
+		): AuthorUpdateResponse
 		setAuthorBio(uuid: String!, bio: String!, language: String!): AuthorBioUpdateResponse
 	}
 
@@ -78,6 +87,12 @@ export const typeDefs = `#graphql
 	type AuthorList {
 		total: Int!
 		items: [Author!]!
+	}
+
+	type AuthorUpdateResponse {
+		success: Boolean!
+		errors: [String!]!
+		item: Author
 	}
 
 	type AuthorBio {

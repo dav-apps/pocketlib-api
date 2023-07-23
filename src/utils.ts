@@ -15,6 +15,11 @@ import {
 	Category,
 	CategoryName
 } from "./types.js"
+import {
+	facebookUsernameRegex,
+	instagramUsernameRegex,
+	twitterUsernameRegex
+} from "./constants.js"
 import { getTableObject } from "./services/apiService.js"
 
 export async function loadStoreBookData(
@@ -45,6 +50,24 @@ export async function loadStoreBookData(
 			}
 		}
 	}
+}
+
+export function getFacebookUsername(input: string) {
+	if (input == null) return null
+
+	return facebookUsernameRegex.exec(input)?.groups?.username
+}
+
+export function getInstagramUsername(input: string) {
+	if (input == null) return null
+
+	return instagramUsernameRegex.exec(input)?.groups?.username
+}
+
+export function getTwitterUsername(input: string) {
+	if (input == null) return null
+
+	return twitterUsernameRegex.exec(input)?.groups?.username
 }
 
 //#region Converter functions
