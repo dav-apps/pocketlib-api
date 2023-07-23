@@ -16,15 +16,23 @@ export function validateLastNameLength(lastName: string) {
 	}
 }
 
-export function validateWebsiteUrlValidity(websiteUrl: string) {
-	if (!urlRegex.test(websiteUrl)) {
-		return "website_url_invalid"
-	}
-}
-
 export function validateBioLength(bio: string) {
 	if (bio.length > 2000) {
 		return "bio_too_long"
+	}
+}
+
+export function validateNameLength(name: string) {
+	if (name.length < 2) {
+		return "name_too_short"
+	} else if (name.length > 100) {
+		return "name_too_long"
+	}
+}
+
+export function validateWebsiteUrl(websiteUrl: string) {
+	if (!urlRegex.test(websiteUrl)) {
+		return "website_url_invalid"
 	}
 }
 

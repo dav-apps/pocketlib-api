@@ -90,24 +90,20 @@ export async function setAuthorBio(
 	}
 
 	let author = convertTableObjectToAuthor(authorTableObject)
-	let biosString = author.bios
-
-	if (biosString == null) {
-		biosString = ""
-	}
+	let biosString = author.bios || ""
 
 	// Get all bios
 	const bioUuids = biosString.split(",")
 	let bios: AuthorBio[] = []
 
-	for (let uuid of bioUuids) {
-		let bioObj = await getTableObject(uuid)
+	for (let bioUuid of bioUuids) {
+		let bioObj = await getTableObject(bioUuid)
 		if (bioObj == null) continue
 
 		bios.push(convertTableObjectToAuthorBio(bioObj))
 	}
 
-	// Find the bio with the language
+	// Find the bio with the given language
 	let bio = bios.find(b => b.language == args.language)
 	let response:
 		| ApiResponse<TableObjectsController.TableObjectResponseData>

@@ -31,7 +31,7 @@ import { getTableObject, listTableObjects } from "../services/apiService.js"
 import {
 	validateFirstNameLength,
 	validateLastNameLength,
-	validateWebsiteUrlValidity
+	validateWebsiteUrl
 } from "../services/validationService.js"
 
 export async function retrieveAuthor(
@@ -263,6 +263,10 @@ export async function updateAuthor(
 		errorMessages.push(validateLastNameLength(args.lastName))
 	}
 
+	if (args.websiteUrl != null) {
+		errorMessages.push(validateWebsiteUrl(args.websiteUrl))
+	}
+
 	if (args.facebookUsername != null && facebookUsername == null) {
 		errorMessages.push("facebook_username_invalid")
 	}
@@ -273,10 +277,6 @@ export async function updateAuthor(
 
 	if (args.twitterUsername != null && twitterUsername == null) {
 		errorMessages.push("twitter_username_invalid")
-	}
-
-	if (args.websiteUrl != null) {
-		errorMessages.push(validateWebsiteUrlValidity(args.websiteUrl))
 	}
 
 	errorMessages = errorMessages.filter(e => e != null)
@@ -299,6 +299,10 @@ export async function updateAuthor(
 		properties["last_name"] = args.lastName
 	}
 
+	if (args.websiteUrl != null) {
+		properties["website_url"] = args.websiteUrl
+	}
+
 	if (facebookUsername != null) {
 		properties["facebook_username"] = facebookUsername
 	}
@@ -309,10 +313,6 @@ export async function updateAuthor(
 
 	if (twitterUsername != null) {
 		properties["twitter_username"] = twitterUsername
-	}
-
-	if (args.websiteUrl != null) {
-		properties["website_url"] = args.websiteUrl
 	}
 
 	let updateResponse = await TableObjectsController.UpdateTableObject({

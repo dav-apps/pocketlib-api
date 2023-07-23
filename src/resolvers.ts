@@ -2,6 +2,7 @@ import * as publisherResolvers from "./resolvers/publisher.js"
 import * as authorResolvers from "./resolvers/author.js"
 import * as authorBioResolvers from "./resolvers/authorBio.js"
 import * as storeBookCollectionResolvers from "./resolvers/storeBookCollection.js"
+import * as storeBookCollectionNameResolvers from "./resolvers/storeBookCollectionName.js"
 import * as storeBookSeriesResolvers from "./resolvers/storeBookSeries.js"
 import * as storeBookResolvers from "./resolvers/storeBook.js"
 import * as storeBookReleaseResolvers from "./resolvers/storeBookRelease.js"
@@ -23,7 +24,9 @@ export const resolvers = {
 	},
 	Mutation: {
 		updateAuthor: authorResolvers.updateAuthor,
-		setAuthorBio: authorBioResolvers.setAuthorBio
+		setAuthorBio: authorBioResolvers.setAuthorBio,
+		setStoreBookCollectionName:
+			storeBookCollectionNameResolvers.setStoreBookCollectionName
 	},
 	Publisher: {
 		logo: publisherResolvers.logo,

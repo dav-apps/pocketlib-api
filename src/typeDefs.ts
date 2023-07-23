@@ -42,7 +42,16 @@ export const typeDefs = `#graphql
 			instagramUsername: String
 			twitterUsername: String
 		): AuthorUpdateResponse
-		setAuthorBio(uuid: String!, bio: String!, language: String!): AuthorBioUpdateResponse
+		setAuthorBio(
+			uuid: String!
+			bio: String!
+			language: String!
+		): AuthorBioUpdateResponse
+		setStoreBookCollectionName(
+			uuid: String!
+			name: String!
+			language: String!
+		): StoreBookCollectionNameUpdateResponse
 	}
 
 	type Publisher {
@@ -140,6 +149,12 @@ export const typeDefs = `#graphql
 	type StoreBookCollectionNameList {
 		total: Int!
 		items: [StoreBookCollectionName!]!
+	}
+
+	type StoreBookCollectionNameUpdateResponse {
+		success: Boolean!
+		errors: [String!]!
+		item: StoreBookCollectionName
 	}
 
 	type StoreBookSeries {
