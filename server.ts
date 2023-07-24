@@ -4,6 +4,8 @@ import { defaultFieldResolver } from "graphql"
 import { makeExecutableSchema } from "@graphql-tools/schema"
 import { mapSchema, getDirective, MapperKind } from "@graphql-tools/utils"
 import { User } from "./src/types.js"
+import { throwApiError } from "./src/utils.js"
+import * as Errors from "./src/errors.js"
 import { admins } from "./src/constants.js"
 import { getUser, getTableObject } from "./src/services/apiService.js"
 import { typeDefs } from "./src/typeDefs.js"
@@ -25,11 +27,11 @@ const authDirectiveTransformer = (schema, directiveName) => {
 					const adminRole = role == "ADMIN"
 
 					if (user == null && (userRole || authorRole || adminRole)) {
-						throw new Error("You are not authenticated")
+						throwApiError(Errors.notAuthenticated)
 					}
 
 					if (user != null && adminRole && !admins.includes(user.id)) {
-						throw new Error("Action not allowed")
+						throwApiError(Errors.actionPermitted)
 					}
 
 					if (user != null && authorRole && !admins.includes(user.id)) {
@@ -50,7 +52,7 @@ const authDirectiveTransformer = (schema, directiveName) => {
 						}
 
 						if (throwError) {
-							throw new Error("Action not allowed")
+							throwApiError(Errors.actionPermitted)
 						}
 					}
 
