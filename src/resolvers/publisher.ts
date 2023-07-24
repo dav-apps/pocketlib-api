@@ -13,6 +13,8 @@ import {
 	Author
 } from "../types.js"
 import {
+	throwApiError,
+	throwValidationError,
 	getFacebookUsername,
 	getInstagramUsername,
 	getTwitterUsername,
@@ -21,6 +23,7 @@ import {
 	convertTableObjectToAuthor
 } from "../utils.js"
 import { admins } from "../constants.js"
+import * as Errors from "../errors.js"
 import { getTableObject, listTableObjects } from "../services/apiService.js"
 import {
 	validateNameLength,
@@ -124,9 +127,9 @@ export async function updatePublisher(
 	if (uuid == "mine") {
 		// Check if the user is a publisher
 		if (user == null) {
-			throw new Error("not_authenticated")
+			throwApiError(Errors.notAuthenticated)
 		} else if (admins.includes(user.id)) {
-			throw new Error("action_permitted_for_admins")
+			throwApiError(Errors.actionPermitted)
 		}
 
 		// Get the publisher of the user
@@ -137,35 +140,29 @@ export async function updatePublisher(
 			userId: user.id
 		})
 
-		if (response.items.length == 1) {
+		if (response.items.length > 0) {
 			publisherTableObject = response.items[0]
 		} else {
-			return {
-				success: false,
-				errors: ["action_only_for_publishers"]
-			}
+			throwApiError(Errors.publisherRequired)
 		}
 	} else {
 		// Check if the user is an admin
 		if (user == null) {
-			throw new Error("not_authenticated")
+			throwApiError(Errors.notAuthenticated)
 		} else if (!admins.includes(user.id)) {
-			throw new Error("action_permitted")
+			throwApiError(Errors.actionPermitted)
 		}
 
 		// Get the table object
 		publisherTableObject = await getTableObject(uuid)
 
 		if (publisherTableObject == null) {
-			return {
-				success: false,
-				errors: ["table_object_does_not_exist"]
-			}
+			throwApiError(Errors.publisherDoesNotExist)
 		}
 
 		// Check if the table object belongs to the user
 		if (publisherTableObject.userId != user.id) {
-			throw new Error("action_permitted")
+			throwApiError(Errors.actionPermitted)
 		}
 	}
 
@@ -185,40 +182,33 @@ export async function updatePublisher(
 	}
 
 	// Validate the args
-	let errorMessages: string[] = []
+	let errors: string[] = []
 
 	if (args.name != null) {
-		errorMessages.push(validateNameLength(args.name))
+		errors.push(validateNameLength(args.name))
 	}
 
 	if (args.description != null) {
-		errorMessages.push(validateDescriptionLength(args.description))
+		errors.push(validateDescriptionLength(args.description))
 	}
 
 	if (args.websiteUrl != null) {
-		errorMessages.push(validateWebsiteUrl(args.websiteUrl))
+		errors.push(validateWebsiteUrl(args.websiteUrl))
 	}
 
 	if (args.facebookUsername != null && facebookUsername == null) {
-		errorMessages.push("facebook_username_invalid")
+		errors.push(Errors.facebookUsernameInvalid)
 	}
 
 	if (args.instagramUsername != null && instagramUsername == null) {
-		errorMessages.push("instagram_username_invalid")
+		errors.push(Errors.instagramUsernameInvalid)
 	}
 
 	if (args.twitterUsername != null && twitterUsername == null) {
-		errorMessages.push("twitter_username_invalid")
+		errors.push(Errors.twitterUsernameInvalid)
 	}
 
-	errorMessages = errorMessages.filter(e => e != null)
-
-	if (errorMessages.length > 0) {
-		return {
-			success: false,
-			errors: errorMessages
-		}
-	}
+	throwValidationError(errors)
 
 	// Update the publisher
 	let properties = {}
@@ -254,10 +244,7 @@ export async function updatePublisher(
 	})
 
 	if (!isSuccessStatusCode(updateResponse.status)) {
-		return {
-			success: false,
-			errors: ["unexpected_error"]
-		}
+		throwApiError(Errors.unexpectedError)
 	}
 
 	let updateResponseData = (
