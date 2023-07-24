@@ -1,4 +1,6 @@
+import { GraphQLError } from "graphql"
 import {
+	ApiError,
 	TableObject,
 	Publisher,
 	PublisherLogo,
@@ -20,7 +22,31 @@ import {
 	instagramUsernameRegex,
 	twitterUsernameRegex
 } from "./constants.js"
+import { validationFailed } from "./errors.js"
 import { getTableObject } from "./services/apiService.js"
+
+export function throwApiError(error: ApiError) {
+	throw new GraphQLError(error.message, {
+		extensions: {
+			code: error.code,
+			http: { status: error.status || 500 }
+		}
+	})
+}
+
+export function throwValidationError(errors: string[]) {
+	let filteredErrors = errors.filter(e => e != null)
+
+	if (filteredErrors.length > 0) {
+		throw new GraphQLError(validationFailed.message, {
+			extensions: {
+				code: validationFailed.code,
+				http: { status: validationFailed.status || 500 },
+				errors: filteredErrors
+			}
+		})
+	}
+}
 
 export async function loadStoreBookData(
 	storeBook: StoreBook,

@@ -14,6 +14,12 @@ export interface UpdateResponse<T> {
 	item?: T
 }
 
+export interface ApiError {
+	code: string
+	message: string
+	status?: number
+}
+
 //#region Platform models
 export interface User {
 	id: number
