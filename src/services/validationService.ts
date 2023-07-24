@@ -1,49 +1,50 @@
 import { languages, urlRegex } from "../constants.js"
+import * as Errors from "../errors.js"
 
 export function validateFirstNameLength(firstName: string) {
 	if (firstName.length < 2) {
-		return "first_name_too_short"
+		return Errors.firstNameTooShort
 	} else if (firstName.length > 20) {
-		return "first_name_too_long"
+		return Errors.firstNameTooLong
 	}
 }
 
 export function validateLastNameLength(lastName: string) {
 	if (lastName.length < 2) {
-		return "last_name_too_short"
+		return Errors.lastNameTooShort
 	} else if (lastName.length > 20) {
-		return "last_name_too_long"
+		return Errors.lastNameTooLong
 	}
 }
 
 export function validateBioLength(bio: string) {
 	if (bio.length > 2000) {
-		return "bio_too_long"
+		return Errors.bioTooLong
 	}
 }
 
 export function validateNameLength(name: string) {
 	if (name.length < 2) {
-		return "name_too_short"
+		return Errors.nameTooShort
 	} else if (name.length > 100) {
-		return "name_too_long"
+		return Errors.nameTooLong
 	}
 }
 
 export function validateDescriptionLength(description: string) {
 	if (description.length > 5700) {
-		return "description_too_long"
+		return Errors.descriptionTooLong
 	}
 }
 
 export function validateWebsiteUrl(websiteUrl: string) {
 	if (!urlRegex.test(websiteUrl)) {
-		return "website_url_invalid"
+		return Errors.websiteUrlInvalid
 	}
 }
 
 export function validateLanguage(language: string) {
 	if (!languages.includes(language)) {
-		return "language_invalid"
+		return Errors.languageInvalid
 	}
 }

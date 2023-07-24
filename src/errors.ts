@@ -17,6 +17,12 @@ export const actionPermitted: ApiError = {
 	status: 403
 }
 
+export const validationFailed: ApiError = {
+	code: "VALIDATION_FAILED",
+	message: "Validation failed",
+	status: 400
+}
+
 export const publisherDoesNotExist: ApiError = {
 	code: "PUBLISHER_NOT_EXISTS",
 	message: "Publisher does not exist",
@@ -35,12 +41,18 @@ export const storeBookCollectionDoesNotExist: ApiError = {
 	status: 404
 }
 
-export const validationFailed: ApiError = {
-	code: "VALIDATION_FAILED",
-	message: "Validation failed",
-	status: 400
-}
+export const nameTooShort = "NAME_TOO_SHORT"
+export const firstNameTooShort = "FIRST_NAME_TOO_SHORT"
+export const lastNameTooShort = "LAST_NAME_TOO_SHORT"
 
+export const nameTooLong = "NAME_TOO_LONG"
+export const descriptionTooLong = "DESCRIPTION_TOO_LONG"
+export const firstNameTooLong = "FIRST_NAME_TOO_LONG"
+export const lastNameTooLong = "LAST_NAME_TOO_LONG"
+export const bioTooLong = "BIO_TOO_LONG"
+
+export const websiteUrlInvalid = "WEBSITE_URL_INVALID"
 export const facebookUsernameInvalid = "FACEBOOK_USERNAME_INVALID"
 export const instagramUsernameInvalid = "INSTAGRAM_USERNAME_INVALID"
 export const twitterUsernameInvalid = "TWITTER_USERNAME_INVALID"
+export const languageInvalid = "LANGUAGE_INVALID"
