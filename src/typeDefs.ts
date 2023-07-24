@@ -41,7 +41,7 @@ export const typeDefs = `#graphql
 			facebookUsername: String
 			instagramUsername: String
 			twitterUsername: String
-		): PublisherUpdateResponse!
+		): Publisher
 		updateAuthor(
 			uuid: String!
 			firstName: String
@@ -50,17 +50,17 @@ export const typeDefs = `#graphql
 			facebookUsername: String
 			instagramUsername: String
 			twitterUsername: String
-		): AuthorUpdateResponse!
+		): Author
 		setAuthorBio(
 			uuid: String!
 			bio: String!
 			language: String!
-		): AuthorBioUpdateResponse
+		): AuthorBio
 		setStoreBookCollectionName(
 			uuid: String!
 			name: String!
 			language: String!
-		): StoreBookCollectionNameUpdateResponse!
+		): StoreBookCollectionName
 	}
 
 	type Publisher {
@@ -78,12 +78,6 @@ export const typeDefs = `#graphql
 	type PublisherList {
 		total: Int!
 		items: [Publisher!]!
-	}
-
-	type PublisherUpdateResponse {
-		success: Boolean!
-		errors: [String!]!
-		item: Publisher
 	}
 
 	type PublisherLogo {
@@ -113,12 +107,6 @@ export const typeDefs = `#graphql
 		items: [Author!]!
 	}
 
-	type AuthorUpdateResponse {
-		success: Boolean!
-		errors: [String!]!
-		item: Author
-	}
-
 	type AuthorBio {
 		uuid: String!
 		bio: String!
@@ -128,12 +116,6 @@ export const typeDefs = `#graphql
 	type AuthorBioList {
 		total: Int!
 		items: [AuthorBio!]!
-	}
-
-	type AuthorBioUpdateResponse {
-		success: Boolean!
-		errors: [String!]!
-		item: AuthorBio
 	}
 
 	type AuthorProfileImage {
@@ -164,12 +146,6 @@ export const typeDefs = `#graphql
 	type StoreBookCollectionNameList {
 		total: Int!
 		items: [StoreBookCollectionName!]!
-	}
-
-	type StoreBookCollectionNameUpdateResponse {
-		success: Boolean!
-		errors: [String!]!
-		item: StoreBookCollectionName
 	}
 
 	type StoreBookSeries {

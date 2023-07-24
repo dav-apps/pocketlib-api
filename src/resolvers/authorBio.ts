@@ -4,9 +4,10 @@ import {
 	isSuccessStatusCode,
 	TableObjectsController
 } from "dav-js"
-import { UpdateResponse, User, TableObject, AuthorBio } from "../types.js"
+import { User, TableObject, AuthorBio } from "../types.js"
 import {
 	throwApiError,
+	throwValidationError,
 	convertTableObjectToAuthor,
 	convertTableObjectToAuthorBio
 } from "../utils.js"
@@ -22,7 +23,7 @@ export async function setAuthorBio(
 	parent: any,
 	args: { uuid: string; bio: string; language: string },
 	context: any
-): Promise<UpdateResponse<AuthorBio>> {
+): Promise<AuthorBio> {
 	const uuid = args.uuid
 	if (uuid == null) return null
 
@@ -46,13 +47,10 @@ export async function setAuthorBio(
 			userId: user.id
 		})
 
-		if (response.items.length == 1) {
+		if (response.items.length > 0) {
 			authorTableObject = response.items[0]
 		} else {
-			return {
-				success: false,
-				errors: ["action_only_for_authors"]
-			}
+			throwApiError(Errors.actionPermitted)
 		}
 	} else {
 		// Check if the user is an admin
@@ -66,10 +64,7 @@ export async function setAuthorBio(
 		authorTableObject = await getTableObject(uuid)
 
 		if (authorTableObject == null) {
-			return {
-				success: false,
-				errors: ["table_object_does_not_exist"]
-			}
+			throwApiError(Errors.authorDoesNotExist)
 		}
 
 		// Check if the table object belongs to the user
@@ -79,17 +74,10 @@ export async function setAuthorBio(
 	}
 
 	// Validate the args
-	let errorMessages = [
+	throwValidationError([
 		validateBioLength(args.bio),
 		validateLanguage(args.language)
-	].filter(e => e != null)
-
-	if (errorMessages.length > 0) {
-		return {
-			success: false,
-			errors: errorMessages
-		}
-	}
+	])
 
 	let author = convertTableObjectToAuthor(authorTableObject)
 	let biosString = author.bios || ""
@@ -123,10 +111,7 @@ export async function setAuthorBio(
 		})
 
 		if (!isSuccessStatusCode(response.status)) {
-			return {
-				success: false,
-				errors: ["unexpected_error"]
-			}
+			throwApiError(Errors.unexpectedError)
 		}
 	} else {
 		// Update the existing AuthorBio
@@ -139,10 +124,7 @@ export async function setAuthorBio(
 		})
 
 		if (!isSuccessStatusCode(response.status)) {
-			return {
-				success: false,
-				errors: ["unexpected_error"]
-			}
+			throwApiError(Errors.unexpectedError)
 		}
 	}
 
@@ -169,10 +151,7 @@ export async function setAuthorBio(
 			})
 
 		if (!isSuccessStatusCode(updateAuthorTableObjectResponse.status)) {
-			return {
-				success: false,
-				errors: ["unexpected_error"]
-			}
+			throwApiError(Errors.unexpectedError)
 		}
 	}
 
@@ -189,11 +168,5 @@ export async function setAuthorBio(
 		responseTableObject.properties[key] = value.value
 	}
 
-	let newAuthorBio = convertTableObjectToAuthorBio(responseTableObject)
-
-	return {
-		success: true,
-		errors: [],
-		item: newAuthorBio
-	}
+	return convertTableObjectToAuthorBio(responseTableObject)
 }

@@ -5,7 +5,6 @@ import {
 } from "dav-js"
 import {
 	List,
-	UpdateResponse,
 	User,
 	TableObject,
 	Publisher,
@@ -112,7 +111,7 @@ export async function updatePublisher(
 		twitterUsername?: string
 	},
 	context: any
-): Promise<UpdateResponse<Publisher>> {
+): Promise<Publisher> {
 	const uuid = args.uuid
 	if (uuid == null) return null
 
@@ -174,11 +173,7 @@ export async function updatePublisher(
 		args.instagramUsername == null &&
 		args.twitterUsername == null
 	) {
-		return {
-			success: true,
-			errors: [],
-			item: convertTableObjectToPublisher(publisherTableObject)
-		}
+		return convertTableObjectToPublisher(publisherTableObject)
 	}
 
 	// Validate the args
@@ -264,13 +259,7 @@ export async function updatePublisher(
 		responseTableObject.properties[key] = value.value
 	}
 
-	let newPublisher = convertTableObjectToPublisher(responseTableObject)
-
-	return {
-		success: true,
-		errors: [],
-		item: newPublisher
-	}
+	return convertTableObjectToPublisher(responseTableObject)
 }
 
 export async function logo(publisher: Publisher): Promise<PublisherLogo> {

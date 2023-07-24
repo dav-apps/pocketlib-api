@@ -8,12 +8,6 @@ export interface List<T> {
 	items: T[]
 }
 
-export interface UpdateResponse<T> {
-	success: boolean
-	errors: string[]
-	item?: T
-}
-
 export interface ApiError {
 	code: string
 	message: string

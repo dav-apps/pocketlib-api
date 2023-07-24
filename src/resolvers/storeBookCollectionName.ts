@@ -4,14 +4,10 @@ import {
 	ApiErrorResponse,
 	TableObjectsController
 } from "dav-js"
-import {
-	UpdateResponse,
-	User,
-	TableObject,
-	StoreBookCollectionName
-} from "../types.js"
+import { User, TableObject, StoreBookCollectionName } from "../types.js"
 import {
 	throwApiError,
+	throwValidationError,
 	convertTableObjectToStoreBookCollection,
 	convertTableObjectToStoreBookCollectionName
 } from "../utils.js"
@@ -27,7 +23,7 @@ export async function setStoreBookCollectionName(
 	parent: any,
 	args: { uuid: string; name: string; language: string },
 	context: any
-): Promise<UpdateResponse<StoreBookCollectionName>> {
+): Promise<StoreBookCollectionName> {
 	const uuid = args.uuid
 	if (uuid == null) return null
 
@@ -43,10 +39,7 @@ export async function setStoreBookCollectionName(
 	let collectionTableObject = await getTableObject(uuid)
 
 	if (collectionTableObject == null) {
-		return {
-			success: false,
-			errors: ["table_object_does_not_exist"]
-		}
+		throwApiError(Errors.storeBookCollectionDoesNotExist)
 	}
 
 	// Check if the table object belongs to the user
@@ -55,17 +48,10 @@ export async function setStoreBookCollectionName(
 	}
 
 	// Validate the args
-	let errorMessages = [
+	throwValidationError([
 		validateNameLength(args.name),
 		validateLanguage(args.language)
-	].filter(e => e != null)
-
-	if (errorMessages.length > 0) {
-		return {
-			success: false,
-			errors: errorMessages
-		}
-	}
+	])
 
 	let collection = convertTableObjectToStoreBookCollection(
 		collectionTableObject
@@ -101,10 +87,7 @@ export async function setStoreBookCollectionName(
 		})
 
 		if (!isSuccessStatusCode(response.status)) {
-			return {
-				success: false,
-				errors: ["unexpected_error"]
-			}
+			throwApiError(Errors.unexpectedError)
 		}
 	} else {
 		// Update the existing StoreBookCollectionName
@@ -117,10 +100,7 @@ export async function setStoreBookCollectionName(
 		})
 
 		if (!isSuccessStatusCode(response.status)) {
-			return {
-				success: false,
-				errors: ["unexpected_error"]
-			}
+			throwApiError(Errors.unexpectedError)
 		}
 	}
 
@@ -147,10 +127,7 @@ export async function setStoreBookCollectionName(
 			})
 
 		if (!isSuccessStatusCode(updateCollectionTableObjectResponse.status)) {
-			return {
-				success: false,
-				errors: ["unexpected_error"]
-			}
+			throwApiError(Errors.unexpectedError)
 		}
 	}
 
@@ -167,12 +144,5 @@ export async function setStoreBookCollectionName(
 		responseTableObject.properties[key] = value.value
 	}
 
-	let newCollectionName =
-		convertTableObjectToStoreBookCollectionName(responseTableObject)
-
-	return {
-		success: true,
-		errors: [],
-		item: newCollectionName
-	}
+	return convertTableObjectToStoreBookCollectionName(responseTableObject)
 }

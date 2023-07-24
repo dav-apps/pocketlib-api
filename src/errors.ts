@@ -19,7 +19,19 @@ export const actionPermitted: ApiError = {
 
 export const publisherDoesNotExist: ApiError = {
 	code: "PUBLISHER_NOT_EXISTS",
-	message: "Publisher TableObject does not exist",
+	message: "Publisher does not exist",
+	status: 404
+}
+
+export const authorDoesNotExist: ApiError = {
+	code: "AUTHOR_NOT_EXISTS",
+	message: "Author does not exist",
+	status: 404
+}
+
+export const storeBookCollectionDoesNotExist: ApiError = {
+	code: "STORE_BOOK_COLLECTION_DOES_NOT_EXIST",
+	message: "StoreBookCollection does not exist",
 	status: 404
 }
 

@@ -5,7 +5,6 @@ import {
 } from "dav-js"
 import {
 	List,
-	UpdateResponse,
 	User,
 	TableObject,
 	Publisher,
@@ -17,6 +16,7 @@ import {
 } from "../types.js"
 import {
 	throwApiError,
+	throwValidationError,
 	getFacebookUsername,
 	getInstagramUsername,
 	getTwitterUsername,
@@ -179,7 +179,7 @@ export async function updateAuthor(
 		twitterUsername?: string
 	},
 	context: any
-): Promise<UpdateResponse<Author>> {
+): Promise<Author> {
 	const uuid = args.uuid
 	if (uuid == null) return null
 
@@ -207,13 +207,10 @@ export async function updateAuthor(
 			userId: user.id
 		})
 
-		if (response.items.length == 1) {
+		if (response.items.length > 0) {
 			authorTableObject = response.items[0]
 		} else {
-			return {
-				success: false,
-				errors: ["action_only_for_authors"]
-			}
+			throwApiError(Errors.actionPermitted)
 		}
 	} else {
 		// Check if the user is an admin
@@ -227,10 +224,7 @@ export async function updateAuthor(
 		authorTableObject = await getTableObject(uuid)
 
 		if (authorTableObject == null) {
-			return {
-				success: false,
-				errors: ["table_object_does_not_exist"]
-			}
+			throwApiError(Errors.authorDoesNotExist)
 		}
 
 		// Check if the table object belongs to the user
@@ -247,48 +241,37 @@ export async function updateAuthor(
 		args.instagramUsername == null &&
 		args.twitterUsername == null
 	) {
-		return {
-			success: true,
-			errors: [],
-			item: convertTableObjectToAuthor(authorTableObject)
-		}
+		return convertTableObjectToAuthor(authorTableObject)
 	}
 
 	// Validate the args
-	let errorMessages: string[] = []
+	let errors: string[] = []
 
 	if (args.firstName != null) {
-		errorMessages.push(validateFirstNameLength(args.firstName))
+		errors.push(validateFirstNameLength(args.firstName))
 	}
 
 	if (args.lastName != null) {
-		errorMessages.push(validateLastNameLength(args.lastName))
+		errors.push(validateLastNameLength(args.lastName))
 	}
 
 	if (args.websiteUrl != null) {
-		errorMessages.push(validateWebsiteUrl(args.websiteUrl))
+		errors.push(validateWebsiteUrl(args.websiteUrl))
 	}
 
 	if (args.facebookUsername != null && facebookUsername == null) {
-		errorMessages.push("facebook_username_invalid")
+		errors.push("facebook_username_invalid")
 	}
 
 	if (args.instagramUsername != null && instagramUsername == null) {
-		errorMessages.push("instagram_username_invalid")
+		errors.push("instagram_username_invalid")
 	}
 
 	if (args.twitterUsername != null && twitterUsername == null) {
-		errorMessages.push("twitter_username_invalid")
+		errors.push("twitter_username_invalid")
 	}
 
-	errorMessages = errorMessages.filter(e => e != null)
-
-	if (errorMessages.length > 0) {
-		return {
-			success: false,
-			errors: errorMessages
-		}
-	}
+	throwValidationError(errors)
 
 	// Update the author
 	let properties = {}
@@ -324,10 +307,7 @@ export async function updateAuthor(
 	})
 
 	if (!isSuccessStatusCode(updateResponse.status)) {
-		return {
-			success: false,
-			errors: ["unexpected_error"]
-		}
+		throwApiError(Errors.unexpectedError)
 	}
 
 	let updateResponseData = (
@@ -347,13 +327,7 @@ export async function updateAuthor(
 		responseTableObject.properties[key] = value.value
 	}
 
-	let newAuthor = convertTableObjectToAuthor(responseTableObject)
-
-	return {
-		success: true,
-		errors: [],
-		item: newAuthor
-	}
+	return convertTableObjectToAuthor(responseTableObject)
 }
 
 export async function publisher(author: Author): Promise<Publisher> {
