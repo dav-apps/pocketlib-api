@@ -6,9 +6,11 @@ import {
 } from "dav-js"
 import { UpdateResponse, User, TableObject, AuthorBio } from "../types.js"
 import {
+	throwApiError,
 	convertTableObjectToAuthor,
 	convertTableObjectToAuthorBio
 } from "../utils.js"
+import * as Errors from "../errors.js"
 import { admins, authorBioTableId } from "../constants.js"
 import { getTableObject, listTableObjects } from "../services/apiService.js"
 import {
@@ -31,9 +33,9 @@ export async function setAuthorBio(
 	if (uuid == "mine") {
 		// Check if the user is an author
 		if (user == null) {
-			throw new Error("not_authenticated")
+			throwApiError(Errors.notAuthenticated)
 		} else if (admins.includes(user.id)) {
-			throw new Error("action_permitted_for_admins")
+			throwApiError(Errors.actionPermitted)
 		}
 
 		// Get the author of the user
@@ -55,9 +57,9 @@ export async function setAuthorBio(
 	} else {
 		// Check if the user is an admin
 		if (user == null) {
-			throw new Error("not_authenticated")
+			throwApiError(Errors.notAuthenticated)
 		} else if (!admins.includes(user.id)) {
-			throw new Error("action_permitted")
+			throwApiError(Errors.actionPermitted)
 		}
 
 		// Get the author table object
@@ -72,7 +74,7 @@ export async function setAuthorBio(
 
 		// Check if the table object belongs to the user
 		if (authorTableObject.userId != user.id) {
-			throw new Error("action_permitted")
+			throwApiError(Errors.actionPermitted)
 		}
 	}
 

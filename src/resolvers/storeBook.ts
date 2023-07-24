@@ -12,6 +12,7 @@ import {
 	Category
 } from "../types.js"
 import {
+	throwApiError,
 	loadStoreBookData,
 	convertTableObjectToStoreBookCollection,
 	convertTableObjectToStoreBookSeries,
@@ -21,6 +22,7 @@ import {
 	convertTableObjectToStoreBookFile,
 	convertTableObjectToCategory
 } from "../utils.js"
+import * as Errors from "../errors.js"
 import { admins } from "../constants.js"
 import {
 	getTableObject,
@@ -121,9 +123,9 @@ export async function listStoreBooks(
 		const user: User = context.user
 
 		if (user == null) {
-			throw new Error("You are not authenticated")
+			throwApiError(Errors.notAuthenticated)
 		} else if (!admins.includes(user.id)) {
-			throw new Error("Action not allowed")
+			throwApiError(Errors.actionPermitted)
 		}
 
 		// Get the StoreBooks in review

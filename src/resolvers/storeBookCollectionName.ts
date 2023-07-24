@@ -11,9 +11,11 @@ import {
 	StoreBookCollectionName
 } from "../types.js"
 import {
+	throwApiError,
 	convertTableObjectToStoreBookCollection,
 	convertTableObjectToStoreBookCollectionName
 } from "../utils.js"
+import * as Errors from "../errors.js"
 import { storeBookCollectionNameTableId } from "../constants.js"
 import { getTableObject } from "../services/apiService.js"
 import {
@@ -34,7 +36,7 @@ export async function setStoreBookCollectionName(
 
 	// Check if the user is logged in
 	if (user == null) {
-		throw new Error("not_authenticated")
+		throwApiError(Errors.notAuthenticated)
 	}
 
 	// Get the collection table object
@@ -49,7 +51,7 @@ export async function setStoreBookCollectionName(
 
 	// Check if the table object belongs to the user
 	if (collectionTableObject.userId != user.id) {
-		throw new Error("action_permitted")
+		throwApiError(Errors.actionPermitted)
 	}
 
 	// Validate the args

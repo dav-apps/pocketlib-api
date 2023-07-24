@@ -16,6 +16,7 @@ import {
 	StoreBookSeries
 } from "../types.js"
 import {
+	throwApiError,
 	getFacebookUsername,
 	getInstagramUsername,
 	getTwitterUsername,
@@ -26,6 +27,7 @@ import {
 	convertTableObjectToStoreBookCollection,
 	convertTableObjectToStoreBookSeries
 } from "../utils.js"
+import * as Errors from "../errors.js"
 import { admins } from "../constants.js"
 import { getTableObject, listTableObjects } from "../services/apiService.js"
 import {
@@ -49,9 +51,9 @@ export async function retrieveAuthor(
 		const user: User = context.user
 
 		if (user == null) {
-			throw new Error("You are not authenticated")
+			throwApiError(Errors.notAuthenticated)
 		} else if (admins.includes(user.id)) {
-			throw new Error("You are an admin")
+			throwApiError(Errors.actionPermitted)
 		}
 
 		// Get the author of the user
@@ -112,9 +114,9 @@ export async function listAuthors(
 		const user: User = context.user
 
 		if (user == null) {
-			throw new Error("not_authenticated")
+			throwApiError(Errors.notAuthenticated)
 		} else if (!admins.includes(user.id)) {
-			throw new Error("action_permitted")
+			throwApiError(Errors.actionPermitted)
 		}
 
 		// Get the authors of the user
@@ -192,9 +194,9 @@ export async function updateAuthor(
 	if (uuid == "mine") {
 		// Check if the user is an author
 		if (user == null) {
-			throw new Error("not_authenticated")
+			throwApiError(Errors.notAuthenticated)
 		} else if (admins.includes(user.id)) {
-			throw new Error("action_permitted_for_admins")
+			throwApiError(Errors.actionPermitted)
 		}
 
 		// Get the author of the user
@@ -216,9 +218,9 @@ export async function updateAuthor(
 	} else {
 		// Check if the user is an admin
 		if (user == null) {
-			throw new Error("not_authenticated")
+			throwApiError(Errors.notAuthenticated)
 		} else if (!admins.includes(user.id)) {
-			throw new Error("action_permitted")
+			throwApiError(Errors.actionPermitted)
 		}
 
 		// Get the table object
@@ -233,7 +235,7 @@ export async function updateAuthor(
 
 		// Check if the table object belongs to the user
 		if (authorTableObject.userId != user.id) {
-			throw new Error("action_permitted")
+			throwApiError(Errors.actionPermitted)
 		}
 	}
 

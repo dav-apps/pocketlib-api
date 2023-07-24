@@ -46,9 +46,9 @@ export async function retrievePublisher(
 		const user: User = context.user
 
 		if (user == null) {
-			throw new Error("You are not authenticated")
+			throwApiError(Errors.notAuthenticated)
 		} else if (admins.includes(user.id)) {
-			throw new Error("You are an admin")
+			throwApiError(Errors.actionPermitted)
 		}
 
 		// Get the publisher of the user
@@ -143,7 +143,7 @@ export async function updatePublisher(
 		if (response.items.length > 0) {
 			publisherTableObject = response.items[0]
 		} else {
-			throwApiError(Errors.publisherRequired)
+			throwApiError(Errors.actionPermitted)
 		}
 	} else {
 		// Check if the user is an admin

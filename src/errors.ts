@@ -23,12 +23,6 @@ export const publisherDoesNotExist: ApiError = {
 	status: 404
 }
 
-export const publisherRequired: ApiError = {
-	code: "PUBLISHER_REQUIRED",
-	message: "You need to be a publisher to invoke this action",
-	status: 403
-}
-
 export const validationFailed: ApiError = {
 	code: "VALIDATION_FAILED",
 	message: "Validation failed",
