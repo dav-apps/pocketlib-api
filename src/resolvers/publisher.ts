@@ -21,7 +21,7 @@ import {
 	convertTableObjectToPublisherLogo,
 	convertTableObjectToAuthor
 } from "../utils.js"
-import { admins } from "../constants.js"
+import { admins, publisherTableId } from "../constants.js"
 import * as Errors from "../errors.js"
 import { getTableObject, listTableObjects } from "../services/apiService.js"
 import {
@@ -97,6 +97,71 @@ export async function listPublishers(
 		total: response.total,
 		items: result
 	}
+}
+
+export async function createPublisher(
+	parent: any,
+	args: { name: string },
+	context: ResolverContext
+): Promise<Publisher> {
+	const user = context.user
+	const accessToken = context.token
+
+	// Check if the user is logged in
+	if (user == null) {
+		throwApiError(Errors.notAuthenticated)
+	}
+
+	let isAdmin = admins.includes(user.id)
+
+	if (!isAdmin) {
+		// Check if the user is already a publisher
+		let response = await listTableObjects({
+			caching: false,
+			limit: 1,
+			tableName: "Publisher",
+			userId: user.id
+		})
+
+		if (response.items.length > 0) {
+			throwApiError(Errors.actionPermitted)
+		}
+	}
+
+	// Validate the args
+	throwValidationError(validateNameLength(args.name))
+
+	// Create the publisher
+	let createResponse = await TableObjectsController.CreateTableObject({
+		accessToken,
+		tableId: publisherTableId,
+		properties: {
+			name: args.name
+		}
+	})
+
+	if (!isSuccessStatusCode(createResponse.status)) {
+		throwApiError(Errors.unexpectedError)
+	}
+
+	let createResponseData = (
+		createResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
+	).data
+
+	// Convert from TableObjectResponseData to TableObject
+	let responseTableObject: TableObject = {
+		uuid: createResponseData.tableObject.Uuid,
+		userId: user.id,
+		tableId: createResponseData.tableObject.TableId,
+		properties: {}
+	}
+
+	for (let key of Object.keys(createResponseData.tableObject.Properties)) {
+		let value = createResponseData.tableObject.Properties[key]
+		responseTableObject.properties[key] = value.value
+	}
+
+	return convertTableObjectToPublisher(responseTableObject)
 }
 
 export async function updatePublisher(

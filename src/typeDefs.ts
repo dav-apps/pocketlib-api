@@ -49,6 +49,7 @@ export const typeDefs = `#graphql
 	}
 
 	type Mutation {
+		createPublisher(name: String!): Publisher
 		updatePublisher(
 			uuid: String!
 			name: String
