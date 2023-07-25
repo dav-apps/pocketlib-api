@@ -4,8 +4,8 @@ import {
 	TableObjectsController
 } from "dav-js"
 import {
+	ResolverContext,
 	List,
-	User,
 	TableObject,
 	Publisher,
 	Author,
@@ -39,7 +39,7 @@ import {
 export async function retrieveAuthor(
 	parent: any,
 	args: { uuid: string },
-	context: any
+	context: ResolverContext
 ): Promise<Author> {
 	const uuid = args.uuid
 	if (uuid == null) return null
@@ -48,7 +48,7 @@ export async function retrieveAuthor(
 
 	if (uuid == "mine") {
 		// Check if the user is an author
-		const user: User = context.user
+		const user = context.user
 
 		if (user == null) {
 			throwApiError(Errors.notAuthenticated)
@@ -86,7 +86,7 @@ export async function listAuthors(
 		limit?: number
 		offset?: number
 	},
-	context: any
+	context: ResolverContext
 ): Promise<List<Author>> {
 	let total = 0
 	let tableObjects: TableObject[] = []
@@ -111,7 +111,7 @@ export async function listAuthors(
 		tableObjects = response.items
 	} else if (mine) {
 		// Check if the user is an admin
-		const user: User = context.user
+		const user = context.user
 
 		if (user == null) {
 			throwApiError(Errors.notAuthenticated)
@@ -170,10 +170,10 @@ export async function listAuthors(
 export async function createAuthor(
 	parent: any,
 	args: { publisher?: string; firstName: string; lastName: string },
-	context: any
+	context: ResolverContext
 ): Promise<Author> {
-	const user: User = context.user
-	const accessToken = context.token as string
+	const user = context.user
+	const accessToken = context.token
 
 	// Check if the user is logged in
 	if (user == null) {
@@ -204,10 +204,10 @@ export async function createAuthor(
 	}
 
 	// Validate the args
-	throwValidationError([
+	throwValidationError(
 		validateFirstNameLength(args.firstName),
 		validateLastNameLength(args.lastName)
-	])
+	)
 
 	// Create the author
 	let properties = {
@@ -260,7 +260,7 @@ export async function updateAuthor(
 		instagramUsername?: string
 		twitterUsername?: string
 	},
-	context: any
+	context: ResolverContext
 ): Promise<Author> {
 	const uuid = args.uuid
 	if (uuid == null) return null
@@ -270,8 +270,8 @@ export async function updateAuthor(
 	let twitterUsername = getTwitterUsername(args.twitterUsername)
 
 	let authorTableObject: TableObject = null
-	const user: User = context.user
-	const accessToken = context.token as string
+	const user = context.user
+	const accessToken = context.token
 
 	if (uuid == "mine") {
 		// Check if the user is an author
@@ -342,18 +342,18 @@ export async function updateAuthor(
 	}
 
 	if (args.facebookUsername != null && facebookUsername == null) {
-		errors.push("facebook_username_invalid")
+		errors.push(Errors.facebookUsernameInvalid)
 	}
 
 	if (args.instagramUsername != null && instagramUsername == null) {
-		errors.push("instagram_username_invalid")
+		errors.push(Errors.instagramUsernameInvalid)
 	}
 
 	if (args.twitterUsername != null && twitterUsername == null) {
-		errors.push("twitter_username_invalid")
+		errors.push(Errors.twitterUsernameInvalid)
 	}
 
-	throwValidationError(errors)
+	throwValidationError(...errors)
 
 	// Update the author
 	let properties = {}
@@ -425,7 +425,7 @@ export async function publisher(author: Author): Promise<Publisher> {
 export async function bio(
 	author: Author,
 	args: any,
-	context: any,
+	context: ResolverContext,
 	info: any
 ): Promise<AuthorBio> {
 	const biosString = author.bios

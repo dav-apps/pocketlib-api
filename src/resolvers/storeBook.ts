@@ -1,7 +1,6 @@
 import {
 	ResolverContext,
 	List,
-	User,
 	TableObject,
 	StoreBookCollection,
 	StoreBookSeries,
@@ -55,7 +54,7 @@ export async function listStoreBooks(
 		limit?: number
 		offset?: number
 	},
-	context: any
+	context: ResolverContext
 ): Promise<List<StoreBook>> {
 	let tableObjects: TableObject[] = []
 
@@ -120,7 +119,7 @@ export async function listStoreBooks(
 		}
 	} else if (inReview) {
 		// Check if the user is an admin
-		const user: User = context.user
+		const user = context.user
 
 		if (user == null) {
 			throwApiError(Errors.notAuthenticated)

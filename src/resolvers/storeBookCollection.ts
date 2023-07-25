@@ -1,4 +1,5 @@
 import {
+	ResolverContext,
 	List,
 	Author,
 	StoreBookCollection,
@@ -42,7 +43,7 @@ export async function author(
 export async function name(
 	storeBookCollection: StoreBookCollection,
 	args: any,
-	context: any,
+	context: ResolverContext,
 	info: any
 ): Promise<StoreBookCollectionName> {
 	const namesString = storeBookCollection.names

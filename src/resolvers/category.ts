@@ -1,4 +1,4 @@
-import { List, Category, CategoryName } from "../types.js"
+import { ResolverContext, List, Category, CategoryName } from "../types.js"
 import {
 	convertTableObjectToCategory,
 	convertTableObjectToCategoryName
@@ -36,7 +36,7 @@ export async function listCategories(
 export async function name(
 	category: Category,
 	args: any,
-	context: any,
+	context: ResolverContext,
 	info: any
 ): Promise<CategoryName> {
 	const namesString = category.names

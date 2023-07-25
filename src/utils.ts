@@ -34,7 +34,7 @@ export function throwApiError(error: ApiError) {
 	})
 }
 
-export function throwValidationError(errors: string[]) {
+export function throwValidationError(...errors: string[]) {
 	let filteredErrors = errors.filter(e => e != null)
 
 	if (filteredErrors.length > 0) {

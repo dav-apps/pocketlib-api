@@ -3,33 +3,49 @@ export const typeDefs = `#graphql
 
 	type Query {
 		retrievePublisher(uuid: String!): Publisher
-		listPublishers(limit: Int, offset: Int): PublisherList!
+		listPublishers(
+			limit: Int
+			offset: Int
+		): PublisherList!
 		retrieveAuthor(uuid: String!): Author
 		listAuthors(
-			latest: Boolean,
-			mine: Boolean,
-			languages: [String!],
-			limit: Int,
+			latest: Boolean
+			mine: Boolean
+			languages: [String!]
+			limit: Int
 			offset: Int
 		): AuthorList!
-		retrieveStoreBookCollection(uuid: String!, languages: [String!]): StoreBookCollection
-		retrieveStoreBookSeries(uuid: String!, languages: [String!]): StoreBookSeries
+		retrieveStoreBookCollection(
+			uuid: String!
+			languages: [String!]
+		): StoreBookCollection
+		retrieveStoreBookSeries(
+			uuid: String!
+			languages: [String!]
+		): StoreBookSeries
 		listStoreBookSeries(
-			latest: Boolean,
-			languages: [String!],
-			limit: Int,
+			latest: Boolean
+			languages: [String!]
+			limit: Int
 			offset: Int
 		): StoreBookSeriesList!
-		retrieveStoreBook(uuid: String!, languages: [String!]): StoreBook
+		retrieveStoreBook(
+			uuid: String!
+			languages: [String!]
+		): StoreBook
 		listStoreBooks(
-			latest: Boolean,
-			categories: [String!],
-			inReview: Boolean,
-			languages: [String!],
-			limit: Int,
+			latest: Boolean
+			categories: [String!]
+			inReview: Boolean
+			languages: [String!]
+			limit: Int
 			offset: Int
 		): StoreBookList!
-		listCategories(languages: [String!], limit: Int, offset: Int): CategoryList!
+		listCategories(
+			languages: [String!]
+			limit: Int
+			offset: Int
+		): CategoryList!
 	}
 
 	type Mutation {

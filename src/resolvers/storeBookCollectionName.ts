@@ -4,7 +4,11 @@ import {
 	ApiErrorResponse,
 	TableObjectsController
 } from "dav-js"
-import { User, TableObject, StoreBookCollectionName } from "../types.js"
+import {
+	ResolverContext,
+	TableObject,
+	StoreBookCollectionName
+} from "../types.js"
 import {
 	throwApiError,
 	throwValidationError,
@@ -22,13 +26,13 @@ import {
 export async function setStoreBookCollectionName(
 	parent: any,
 	args: { uuid: string; name: string; language: string },
-	context: any
+	context: ResolverContext
 ): Promise<StoreBookCollectionName> {
 	const uuid = args.uuid
 	if (uuid == null) return null
 
-	const user: User = context.user
-	const accessToken = context.token as string
+	const user = context.user
+	const accessToken = context.token
 
 	// Check if the user is logged in
 	if (user == null) {
@@ -48,10 +52,10 @@ export async function setStoreBookCollectionName(
 	}
 
 	// Validate the args
-	throwValidationError([
+	throwValidationError(
 		validateNameLength(args.name),
 		validateLanguage(args.language)
-	])
+	)
 
 	let collection = convertTableObjectToStoreBookCollection(
 		collectionTableObject

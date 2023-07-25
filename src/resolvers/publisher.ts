@@ -4,8 +4,8 @@ import {
 	TableObjectsController
 } from "dav-js"
 import {
+	ResolverContext,
 	List,
-	User,
 	TableObject,
 	Publisher,
 	PublisherLogo,
@@ -33,7 +33,7 @@ import {
 export async function retrievePublisher(
 	parent: any,
 	args: { uuid: string },
-	context: any
+	context: ResolverContext
 ): Promise<Publisher> {
 	const uuid = args.uuid
 	if (uuid == null) return null
@@ -42,7 +42,7 @@ export async function retrievePublisher(
 
 	if (uuid == "mine") {
 		// Check if the user is a publisher
-		const user: User = context.user
+		const user = context.user
 
 		if (user == null) {
 			throwApiError(Errors.notAuthenticated)
@@ -110,7 +110,7 @@ export async function updatePublisher(
 		instagramUsername?: string
 		twitterUsername?: string
 	},
-	context: any
+	context: ResolverContext
 ): Promise<Publisher> {
 	const uuid = args.uuid
 	if (uuid == null) return null
@@ -120,8 +120,8 @@ export async function updatePublisher(
 	let twitterUsername = getTwitterUsername(args.twitterUsername)
 
 	let publisherTableObject: TableObject = null
-	const user: User = context.user
-	const accessToken = context.token as string
+	const user = context.user
+	const accessToken = context.token
 
 	if (uuid == "mine") {
 		// Check if the user is a publisher
@@ -203,7 +203,7 @@ export async function updatePublisher(
 		errors.push(Errors.twitterUsernameInvalid)
 	}
 
-	throwValidationError(errors)
+	throwValidationError(...errors)
 
 	// Update the publisher
 	let properties = {}

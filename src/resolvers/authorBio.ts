@@ -4,7 +4,7 @@ import {
 	isSuccessStatusCode,
 	TableObjectsController
 } from "dav-js"
-import { User, TableObject, AuthorBio } from "../types.js"
+import { ResolverContext, TableObject, AuthorBio } from "../types.js"
 import {
 	throwApiError,
 	throwValidationError,
@@ -22,14 +22,14 @@ import {
 export async function setAuthorBio(
 	parent: any,
 	args: { uuid: string; bio: string; language: string },
-	context: any
+	context: ResolverContext
 ): Promise<AuthorBio> {
 	const uuid = args.uuid
 	if (uuid == null) return null
 
 	let authorTableObject: TableObject = null
-	const user: User = context.user
-	const accessToken = context.token as string
+	const user = context.user
+	const accessToken = context.token
 
 	if (uuid == "mine") {
 		// Check if the user is an author
@@ -74,10 +74,10 @@ export async function setAuthorBio(
 	}
 
 	// Validate the args
-	throwValidationError([
+	throwValidationError(
 		validateBioLength(args.bio),
 		validateLanguage(args.language)
-	])
+	)
 
 	let author = convertTableObjectToAuthor(authorTableObject)
 	let biosString = author.bios || ""
