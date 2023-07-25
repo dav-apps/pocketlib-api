@@ -24,6 +24,7 @@ export const resolvers = {
 	},
 	Mutation: {
 		updatePublisher: publisherResolvers.updatePublisher,
+		createAuthor: authorResolvers.createAuthor,
 		updateAuthor: authorResolvers.updateAuthor,
 		setAuthorBio: authorBioResolvers.setAuthorBio,
 		setStoreBookCollectionName:

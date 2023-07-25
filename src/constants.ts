@@ -1,6 +1,7 @@
 export const apiBaseUrl = "http://localhost:3111"
 export const admins = [1]
 export const languages = ["en", "de"]
+export const publisherTableId = 36
 export const authorBioTableId = 20
 export const storeBookCollectionNameTableId = 23
 export const facebookUsernameRegex =

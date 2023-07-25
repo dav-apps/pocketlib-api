@@ -28,7 +28,7 @@ import {
 	convertTableObjectToStoreBookSeries
 } from "../utils.js"
 import * as Errors from "../errors.js"
-import { admins } from "../constants.js"
+import { admins, publisherTableId } from "../constants.js"
 import { getTableObject, listTableObjects } from "../services/apiService.js"
 import {
 	validateFirstNameLength,
@@ -165,6 +165,88 @@ export async function listAuthors(
 			items: result
 		}
 	}
+}
+
+export async function createAuthor(
+	parent: any,
+	args: { publisher?: string; firstName: string; lastName: string },
+	context: any
+): Promise<Author> {
+	const user: User = context.user
+	const accessToken = context.token as string
+
+	// Check if the user is logged in
+	if (user == null) {
+		throwApiError(Errors.notAuthenticated)
+	}
+
+	let isAdmin = admins.includes(user.id)
+
+	if (isAdmin && args.publisher != null) {
+		// Get the publisher
+		let publisherTableObject = await getTableObject(args.publisher)
+
+		if (publisherTableObject == null) {
+			throwApiError(Errors.publisherDoesNotExist)
+		}
+	} else if (!isAdmin) {
+		// Check if the user already is an author
+		let response = await listTableObjects({
+			caching: false,
+			limit: 1,
+			tableName: "Author",
+			userId: user.id
+		})
+
+		if (response.items.length > 0) {
+			throwApiError(Errors.actionPermitted)
+		}
+	}
+
+	// Validate the args
+	throwValidationError([
+		validateFirstNameLength(args.firstName),
+		validateLastNameLength(args.lastName)
+	])
+
+	// Create the author
+	let properties = {
+		first_name: args.firstName,
+		last_name: args.lastName
+	}
+
+	if (isAdmin && args.publisher != null) {
+		properties["publisher"] = args.publisher
+	}
+
+	let createResponse = await TableObjectsController.CreateTableObject({
+		accessToken,
+		tableId: publisherTableId,
+		properties
+	})
+
+	if (!isSuccessStatusCode(createResponse.status)) {
+		throwApiError(Errors.unexpectedError)
+	}
+
+	let createResponseData = (
+		createResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
+	).data
+
+	// Convert from TableObjectResponseData to TableObject
+	let responseTableObject: TableObject = {
+		uuid: createResponseData.tableObject.Uuid,
+		userId: user.id,
+		tableId: createResponseData.tableObject.TableId,
+		properties: {}
+	}
+
+	for (let key of Object.keys(createResponseData.tableObject.Properties)) {
+		let value = createResponseData.tableObject.Properties[key]
+		responseTableObject.properties[key] = value.value
+	}
+
+	return convertTableObjectToAuthor(responseTableObject)
 }
 
 export async function updateAuthor(

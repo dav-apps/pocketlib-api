@@ -42,6 +42,11 @@ export const typeDefs = `#graphql
 			instagramUsername: String
 			twitterUsername: String
 		): Publisher
+		createAuthor(
+			publisher: String
+			firstName: String!
+			lastName: String!
+		): Author
 		updateAuthor(
 			uuid: String!
 			firstName: String
