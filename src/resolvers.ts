@@ -29,7 +29,8 @@ export const resolvers = {
 		updateAuthor: authorResolvers.updateAuthor,
 		setAuthorBio: authorBioResolvers.setAuthorBio,
 		setStoreBookCollectionName:
-			storeBookCollectionNameResolvers.setStoreBookCollectionName
+			storeBookCollectionNameResolvers.setStoreBookCollectionName,
+		createStoreBook: storeBookResolvers.createStoreBook
 	},
 	Publisher: {
 		logo: publisherResolvers.logo,

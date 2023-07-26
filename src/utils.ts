@@ -57,23 +57,41 @@ export async function loadStoreBookData(
 
 	if (releasesString != null) {
 		let releaseUuids = releasesString.split(",").reverse()
+		let releases: StoreBookRelease[] = []
+		let releaseFound = false
 
 		for (let uuid of releaseUuids) {
 			let releaseTableObject = await getTableObject(uuid)
 			if (releaseTableObject == null) continue
 
 			let release = convertTableObjectToStoreBookRelease(releaseTableObject)
+			releases.push(release)
 
 			if (!published || (published && release.status == "published")) {
 				storeBook.title = release.title
 				storeBook.description = release.description
-				storeBook.price = release.price
+				storeBook.price = release.price || 0
 				storeBook.isbn = release.isbn
 				storeBook.cover = release.cover
 				storeBook.file = release.file
 				storeBook.categories = release.categories
+
+				releaseFound = true
 				break
 			}
+		}
+
+		if (!releaseFound && releases.length > 0) {
+			// Retrieve the data of the first release
+			let release = releases[0]
+
+			storeBook.title = release.title
+			storeBook.description = release.description
+			storeBook.price = release.price || 0
+			storeBook.isbn = release.isbn
+			storeBook.cover = release.cover
+			storeBook.file = release.file
+			storeBook.categories = release.categories
 		}
 	}
 }
@@ -198,7 +216,7 @@ export function convertTableObjectToStoreBook(obj: TableObject): StoreBook {
 		language: obj.properties.language as string,
 		price: null,
 		isbn: null,
-		status: obj.properties.status as string,
+		status: (obj.properties.status as string) || "unpublished",
 		cover: null,
 		file: null,
 		categories: null,

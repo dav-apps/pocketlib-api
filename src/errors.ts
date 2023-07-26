@@ -41,14 +41,18 @@ export const storeBookCollectionDoesNotExist: ApiError = {
 	status: 404
 }
 
+export const authorRequired = "AUTHOR_REQUIRED"
+
 export const nameTooShort = "NAME_TOO_SHORT"
 export const firstNameTooShort = "FIRST_NAME_TOO_SHORT"
 export const lastNameTooShort = "LAST_NAME_TOO_SHORT"
+export const titleTooShort = "TITLE_TOO_SHORT"
 
 export const nameTooLong = "NAME_TOO_LONG"
-export const descriptionTooLong = "DESCRIPTION_TOO_LONG"
 export const firstNameTooLong = "FIRST_NAME_TOO_LONG"
 export const lastNameTooLong = "LAST_NAME_TOO_LONG"
+export const titleTooLong = "TITLE_TOO_LONG"
+export const descriptionTooLong = "DESCRIPTION_TOO_LONG"
 export const bioTooLong = "BIO_TOO_LONG"
 
 export const websiteUrlInvalid = "WEBSITE_URL_INVALID"
@@ -56,3 +60,7 @@ export const facebookUsernameInvalid = "FACEBOOK_USERNAME_INVALID"
 export const instagramUsernameInvalid = "INSTAGRAM_USERNAME_INVALID"
 export const twitterUsernameInvalid = "TWITTER_USERNAME_INVALID"
 export const languageInvalid = "LANGUAGE_INVALID"
+export const priceInvalid = "PRICE_INVALID"
+export const isbnInvalid = "ISBN_INVALID"
+
+export const storeBookMaxCategories = "TOO_MANY_CATEGORIES_FOR_STORE_BOOK"

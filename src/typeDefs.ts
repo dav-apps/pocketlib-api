@@ -83,6 +83,16 @@ export const typeDefs = `#graphql
 			name: String!
 			language: String!
 		): StoreBookCollectionName
+		createStoreBook(
+			author: String
+			collection: String
+			title: String!
+			description: String
+			language: String!
+			price: Int
+			isbn: String
+			categories: [String!]
+		): StoreBook
 	}
 
 	type Publisher {
@@ -191,7 +201,7 @@ export const typeDefs = `#graphql
 		language: String!
 		price: Int!
 		isbn: String
-		status: String
+		status: String!
 		cover: StoreBookCover
 		file: StoreBookFile
 		categories(limit: Int, offset: Int): CategoryList!

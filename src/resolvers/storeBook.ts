@@ -1,4 +1,9 @@
 import {
+	isSuccessStatusCode,
+	ApiResponse,
+	TableObjectsController
+} from "dav-js"
+import {
 	ResolverContext,
 	List,
 	TableObject,
@@ -12,6 +17,7 @@ import {
 } from "../types.js"
 import {
 	throwApiError,
+	throwValidationError,
 	loadStoreBookData,
 	convertTableObjectToStoreBookCollection,
 	convertTableObjectToStoreBookSeries,
@@ -22,12 +28,27 @@ import {
 	convertTableObjectToCategory
 } from "../utils.js"
 import * as Errors from "../errors.js"
-import { admins } from "../constants.js"
+import {
+	admins,
+	storeBookCollectionTableId,
+	storeBookCollectionNameTableId,
+	storeBookTableId,
+	storeBookReleaseTableId
+} from "../constants.js"
 import {
 	getTableObject,
 	listTableObjects,
-	listPurchasesOfTableObject
+	listPurchasesOfTableObject,
+	setTableObjectPrice
 } from "../services/apiService.js"
+import {
+	validateTitleLength,
+	validateDescriptionLength,
+	validateLanguage,
+	validatePrice,
+	validateIsbn,
+	validateCategoriesLength
+} from "../services/validationService.js"
 
 export async function retrieveStoreBook(
 	parent: any,
@@ -153,6 +174,327 @@ export async function listStoreBooks(
 	return {
 		total: result.length,
 		items: result.slice(offset, limit + offset)
+	}
+}
+
+export async function createStoreBook(
+	parent: any,
+	args: {
+		author?: string
+		collection?: string
+		title: string
+		description?: string
+		language: string
+		price?: number
+		isbn?: string
+		categories?: string[]
+	},
+	context: ResolverContext
+): Promise<StoreBook> {
+	const user = context.user
+	const accessToken = context.token
+
+	// Check if the user is logged in
+	if (user == null) {
+		throwApiError(Errors.notAuthenticated)
+	}
+
+	let isAdmin = admins.includes(user.id)
+	let authorTableObject: TableObject = null
+
+	if (isAdmin) {
+		if (args.author == null) {
+			throwValidationError(Errors.authorRequired)
+		}
+
+		// Get the author
+		authorTableObject = await getTableObject(args.author)
+
+		if (authorTableObject == null) {
+			throwApiError(Errors.authorDoesNotExist)
+		}
+	} else {
+		// Check if the user is an author
+		let response = await listTableObjects({
+			caching: false,
+			limit: 1,
+			tableName: "Author",
+			userId: user.id
+		})
+
+		if (response.items.length == 0) {
+			throwApiError(Errors.actionPermitted)
+		} else {
+			authorTableObject = response.items[0]
+		}
+	}
+
+	// Validate the args
+	let errors: string[] = [validateTitleLength(args.title)]
+
+	if (args.description != null) {
+		errors.push(validateDescriptionLength(args.description))
+	}
+
+	errors.push(validateLanguage(args.language))
+
+	if (args.price != null) {
+		errors.push(validatePrice(args.price))
+	}
+
+	if (args.isbn != null) {
+		errors.push(validateIsbn(args.isbn))
+	}
+
+	if (args.categories != null) {
+		errors.push(validateCategoriesLength(args.categories))
+	}
+
+	throwValidationError(...errors)
+
+	let storeBookCollection: TableObject = null
+
+	if (args.collection == null) {
+		// Create the store book collection name
+		let createCollectionNameResponse =
+			await TableObjectsController.CreateTableObject({
+				accessToken,
+				tableId: storeBookCollectionNameTableId,
+				properties: {
+					name: args.title,
+					language: args.language
+				}
+			})
+
+		if (!isSuccessStatusCode(createCollectionNameResponse.status)) {
+			throwApiError(Errors.unexpectedError)
+		}
+
+		let createCollectionNameResponseData = (
+			createCollectionNameResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
+		).data
+
+		// Create the store book collection
+		let createCollectionResponse =
+			await TableObjectsController.CreateTableObject({
+				accessToken,
+				tableId: storeBookCollectionTableId,
+				properties: {
+					author: authorTableObject.uuid,
+					names: createCollectionNameResponseData.tableObject.Uuid
+				}
+			})
+
+		if (!isSuccessStatusCode(createCollectionResponse.status)) {
+			throwApiError(Errors.unexpectedError)
+		}
+
+		let createCollectionResponseData = (
+			createCollectionResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
+		).data
+
+		storeBookCollection = {
+			uuid: createCollectionResponseData.tableObject.Uuid,
+			tableId: createCollectionResponseData.tableObject.TableId,
+			userId: user.id,
+			properties: {}
+		}
+
+		for (let key of Object.keys(
+			createCollectionResponseData.tableObject.Properties
+		)) {
+			let value = createCollectionResponseData.tableObject.Properties[key]
+			storeBookCollection.properties[key] = value.value
+		}
+	} else {
+		// Get the collection
+		storeBookCollection = await getTableObject(args.collection)
+
+		if (storeBookCollection == null) {
+			throwApiError(Errors.storeBookCollectionDoesNotExist)
+		}
+
+		// Check if the collection already has a name for the given language
+		let namesString = storeBookCollection.properties.names as string
+		let createCollectionName = true
+
+		if (namesString != null) {
+			let nameUuids = namesString.split(",")
+
+			for (let nameUuid of nameUuids) {
+				// Get the store book collection name table object
+				let nameObj = await getTableObject(nameUuid)
+				if (nameObj == null) continue
+
+				if (nameObj.properties.language == args.language) {
+					createCollectionName = false
+				}
+			}
+		}
+
+		if (createCollectionName) {
+			// Create the store book collection name
+			let createCollectionNameResponse =
+				await TableObjectsController.CreateTableObject({
+					accessToken,
+					tableId: storeBookCollectionNameTableId,
+					properties: {
+						name: args.title,
+						language: args.language
+					}
+				})
+
+			if (!isSuccessStatusCode(createCollectionNameResponse.status)) {
+				throwApiError(Errors.unexpectedError)
+			}
+
+			let createCollectionNameResponseData = (
+				createCollectionNameResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
+			).data
+
+			// Add the uuid of the new name to the names of the collection
+			if (namesString == null || namesString.length == 0) {
+				namesString = createCollectionNameResponseData.tableObject.Uuid
+			} else {
+				namesString += `,${createCollectionNameResponseData.tableObject.Uuid}`
+			}
+
+			// Update the collection with the new names
+			await TableObjectsController.UpdateTableObject({
+				accessToken,
+				uuid: storeBookCollection.uuid,
+				properties: {
+					names: namesString
+				}
+			})
+		}
+	}
+
+	// Create the store book release
+	let storeBookReleaseProperties = {
+		title: args.title
+	}
+
+	if (args.description != null) {
+		storeBookReleaseProperties["description"] = args.description
+	}
+
+	if (args.price != null) {
+		storeBookReleaseProperties["price"] = args.price
+	}
+
+	if (args.isbn != null) {
+		storeBookReleaseProperties["isbn"] = args.isbn
+	}
+
+	if (args.categories != null) {
+		// Get the category uuids
+		let categoryUuids: string[] = []
+
+		for (let categoryKey of args.categories) {
+			let categoryResponse = await listTableObjects({
+				limit: 1,
+				tableName: "Collection",
+				propertyName: "key",
+				propertyValue: categoryKey,
+				exact: true
+			})
+
+			if (categoryResponse.items.length > 0) {
+				categoryUuids.push(categoryResponse.items[0].uuid)
+			}
+		}
+
+		if (categoryUuids.length > 0) {
+			storeBookReleaseProperties["categories"] = categoryUuids.join(",")
+		}
+	}
+
+	let createStoreBookReleaseResponse =
+		await TableObjectsController.CreateTableObject({
+			accessToken,
+			tableId: storeBookReleaseTableId,
+			properties: storeBookReleaseProperties
+		})
+
+	if (!isSuccessStatusCode(createStoreBookReleaseResponse.status)) {
+		throwApiError(Errors.unexpectedError)
+	}
+
+	let createStoreBookReleaseResponseData = (
+		createStoreBookReleaseResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
+	).data
+
+	// Create the store book table object
+	let createStoreBookResponse = await TableObjectsController.CreateTableObject(
+		{
+			accessToken,
+			tableId: storeBookTableId,
+			properties: {
+				collection: storeBookCollection.uuid,
+				releases: createStoreBookReleaseResponseData.tableObject.Uuid,
+				language: args.language
+			}
+		}
+	)
+
+	if (!isSuccessStatusCode(createStoreBookResponse.status)) {
+		throwApiError(Errors.unexpectedError)
+	}
+
+	let createStoreBookResponseData = (
+		createStoreBookResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
+	).data
+	let storeBookTableObject = createStoreBookResponseData.tableObject
+
+	// Set the price of the table object
+	let storeBookPrice = await setTableObjectPrice({
+		uuid: storeBookTableObject.Uuid,
+		price: args.price || 0,
+		currency: "eur"
+	})
+
+	if (storeBookPrice == null) {
+		throwApiError(Errors.unexpectedError)
+	}
+
+	// Add the store book to the books of the store book collection
+	let booksString = storeBookCollection.properties.books as string
+
+	if (booksString == null || booksString.length == 0) {
+		booksString = storeBookTableObject.Uuid
+	} else {
+		booksString += `,${storeBookTableObject.Uuid}`
+	}
+
+	let updateStoreBookCollectionResponse =
+		await TableObjectsController.UpdateTableObject({
+			accessToken,
+			uuid: storeBookCollection.uuid,
+			properties: {
+				books: booksString
+			}
+		})
+
+	if (!isSuccessStatusCode(updateStoreBookCollectionResponse.status)) {
+		throwApiError(Errors.unexpectedError)
+	}
+
+	return {
+		uuid: storeBookTableObject.Uuid,
+		collection: storeBookCollection.uuid,
+		title: args.title,
+		description: args.description,
+		language: args.language,
+		price: args.price || 0,
+		isbn: args.isbn,
+		status: "unpublished",
+		cover: null,
+		file: null,
+		categories: null,
+		releases: null,
+		inLibrary: false,
+		purchased: false
 	}
 }
 
