@@ -36,6 +36,12 @@ export interface TableObject {
 	properties: { [key: string]: string | number | boolean }
 }
 
+export interface TableObjectPrice {
+	tableObjectUuid: string
+	price: number
+	currency: string
+}
+
 export interface Purchase {
 	id: number
 	userId: number

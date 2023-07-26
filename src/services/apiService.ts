@@ -1,6 +1,12 @@
 import axios, { AxiosRequestConfig } from "axios"
-import { apiBaseUrl } from "../constants.js"
-import { List, User, TableObject, Purchase } from "../types.js"
+import { apiBaseUrl, appId } from "../constants.js"
+import {
+	List,
+	User,
+	TableObject,
+	TableObjectPrice,
+	Purchase
+} from "../types.js"
 
 export async function getUser(token: string): Promise<User> {
 	try {
@@ -70,6 +76,7 @@ export async function listTableObjects(params: {
 	try {
 		let requestParams: AxiosRequestConfig = {}
 
+		requestParams["app_id"] = appId
 		if (params.limit != null) requestParams["limit"] = params.limit
 		if (params.offset != null) requestParams["offset"] = params.offset
 		if (params.collectionName != null)
@@ -148,5 +155,34 @@ export async function listPurchasesOfTableObject(params: {
 	} catch (error) {
 		console.error(error.response?.data || error)
 		return []
+	}
+}
+
+export async function setTableObjectPrice(params: {
+	uuid: string
+	price: number
+	currency: string
+}): Promise<TableObjectPrice> {
+	try {
+		let response = await axios({
+			method: "put",
+			url: `${apiBaseUrl}/v2/table_objects/${params.uuid}/price`,
+			headers: {
+				"Content-Type": "application/json"
+			},
+			data: {
+				price: params.price,
+				currency: params.currency
+			}
+		})
+
+		return {
+			tableObjectUuid: response.data.table_object_uuid,
+			price: response.data.price,
+			currency: response.data.currency
+		}
+	} catch (error) {
+		console.error(error.response?.data || error)
+		return null
 	}
 }
