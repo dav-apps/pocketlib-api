@@ -80,3 +80,9 @@ export function validateIsbn(isbn: string) {
 		return Errors.isbnInvalid
 	}
 }
+
+export function validateStatus(status: string) {
+	if (!["unpublished", "review", "published", "hidden"].includes(status)) {
+		return Errors.statusInvalid
+	}
+}

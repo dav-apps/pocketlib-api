@@ -93,6 +93,16 @@ export const typeDefs = `#graphql
 			isbn: String
 			categories: [String!]
 		): StoreBook
+		updateStoreBook(
+			uuid: String!
+			title: String
+			description: String
+			language: String
+			price: Int
+			isbn: String
+			status: String
+			categories: [String!]
+		): StoreBook
 	}
 
 	type Publisher {

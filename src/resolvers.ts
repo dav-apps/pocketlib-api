@@ -30,7 +30,8 @@ export const resolvers = {
 		setAuthorBio: authorBioResolvers.setAuthorBio,
 		setStoreBookCollectionName:
 			storeBookCollectionNameResolvers.setStoreBookCollectionName,
-		createStoreBook: storeBookResolvers.createStoreBook
+		createStoreBook: storeBookResolvers.createStoreBook,
+		updateStoreBook: storeBookResolvers.updateStoreBook
 	},
 	Publisher: {
 		logo: publisherResolvers.logo,

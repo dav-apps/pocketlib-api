@@ -41,6 +41,24 @@ export const storeBookCollectionDoesNotExist: ApiError = {
 	status: 404
 }
 
+export const storeBookDoesNotExist: ApiError = {
+	code: "STORE_BOOK_NOT_EXISTS",
+	message: "StoreBook does not exist",
+	status: 404
+}
+
+export const storeBookReleaseDoesNotExist: ApiError = {
+	code: "STORE_BOOK_RELEASE_NOT_EXISTS",
+	message: "StoreBookRelease does not exist",
+	status: 404
+}
+
+export const cannotUpdateStoreBookLanguage: ApiError = {
+	code: "CANNOT_UPDATE_LANGUAGE_OF_PUBLISHED_STORE_BOOK",
+	message: "Can't update language of published store book",
+	status: 422
+}
+
 export const authorRequired = "AUTHOR_REQUIRED"
 
 export const nameTooShort = "NAME_TOO_SHORT"
@@ -62,5 +80,12 @@ export const twitterUsernameInvalid = "TWITTER_USERNAME_INVALID"
 export const languageInvalid = "LANGUAGE_INVALID"
 export const priceInvalid = "PRICE_INVALID"
 export const isbnInvalid = "ISBN_INVALID"
+export const statusInvalid = "STATUS_INVALID"
 
 export const storeBookMaxCategories = "TOO_MANY_CATEGORIES_FOR_STORE_BOOK"
+export const cannotPublishStoreBookWithoutDescription =
+	"CANNOT_PUBLISH_STORE_BOOK_WITHOUT_DESCRIPTION"
+export const cannotPublishStoreBookWithoutCover =
+	"CANNOT_PUBLISH_STORE_BOOK_WITHOUT_COVER"
+export const cannotPublishStoreBookWithoutFile =
+	"CANNOT_PUBLISH_STORE_BOOK_WITHOUT_FILE"
