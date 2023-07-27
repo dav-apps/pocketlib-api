@@ -48,7 +48,7 @@ export async function setStoreBookCollectionName(
 
 	// Check if the table object belongs to the user
 	if (collectionTableObject.userId != user.id) {
-		throwApiError(Errors.actionPermitted)
+		throwApiError(Errors.actionNotAllowed)
 	}
 
 	// Validate the args

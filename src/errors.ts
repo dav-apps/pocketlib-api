@@ -11,9 +11,9 @@ export const notAuthenticated: ApiError = {
 	status: 401
 }
 
-export const actionPermitted: ApiError = {
-	code: "ACTION_PERMITTED",
-	message: "Action permitted",
+export const actionNotAllowed: ApiError = {
+	code: "ACTION_NOT_ALLOWED",
+	message: "Action not allowed",
 	status: 403
 }
 
@@ -59,19 +59,34 @@ export const cannotUpdateStoreBookLanguage: ApiError = {
 	status: 422
 }
 
+export const storeBookReleaseAlreadyPublished: ApiError = {
+	code: "STORE_BOOK_RELEASE_ALREADY_PUBLISHED",
+	message: "The StoreBookRelease is already published",
+	status: 412
+}
+
+export const storeBookNotPublished: ApiError = {
+	code: "STORE_BOOK_NOT_PUBLISHED",
+	message: "The StoreBook is not published",
+	status: 412
+}
+
 export const authorRequired = "AUTHOR_REQUIRED"
 
 export const nameTooShort = "NAME_TOO_SHORT"
 export const firstNameTooShort = "FIRST_NAME_TOO_SHORT"
 export const lastNameTooShort = "LAST_NAME_TOO_SHORT"
 export const titleTooShort = "TITLE_TOO_SHORT"
+export const releaseNameTooShort = "RELEASE_NAME_TOO_SHORT"
 
 export const nameTooLong = "NAME_TOO_LONG"
 export const firstNameTooLong = "FIRST_NAME_TOO_LONG"
 export const lastNameTooLong = "LAST_NAME_TOO_LONG"
+export const bioTooLong = "BIO_TOO_LONG"
 export const titleTooLong = "TITLE_TOO_LONG"
 export const descriptionTooLong = "DESCRIPTION_TOO_LONG"
-export const bioTooLong = "BIO_TOO_LONG"
+export const releaseNameTooLong = "RELEASE_NAME_TOO_LONG"
+export const releaseNotesTooLong = "RELEASE_NOTES_TOO_LONG"
 
 export const websiteUrlInvalid = "WEBSITE_URL_INVALID"
 export const facebookUsernameInvalid = "FACEBOOK_USERNAME_INVALID"

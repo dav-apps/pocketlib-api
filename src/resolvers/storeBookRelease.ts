@@ -1,4 +1,6 @@
+import { isSuccessStatusCode, TableObjectsController } from "dav-js"
 import {
+	ResolverContext,
 	List,
 	StoreBookRelease,
 	StoreBookCover,
@@ -6,11 +8,112 @@ import {
 	Category
 } from "../types.js"
 import {
+	throwApiError,
+	throwValidationError,
 	convertTableObjectToStoreBookCover,
 	convertTableObjectToStoreBookFile,
+	convertTableObjectToStoreBookRelease,
 	convertTableObjectToCategory
 } from "../utils.js"
+import { admins } from "../constants.js"
+import * as Errors from "../errors.js"
 import { getTableObject } from "../services/apiService.js"
+import {
+	validateReleaseNameLength,
+	validateReleaseNotesLength
+} from "../services/validationService.js"
+
+export async function publishStoreBookRelease(
+	parent: any,
+	args: {
+		uuid: string
+		releaseName: string
+		releaseNotes?: string
+	},
+	context: ResolverContext
+): Promise<StoreBookRelease> {
+	const uuid = args.uuid
+	if (uuid == null) return null
+
+	const user = context.user
+	const accessToken = context.token
+	const isAdmin = admins.includes(user.id)
+
+	// Get the store book release
+	let storeBookReleaseTableObject = await getTableObject(uuid)
+
+	if (storeBookReleaseTableObject == null) {
+		throwApiError(Errors.storeBookReleaseDoesNotExist)
+	}
+
+	// Check if the release belongs to the user
+	if (user.id != storeBookReleaseTableObject.userId && !isAdmin) {
+		throwApiError(Errors.actionNotAllowed)
+	}
+
+	// Check if the release is unpublished
+	if (storeBookReleaseTableObject.properties.status == "published") {
+		throwApiError(Errors.storeBookReleaseAlreadyPublished)
+	}
+
+	// Get the store book
+	let storeBookUuid = storeBookReleaseTableObject.properties
+		.store_book as string
+
+	if (storeBookUuid == null) {
+		throwApiError(Errors.unexpectedError)
+	}
+
+	let storeBookTableObject = await getTableObject(storeBookUuid)
+
+	if (storeBookTableObject == null) {
+		throwApiError(Errors.unexpectedError)
+	}
+
+	// Check if the store book is published or hidden
+	let storeBookStatus = storeBookTableObject.properties.status
+
+	if (storeBookStatus != "published" && storeBookStatus != "hidden") {
+		throwApiError(Errors.storeBookNotPublished)
+	}
+
+	// Validate args
+	let errors: string[] = [validateReleaseNameLength(args.releaseName)]
+
+	if (args.releaseNotes != null) {
+		errors.push(validateReleaseNotesLength(args.releaseNotes))
+	}
+
+	throwValidationError(...errors)
+
+	// Publish the release
+	let releaseProperties = {
+		status: "published",
+		release_name: args.releaseName,
+		published_at: Math.floor(Date.now() / 1000)
+	}
+
+	if (args.releaseNotes != null) {
+		releaseProperties["release_notes"] = args.releaseNotes
+	}
+
+	let updateReleaseResponse = await TableObjectsController.UpdateTableObject({
+		accessToken,
+		uuid: storeBookReleaseTableObject.uuid,
+		properties: releaseProperties
+	})
+
+	if (!isSuccessStatusCode(updateReleaseResponse.status)) {
+		throwApiError(Errors.unexpectedError)
+	}
+
+	// Update the local release table object & return it
+	for (let key of Object.keys(releaseProperties)) {
+		storeBookReleaseTableObject.properties[key] = releaseProperties[key]
+	}
+
+	return convertTableObjectToStoreBookRelease(storeBookReleaseTableObject)
+}
 
 export async function cover(
 	storeBookRelease: StoreBookRelease

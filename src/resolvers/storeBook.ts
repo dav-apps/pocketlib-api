@@ -147,7 +147,7 @@ export async function listStoreBooks(
 		if (user == null) {
 			throwApiError(Errors.notAuthenticated)
 		} else if (!admins.includes(user.id)) {
-			throwApiError(Errors.actionPermitted)
+			throwApiError(Errors.actionNotAllowed)
 		}
 
 		// Get the StoreBooks in review
@@ -225,7 +225,7 @@ export async function createStoreBook(
 		})
 
 		if (response.items.length == 0) {
-			throwApiError(Errors.actionPermitted)
+			throwApiError(Errors.actionNotAllowed)
 		} else {
 			authorTableObject = response.items[0]
 		}
@@ -468,6 +468,20 @@ export async function createStoreBook(
 		throwApiError(Errors.unexpectedError)
 	}
 
+	// Add the store book to the release
+	let updateStoreBookReleaseResponse =
+		await TableObjectsController.UpdateTableObject({
+			accessToken,
+			uuid: createStoreBookReleaseResponseData.tableObject.Uuid,
+			properties: {
+				store_book: storeBookTableObject.Uuid
+			}
+		})
+
+	if (!isSuccessStatusCode(updateStoreBookReleaseResponse.status)) {
+		throwApiError(Errors.unexpectedError)
+	}
+
 	return {
 		uuid: storeBookTableObject.Uuid,
 		collection: storeBookCollection.uuid,
@@ -480,7 +494,7 @@ export async function createStoreBook(
 		cover: null,
 		file: null,
 		categories: null,
-		releases: null,
+		releases: createStoreBookReleaseResponseData.tableObject.Uuid,
 		inLibrary: false,
 		purchased: false
 	}
@@ -516,7 +530,7 @@ export async function updateStoreBook(
 
 	// Check if the store book belongs to the user
 	if (!isAdmin && storeBookTableObject.userId != user.id) {
-		throwApiError(Errors.actionPermitted)
+		throwApiError(Errors.actionNotAllowed)
 	}
 
 	// Get the latest release
@@ -753,7 +767,7 @@ export async function updateStoreBook(
 				// Change the status of the book to "hidden"
 				newStoreBookStatus = "hidden"
 			} else {
-				throwApiError(Errors.actionPermitted)
+				throwApiError(Errors.actionNotAllowed)
 			}
 		}
 

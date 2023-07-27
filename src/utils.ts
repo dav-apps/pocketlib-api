@@ -239,7 +239,7 @@ export function convertTableObjectToStoreBookRelease(
 		description: obj.properties.description as string,
 		price: obj.properties.price as number,
 		isbn: obj.properties.isbn as string,
-		status: obj.properties.status as string,
+		status: (obj.properties.status as string) || "unpublished",
 		cover: obj.properties.cover as string,
 		file: obj.properties.file as string,
 		categories: obj.properties.categories as string

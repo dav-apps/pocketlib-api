@@ -51,6 +51,20 @@ export function validateCategoriesLength(categories: string[]) {
 	}
 }
 
+export function validateReleaseNameLength(releaseName: string) {
+	if (releaseName.length < 2) {
+		return Errors.releaseNameTooShort
+	} else if (releaseName.length > 100) {
+		return Errors.releaseNameTooLong
+	}
+}
+
+export function validateReleaseNotesLength(releaseNotes: string) {
+	if (releaseNotes.length > 5700) {
+		return Errors.releaseNotesTooLong
+	}
+}
+
 export function validateWebsiteUrl(websiteUrl: string) {
 	if (!urlRegex.test(websiteUrl)) {
 		return Errors.websiteUrlInvalid

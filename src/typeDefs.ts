@@ -103,6 +103,11 @@ export const typeDefs = `#graphql
 			status: String
 			categories: [String!]
 		): StoreBook
+		publishStoreBookRelease(
+			uuid: String!
+			releaseName: String!
+			releaseNotes: String
+		): StoreBookRelease
 	}
 
 	type Publisher {
@@ -229,7 +234,7 @@ export const typeDefs = `#graphql
 	type StoreBookRelease {
 		uuid: String!
 		storeBook: StoreBook!
-		releaseName: String!
+		releaseName: String
 		releaseNotes: String
 		publishedAt: String
 		title: String!

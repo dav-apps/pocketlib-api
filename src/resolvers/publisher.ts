@@ -47,7 +47,7 @@ export async function retrievePublisher(
 		if (user == null) {
 			throwApiError(Errors.notAuthenticated)
 		} else if (admins.includes(user.id)) {
-			throwApiError(Errors.actionPermitted)
+			throwApiError(Errors.actionNotAllowed)
 		}
 
 		// Get the publisher of the user
@@ -124,7 +124,7 @@ export async function createPublisher(
 		})
 
 		if (response.items.length > 0) {
-			throwApiError(Errors.actionPermitted)
+			throwApiError(Errors.actionNotAllowed)
 		}
 	}
 
@@ -193,7 +193,7 @@ export async function updatePublisher(
 		if (user == null) {
 			throwApiError(Errors.notAuthenticated)
 		} else if (admins.includes(user.id)) {
-			throwApiError(Errors.actionPermitted)
+			throwApiError(Errors.actionNotAllowed)
 		}
 
 		// Get the publisher of the user
@@ -207,14 +207,14 @@ export async function updatePublisher(
 		if (response.items.length > 0) {
 			publisherTableObject = response.items[0]
 		} else {
-			throwApiError(Errors.actionPermitted)
+			throwApiError(Errors.actionNotAllowed)
 		}
 	} else {
 		// Check if the user is an admin
 		if (user == null) {
 			throwApiError(Errors.notAuthenticated)
 		} else if (!admins.includes(user.id)) {
-			throwApiError(Errors.actionPermitted)
+			throwApiError(Errors.actionNotAllowed)
 		}
 
 		// Get the table object
@@ -226,7 +226,7 @@ export async function updatePublisher(
 
 		// Check if the table object belongs to the user
 		if (publisherTableObject.userId != user.id) {
-			throwApiError(Errors.actionPermitted)
+			throwApiError(Errors.actionNotAllowed)
 		}
 	}
 
