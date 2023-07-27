@@ -42,6 +42,12 @@ export interface TableObjectPrice {
 	currency: string
 }
 
+export interface Collection {
+	id: number
+	tableId: number
+	name: string
+}
+
 export interface Purchase {
 	id: number
 	userId: number

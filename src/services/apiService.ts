@@ -5,6 +5,7 @@ import {
 	User,
 	TableObject,
 	TableObjectPrice,
+	Collection,
 	Purchase
 } from "../types.js"
 
@@ -180,6 +181,34 @@ export async function setTableObjectPrice(params: {
 			tableObjectUuid: response.data.table_object_uuid,
 			price: response.data.price,
 			currency: response.data.currency
+		}
+	} catch (error) {
+		console.error(error.response?.data || error)
+		return null
+	}
+}
+
+export async function addTableObjectToCollection(params: {
+	name: string
+	uuid: string
+	tableId: number
+}): Promise<Collection> {
+	try {
+		let response = await axios({
+			method: "post",
+			url: `${apiBaseUrl}/v2/collection/${params.name}/table_object/${params.uuid}`,
+			headers: {
+				"Content-Type": "application/json"
+			},
+			data: {
+				table_id: params.tableId
+			}
+		})
+
+		return {
+			id: response.data.id,
+			tableId: response.data.table_id,
+			name: response.data.name
 		}
 	} catch (error) {
 		console.error(error.response?.data || error)
