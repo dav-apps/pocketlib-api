@@ -295,6 +295,33 @@ export async function createStoreBook(
 			createCollectionResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
 		).data
 
+		// Update the author with the new collection
+		let authorCollectionsString = authorTableObject.properties
+			.collections as string
+
+		if (
+			authorCollectionsString == null ||
+			authorCollectionsString.length == 0
+		) {
+			authorCollectionsString = createCollectionResponseData.tableObject.Uuid
+		} else {
+			authorCollectionsString += `,${createCollectionResponseData.tableObject.Uuid}`
+		}
+
+		let updateAuthorResponse = await TableObjectsController.UpdateTableObject(
+			{
+				accessToken,
+				uuid: authorTableObject.uuid,
+				properties: {
+					collections: authorCollectionsString
+				}
+			}
+		)
+
+		if (!isSuccessStatusCode(updateAuthorResponse.status)) {
+			throwApiError(Errors.unexpectedError)
+		}
+
 		storeBookCollection = {
 			uuid: createCollectionResponseData.tableObject.Uuid,
 			tableId: createCollectionResponseData.tableObject.TableId,

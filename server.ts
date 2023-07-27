@@ -31,7 +31,7 @@ const authDirectiveTransformer = (schema, directiveName) => {
 					}
 
 					if (user != null && adminRole && !admins.includes(user.id)) {
-						throwApiError(Errors.actionPermitted)
+						throwApiError(Errors.actionNotAllowed)
 					}
 
 					if (user != null && authorRole && !admins.includes(user.id)) {
@@ -52,7 +52,7 @@ const authDirectiveTransformer = (schema, directiveName) => {
 						}
 
 						if (throwError) {
-							throwApiError(Errors.actionPermitted)
+							throwApiError(Errors.actionNotAllowed)
 						}
 					}
 

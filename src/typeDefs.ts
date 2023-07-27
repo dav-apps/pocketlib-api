@@ -83,6 +83,12 @@ export const typeDefs = `#graphql
 			name: String!
 			language: String!
 		): StoreBookCollectionName
+		createStoreBookSeries(
+			author: String
+			name: String!
+			language: String!
+			storeBooks: [String!]
+		): StoreBookSeries
 		createStoreBook(
 			author: String
 			collection: String

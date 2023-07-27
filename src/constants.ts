@@ -8,6 +8,7 @@ export const publisherTableId = 36
 export const authorBioTableId = 20
 export const storeBookCollectionTableId = 22
 export const storeBookCollectionNameTableId = 23
+export const storeBookSeriesTableId = 16
 export const storeBookTableId = 24
 export const storeBookReleaseTableId = 32
 //#endregion

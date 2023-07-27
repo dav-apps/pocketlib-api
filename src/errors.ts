@@ -71,6 +71,12 @@ export const storeBookNotPublished: ApiError = {
 	status: 412
 }
 
+export const storeBookLanguageNotMatching: ApiError = {
+	code: "STORE_BOOK_LANGUAGE_NOT_MATCHING",
+	message: "The language of the StoreBook does not match the given language",
+	status: 400
+}
+
 export const authorRequired = "AUTHOR_REQUIRED"
 
 export const nameTooShort = "NAME_TOO_SHORT"
