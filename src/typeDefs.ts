@@ -119,6 +119,7 @@ export const typeDefs = `#graphql
 			releaseName: String!
 			releaseNotes: String
 		): StoreBookRelease
+		createBook(storeBook: String!): Book
 	}
 
 	type Publisher {
@@ -296,5 +297,11 @@ export const typeDefs = `#graphql
 	type CategoryNameList {
 		total: Int!
 		items: [CategoryName!]!
+	}
+
+	type Book {
+		uuid: String!
+		storeBook: String
+		file: String!
 	}
 `

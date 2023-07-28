@@ -7,6 +7,7 @@ import * as storeBookSeriesResolvers from "./resolvers/storeBookSeries.js"
 import * as storeBookResolvers from "./resolvers/storeBook.js"
 import * as storeBookReleaseResolvers from "./resolvers/storeBookRelease.js"
 import * as categoryResolvers from "./resolvers/category.js"
+import * as bookResolvers from "./resolvers/book.js"
 
 export const resolvers = {
 	Query: {
@@ -34,7 +35,9 @@ export const resolvers = {
 		updateStoreBookSeries: storeBookSeriesResolvers.updateStoreBookSeries,
 		createStoreBook: storeBookResolvers.createStoreBook,
 		updateStoreBook: storeBookResolvers.updateStoreBook,
-		publishStoreBookRelease: storeBookReleaseResolvers.publishStoreBookRelease
+		publishStoreBookRelease:
+			storeBookReleaseResolvers.publishStoreBookRelease,
+		createBook: bookResolvers.createBook
 	},
 	Publisher: {
 		logo: publisherResolvers.logo,

@@ -96,6 +96,27 @@ export async function loadStoreBookData(
 	}
 }
 
+export async function getLastReleaseOfStoreBook(
+	storeBook: TableObject,
+	published: boolean = false
+): Promise<TableObject> {
+	let releaseUuidsString = storeBook.properties.releases as string
+	let releaseUuids = releaseUuidsString.split(",").reverse()
+	if (releaseUuidsString.length == 0) return null
+
+	if (published) {
+		for (let releaseUuid of releaseUuids) {
+			let release = await getTableObject(releaseUuid)
+
+			if (release.properties.status == "published") {
+				return release
+			}
+		}
+	}
+
+	return await getTableObject(releaseUuids[0])
+}
+
 export function getFacebookUsername(input: string) {
 	if (input == null) return null
 

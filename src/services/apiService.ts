@@ -215,3 +215,33 @@ export async function addTableObjectToCollection(params: {
 		return null
 	}
 }
+
+export async function addTableObject(params: {
+	accessToken: string
+	uuid: string
+	tableAlias: number
+}) {
+	try {
+		let response = await axios({
+			method: "post",
+			url: `${apiBaseUrl}/v1/table_object/${params.uuid}/access`,
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: params.accessToken
+			},
+			data: {
+				table_alias: params.tableAlias
+			}
+		})
+
+		return {
+			id: response.data.id,
+			userId: response.data.user_id,
+			tableObjectId: response.data.table_object_id,
+			tableAlias: response.data.table_alias
+		}
+	} catch (error) {
+		console.error(error.response?.data || error)
+		return null
+	}
+}

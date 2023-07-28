@@ -83,6 +83,24 @@ export const storeBookLanguageNotMatching: ApiError = {
 	status: 400
 }
 
+export const cannotAddFreeStoreBookToLibraryWithoutPurchase: ApiError = {
+	code: "CANNOT_ADD_FREE_STORE_BOOK_TO_LIBRARY_WITHOUT_PURCHASE",
+	message: "Can't add free store book to library without purchase",
+	status: 422
+}
+
+export const davProRequired: ApiError = {
+	code: "DAV_PRO_REQUIRED",
+	message: "You need dav Pro to do this action",
+	status: 422
+}
+
+export const storeBookAlreadyInLibrary: ApiError = {
+	code: "STORE_BOOK_ALREADY_IN_LIBRARY",
+	message: "This StoreBook is already in your library",
+	status: 422
+}
+
 export const authorRequired = "AUTHOR_REQUIRED"
 
 export const nameTooShort = "NAME_TOO_SHORT"

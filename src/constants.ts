@@ -11,6 +11,8 @@ export const storeBookCollectionNameTableId = 23
 export const storeBookSeriesTableId = 16
 export const storeBookTableId = 24
 export const storeBookReleaseTableId = 32
+export const bookTableId = 14
+export const bookFileTableId = 15
 //#endregion
 
 //#region Regexes

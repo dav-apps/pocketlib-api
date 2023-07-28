@@ -186,4 +186,10 @@ export interface CategoryName {
 	name: string
 	language: string
 }
+
+export interface Book {
+	uuid: string
+	storeBook: string
+	file: string
+}
 //#endregion
