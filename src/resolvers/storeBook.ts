@@ -753,7 +753,7 @@ export async function updateStoreBook(
 				// Set the status of the release to "published"
 				newReleaseProperties["status"] = "published"
 
-				// Add the store book to the latest store books
+				// Add the store book to the latest store books collection
 				let collection = await addTableObjectToCollection({
 					name: "latest_books",
 					uuid: storeBookTableObject.uuid,

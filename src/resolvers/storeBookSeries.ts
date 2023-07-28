@@ -19,7 +19,11 @@ import {
 } from "../utils.js"
 import { admins, storeBookSeriesTableId } from "../constants.js"
 import * as Errors from "../errors.js"
-import { getTableObject, listTableObjects } from "../services/apiService.js"
+import {
+	getTableObject,
+	listTableObjects,
+	addTableObjectToCollection
+} from "../services/apiService.js"
 import {
 	validateNameLength,
 	validateLanguage
@@ -133,21 +137,7 @@ export async function createStoreBookSeries(
 		}
 	}
 
-	if (args.storeBooks != null) {
-		// Validate the store book uuids
-		for (let uuid of args.storeBooks) {
-			// Get the store book
-			let storeBook = await getTableObject(uuid)
-
-			if (storeBook == null) {
-				throwApiError(Errors.storeBookDoesNotExist)
-			}
-
-			if (storeBook.properties.language != args.language) {
-				throwApiError(Errors.storeBookLanguageNotMatching)
-			}
-		}
-	}
+	validateStoreBooksParam(args.storeBooks, args.language)
 
 	// Create the store book series
 	let seriesProperties = {
@@ -174,6 +164,17 @@ export async function createStoreBookSeries(
 		createSeriesResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
 	).data
 
+	// Add the store book to the latest series collection
+	let collection = await addTableObjectToCollection({
+		name: "latest_series",
+		uuid: createSeriesResponseData.tableObject.Uuid,
+		tableId: storeBookSeriesTableId
+	})
+
+	if (collection == null) {
+		throwApiError(Errors.unexpectedError)
+	}
+
 	return {
 		uuid: createSeriesResponseData.tableObject.Uuid,
 		author: createSeriesResponseData.tableObject.Properties.author
@@ -185,6 +186,75 @@ export async function createStoreBookSeries(
 		storeBooks: createSeriesResponseData.tableObject.Properties.store_books
 			.value as string
 	}
+}
+
+export async function updateStoreBookSeries(
+	parent: any,
+	args: {
+		uuid: string
+		name?: string
+		storeBooks?: string[]
+	},
+	context: ResolverContext
+): Promise<StoreBookSeries> {
+	const uuid = args.uuid
+	if (uuid == null) return null
+
+	const user = context.user
+	const accessToken = context.token
+	const isAdmin = admins.includes(user.id)
+
+	// Get the store book series
+	let storeBookSeriesTableObject = await getTableObject(args.uuid)
+
+	if (storeBookSeriesTableObject == null) {
+		throwApiError(Errors.storeBookSeriesDoesNotExist)
+	}
+
+	// Check if the store book series belongs to the user
+	if (!isAdmin && storeBookSeriesTableObject.userId != user.id) {
+		throwApiError(Errors.actionNotAllowed)
+	}
+
+	// Validate the args
+	if (args.name == null && args.storeBooks == null) {
+		return convertTableObjectToStoreBookSeries(storeBookSeriesTableObject)
+	}
+
+	if (args.name != null) {
+		throwValidationError(validateNameLength(args.name))
+	}
+
+	validateStoreBooksParam(
+		args.storeBooks,
+		storeBookSeriesTableObject.properties.language as string
+	)
+
+	// Update the store book series
+	let updatedSeriesProperties = {}
+
+	if (args.name != null) {
+		updatedSeriesProperties["name"] = args.name
+		storeBookSeriesTableObject.properties.name = args.name
+	}
+
+	if (args.storeBooks != null) {
+		updatedSeriesProperties["store_books"] = args.storeBooks.join(",")
+		storeBookSeriesTableObject.properties.store_books =
+			args.storeBooks.join(",")
+	}
+
+	let updateSeriesResponse = await TableObjectsController.UpdateTableObject({
+		accessToken,
+		uuid: storeBookSeriesTableObject.uuid,
+		properties: updatedSeriesProperties
+	})
+
+	if (!isSuccessStatusCode(updateSeriesResponse.status)) {
+		throwApiError(Errors.unexpectedError)
+	}
+
+	return convertTableObjectToStoreBookSeries(storeBookSeriesTableObject)
 }
 
 export async function storeBooks(
@@ -223,3 +293,22 @@ export async function storeBooks(
 		items: storeBooks.slice(offset, limit + offset)
 	}
 }
+
+//#region Helper functions
+async function validateStoreBooksParam(storeBooks: string[], language: string) {
+	if (storeBooks == null) return
+
+	for (let uuid of storeBooks) {
+		// Get the store book
+		let storeBook = await getTableObject(uuid)
+
+		if (storeBook == null) {
+			throwApiError(Errors.storeBookDoesNotExist)
+		}
+
+		if (storeBook.properties.language != language) {
+			throwApiError(Errors.storeBookLanguageNotMatching)
+		}
+	}
+}
+//#endregion

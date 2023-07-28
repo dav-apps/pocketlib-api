@@ -41,6 +41,12 @@ export const storeBookCollectionDoesNotExist: ApiError = {
 	status: 404
 }
 
+export const storeBookSeriesDoesNotExist: ApiError = {
+	code: "STORE_BOOK_SERIES_NOT_EXISTS",
+	message: "StoreBookSeries does not exist",
+	status: 404
+}
+
 export const storeBookDoesNotExist: ApiError = {
 	code: "STORE_BOOK_NOT_EXISTS",
 	message: "StoreBook does not exist",

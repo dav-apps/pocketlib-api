@@ -89,6 +89,11 @@ export const typeDefs = `#graphql
 			language: String!
 			storeBooks: [String!]
 		): StoreBookSeries
+		updateStoreBookSeries(
+			uuid: String!
+			name: String
+			storeBooks: [String!]
+		): StoreBookSeries
 		createStoreBook(
 			author: String
 			collection: String

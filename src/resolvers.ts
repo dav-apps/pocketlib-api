@@ -31,6 +31,7 @@ export const resolvers = {
 		setStoreBookCollectionName:
 			storeBookCollectionNameResolvers.setStoreBookCollectionName,
 		createStoreBookSeries: storeBookSeriesResolvers.createStoreBookSeries,
+		updateStoreBookSeries: storeBookSeriesResolvers.updateStoreBookSeries,
 		createStoreBook: storeBookResolvers.createStoreBook,
 		updateStoreBook: storeBookResolvers.updateStoreBook,
 		publishStoreBookRelease: storeBookReleaseResolvers.publishStoreBookRelease
