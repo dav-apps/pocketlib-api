@@ -22,7 +22,7 @@ import {
 	instagramUsernameRegex,
 	twitterUsernameRegex
 } from "./constants.js"
-import { validationFailed } from "./errors.js"
+import { apiErrors } from "./errors.js"
 import { getTableObject } from "./services/apiService.js"
 
 export function throwApiError(error: ApiError) {
@@ -38,10 +38,10 @@ export function throwValidationError(...errors: string[]) {
 	let filteredErrors = errors.filter(e => e != null)
 
 	if (filteredErrors.length > 0) {
-		throw new GraphQLError(validationFailed.message, {
+		throw new GraphQLError(apiErrors.validationFailed.message, {
 			extensions: {
-				code: validationFailed.code,
-				http: { status: validationFailed.status || 500 },
+				code: apiErrors.validationFailed.code,
+				http: { status: apiErrors.validationFailed.status || 500 },
 				errors: filteredErrors
 			}
 		})

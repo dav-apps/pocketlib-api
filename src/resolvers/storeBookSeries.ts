@@ -18,7 +18,7 @@ import {
 	convertTableObjectToStoreBook
 } from "../utils.js"
 import { admins, storeBookSeriesTableId } from "../constants.js"
-import * as Errors from "../errors.js"
+import { apiErrors, validationErrors } from "../errors.js"
 import {
 	getTableObject,
 	listTableObjects,
@@ -113,13 +113,13 @@ export async function createStoreBookSeries(
 
 	if (isAdmin) {
 		if (args.author == null) {
-			throwValidationError(Errors.authorRequired)
+			throwValidationError(validationErrors.authorRequired)
 		}
 
 		authorTableObject = await getTableObject(args.author)
 
 		if (authorTableObject == null) {
-			throwApiError(Errors.authorDoesNotExist)
+			throwApiError(apiErrors.authorDoesNotExist)
 		}
 	} else {
 		// Get the author of the user
@@ -133,7 +133,7 @@ export async function createStoreBookSeries(
 		if (response.items.length > 0) {
 			authorTableObject = response.items[0]
 		} else {
-			throwApiError(Errors.actionNotAllowed)
+			throwApiError(apiErrors.actionNotAllowed)
 		}
 	}
 
@@ -157,7 +157,7 @@ export async function createStoreBookSeries(
 	})
 
 	if (!isSuccessStatusCode(createSeriesResponse.status)) {
-		throwApiError(Errors.unexpectedError)
+		throwApiError(apiErrors.unexpectedError)
 	}
 
 	let createSeriesResponseData = (
@@ -172,7 +172,7 @@ export async function createStoreBookSeries(
 	})
 
 	if (collection == null) {
-		throwApiError(Errors.unexpectedError)
+		throwApiError(apiErrors.unexpectedError)
 	}
 
 	return {
@@ -208,12 +208,12 @@ export async function updateStoreBookSeries(
 	let storeBookSeriesTableObject = await getTableObject(args.uuid)
 
 	if (storeBookSeriesTableObject == null) {
-		throwApiError(Errors.storeBookSeriesDoesNotExist)
+		throwApiError(apiErrors.storeBookSeriesDoesNotExist)
 	}
 
 	// Check if the store book series belongs to the user
 	if (!isAdmin && storeBookSeriesTableObject.userId != user.id) {
-		throwApiError(Errors.actionNotAllowed)
+		throwApiError(apiErrors.actionNotAllowed)
 	}
 
 	// Validate the args
@@ -251,7 +251,7 @@ export async function updateStoreBookSeries(
 	})
 
 	if (!isSuccessStatusCode(updateSeriesResponse.status)) {
-		throwApiError(Errors.unexpectedError)
+		throwApiError(apiErrors.unexpectedError)
 	}
 
 	return convertTableObjectToStoreBookSeries(storeBookSeriesTableObject)
@@ -303,11 +303,11 @@ async function validateStoreBooksParam(storeBooks: string[], language: string) {
 		let storeBook = await getTableObject(uuid)
 
 		if (storeBook == null) {
-			throwApiError(Errors.storeBookDoesNotExist)
+			throwApiError(apiErrors.storeBookDoesNotExist)
 		}
 
 		if (storeBook.properties.language != language) {
-			throwApiError(Errors.storeBookLanguageNotMatching)
+			throwApiError(apiErrors.storeBookLanguageNotMatching)
 		}
 	}
 }

@@ -1,85 +1,85 @@
 import { languages, urlRegex, isbnRegex } from "../constants.js"
-import * as Errors from "../errors.js"
+import { apiErrors, validationErrors } from "../errors.js"
 
 export function validateNameLength(name: string) {
 	if (name.length < 2) {
-		return Errors.nameTooShort
+		return validationErrors.nameTooShort
 	} else if (name.length > 100) {
-		return Errors.nameTooLong
+		return validationErrors.nameTooLong
 	}
 }
 
 export function validateFirstNameLength(firstName: string) {
 	if (firstName.length < 2) {
-		return Errors.firstNameTooShort
+		return validationErrors.firstNameTooShort
 	} else if (firstName.length > 20) {
-		return Errors.firstNameTooLong
+		return validationErrors.firstNameTooLong
 	}
 }
 
 export function validateLastNameLength(lastName: string) {
 	if (lastName.length < 2) {
-		return Errors.lastNameTooShort
+		return validationErrors.lastNameTooShort
 	} else if (lastName.length > 20) {
-		return Errors.lastNameTooLong
+		return validationErrors.lastNameTooLong
 	}
 }
 
 export function validateBioLength(bio: string) {
 	if (bio.length > 2000) {
-		return Errors.bioTooLong
+		return validationErrors.bioTooLong
 	}
 }
 
 export function validateTitleLength(title: string) {
 	if (title.length < 2) {
-		return Errors.titleTooShort
+		return validationErrors.titleTooShort
 	} else if (title.length > 60) {
-		return Errors.titleTooLong
+		return validationErrors.titleTooLong
 	}
 }
 
 export function validateDescriptionLength(description: string) {
 	if (description.length > 5700) {
-		return Errors.descriptionTooLong
+		return validationErrors.descriptionTooLong
 	}
 }
 
 export function validateCategoriesLength(categories: string[]) {
 	if (categories.length > 3) {
-		return Errors.storeBookMaxCategories
+		return validationErrors.storeBookMaxCategories
 	}
 }
 
 export function validateReleaseNameLength(releaseName: string) {
 	if (releaseName.length < 2) {
-		return Errors.releaseNameTooShort
+		return validationErrors.releaseNameTooShort
 	} else if (releaseName.length > 100) {
-		return Errors.releaseNameTooLong
+		return validationErrors.releaseNameTooLong
 	}
 }
 
 export function validateReleaseNotesLength(releaseNotes: string) {
 	if (releaseNotes.length > 5700) {
-		return Errors.releaseNotesTooLong
+		return validationErrors.releaseNotesTooLong
 	}
 }
 
 export function validateWebsiteUrl(websiteUrl: string) {
 	if (!urlRegex.test(websiteUrl)) {
-		return Errors.websiteUrlInvalid
+		return validationErrors.websiteUrlInvalid
 	}
 }
 
 export function validateLanguage(language: string) {
 	if (!languages.includes(language)) {
-		return Errors.languageInvalid
+		return validationErrors.languageInvalid
 	}
 }
 
 export function validatePrice(price: number) {
 	if (price < 0 || price > 100000) {
-		return Errors.priceInvalid
+		return validationErrors.priceInvalid
 	}
 }
 
@@ -91,12 +91,13 @@ export function validateIsbn(isbn: string) {
 		(isbn.length != 0 && isbn.length != 10 && isbn.length != 13) ||
 		!isbnValid
 	) {
-		return Errors.isbnInvalid
+		return validationErrors.isbnInvalid
 	}
 }
 
 export function validateStatus(status: string) {
 	if (!["unpublished", "review", "published", "hidden"].includes(status)) {
-		return Errors.statusInvalid
+		return validationErrors.statusInvalid
 	}
 }
+//#endregion

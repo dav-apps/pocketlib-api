@@ -11,7 +11,7 @@ import {
 	convertTableObjectToAuthor,
 	convertTableObjectToAuthorBio
 } from "../utils.js"
-import * as Errors from "../errors.js"
+import { apiErrors } from "../errors.js"
 import { admins, authorBioTableId } from "../constants.js"
 import { getTableObject, listTableObjects } from "../services/apiService.js"
 import {
@@ -34,9 +34,9 @@ export async function setAuthorBio(
 	if (uuid == "mine") {
 		// Check if the user is an author
 		if (user == null) {
-			throwApiError(Errors.notAuthenticated)
+			throwApiError(apiErrors.notAuthenticated)
 		} else if (admins.includes(user.id)) {
-			throwApiError(Errors.actionNotAllowed)
+			throwApiError(apiErrors.actionNotAllowed)
 		}
 
 		// Get the author of the user
@@ -50,26 +50,26 @@ export async function setAuthorBio(
 		if (response.items.length > 0) {
 			authorTableObject = response.items[0]
 		} else {
-			throwApiError(Errors.actionNotAllowed)
+			throwApiError(apiErrors.actionNotAllowed)
 		}
 	} else {
 		// Check if the user is an admin
 		if (user == null) {
-			throwApiError(Errors.notAuthenticated)
+			throwApiError(apiErrors.notAuthenticated)
 		} else if (!admins.includes(user.id)) {
-			throwApiError(Errors.actionNotAllowed)
+			throwApiError(apiErrors.actionNotAllowed)
 		}
 
 		// Get the author table object
 		authorTableObject = await getTableObject(uuid)
 
 		if (authorTableObject == null) {
-			throwApiError(Errors.authorDoesNotExist)
+			throwApiError(apiErrors.authorDoesNotExist)
 		}
 
 		// Check if the table object belongs to the user
 		if (authorTableObject.userId != user.id) {
-			throwApiError(Errors.actionNotAllowed)
+			throwApiError(apiErrors.actionNotAllowed)
 		}
 	}
 
@@ -111,7 +111,7 @@ export async function setAuthorBio(
 		})
 
 		if (!isSuccessStatusCode(response.status)) {
-			throwApiError(Errors.unexpectedError)
+			throwApiError(apiErrors.unexpectedError)
 		}
 	} else {
 		// Update the existing AuthorBio
@@ -124,7 +124,7 @@ export async function setAuthorBio(
 		})
 
 		if (!isSuccessStatusCode(response.status)) {
-			throwApiError(Errors.unexpectedError)
+			throwApiError(apiErrors.unexpectedError)
 		}
 	}
 
@@ -151,7 +151,7 @@ export async function setAuthorBio(
 			})
 
 		if (!isSuccessStatusCode(updateAuthorTableObjectResponse.status)) {
-			throwApiError(Errors.unexpectedError)
+			throwApiError(apiErrors.unexpectedError)
 		}
 	}
 

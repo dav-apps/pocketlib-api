@@ -5,7 +5,7 @@ import {
 } from "dav-js"
 import { ResolverContext, TableObject, Book } from "../types.js"
 import { throwApiError, getLastReleaseOfStoreBook } from "../utils.js"
-import * as Errors from "../errors.js"
+import { apiErrors } from "../errors.js"
 import { admins, bookTableId, bookFileTableId } from "../constants.js"
 import {
 	getTableObject,
@@ -24,7 +24,7 @@ export async function createBook(
 
 	// Check if the user is logged in
 	if (user == null) {
-		throwApiError(Errors.notAuthenticated)
+		throwApiError(apiErrors.notAuthenticated)
 	}
 
 	const isAdmin = admins.includes(user.id)
@@ -34,7 +34,7 @@ export async function createBook(
 	let storeBookTableObject = await getTableObject(args.storeBook)
 
 	if (storeBookTableObject == null) {
-		throwApiError(Errors.storeBookDoesNotExist)
+		throwApiError(apiErrors.storeBookDoesNotExist)
 	}
 
 	// Get the latest store book release
@@ -42,12 +42,12 @@ export async function createBook(
 		await getLastReleaseOfStoreBook(storeBookTableObject, true)
 
 	if (storeBookReleaseTableObject == null) {
-		throwApiError(Errors.unexpectedError)
+		throwApiError(apiErrors.unexpectedError)
 	} else if (
 		storeBookTableObject.properties.status != "published" ||
 		storeBookReleaseTableObject.properties.status != "published"
 	) {
-		throwApiError(Errors.storeBookNotPublished)
+		throwApiError(apiErrors.storeBookNotPublished)
 	}
 
 	// Check if the user has purchased the table object
@@ -72,7 +72,7 @@ export async function createBook(
 				storeBookStatus != "published" ||
 				storeBookReleaseStatus != "published"
 			) {
-				throwApiError(Errors.actionNotAllowed)
+				throwApiError(apiErrors.actionNotAllowed)
 			}
 
 			// Check if the store book is free
@@ -80,12 +80,14 @@ export async function createBook(
 				(storeBookTableObject.properties.price as number) || 0
 
 			if (storeBookPrice == 0) {
-				throwApiError(Errors.cannotAddFreeStoreBookToLibraryWithoutPurchase)
+				throwApiError(
+					apiErrors.cannotAddFreeStoreBookToLibraryWithoutPurchase
+				)
 			}
 
 			// Check if the user is on the Pro plan
 			if (user.plan < 2) {
-				throwApiError(Errors.davProRequired)
+				throwApiError(apiErrors.davProRequired)
 			}
 		}
 	}
@@ -103,20 +105,20 @@ export async function createBook(
 	})
 
 	if (tableObjectsInLibrary.items.length > 0) {
-		throwApiError(Errors.storeBookAlreadyInLibrary)
+		throwApiError(apiErrors.storeBookAlreadyInLibrary)
 	}
 
 	// Get the table object of the store book file
 	let fileUuid = storeBookTableObject.properties.file as string
 
 	if (fileUuid == null) {
-		throwApiError(Errors.unexpectedError)
+		throwApiError(apiErrors.unexpectedError)
 	}
 
 	let storeBookFileTableObject = await getTableObject(fileUuid)
 
 	if (storeBookFileTableObject == null) {
-		throwApiError(Errors.unexpectedError)
+		throwApiError(apiErrors.unexpectedError)
 	}
 
 	let bookType = storeBookFileTableObject.properties.type as string
@@ -139,7 +141,7 @@ export async function createBook(
 	})
 
 	if (!isSuccessStatusCode(createBookResponse.status)) {
-		throwApiError(Errors.unexpectedError)
+		throwApiError(apiErrors.unexpectedError)
 	}
 
 	let createBookResponseData = (
@@ -154,7 +156,7 @@ export async function createBook(
 	})
 
 	if (addTableObjectResponse == null) {
-		throwApiError(Errors.unexpectedError)
+		throwApiError(apiErrors.unexpectedError)
 	}
 
 	return {

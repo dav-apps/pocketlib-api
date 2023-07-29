@@ -15,7 +15,7 @@ import {
 	convertTableObjectToStoreBookCollection,
 	convertTableObjectToStoreBookCollectionName
 } from "../utils.js"
-import * as Errors from "../errors.js"
+import { apiErrors } from "../errors.js"
 import { storeBookCollectionNameTableId } from "../constants.js"
 import { getTableObject } from "../services/apiService.js"
 import {
@@ -36,19 +36,19 @@ export async function setStoreBookCollectionName(
 
 	// Check if the user is logged in
 	if (user == null) {
-		throwApiError(Errors.notAuthenticated)
+		throwApiError(apiErrors.notAuthenticated)
 	}
 
 	// Get the collection table object
 	let collectionTableObject = await getTableObject(uuid)
 
 	if (collectionTableObject == null) {
-		throwApiError(Errors.storeBookCollectionDoesNotExist)
+		throwApiError(apiErrors.storeBookCollectionDoesNotExist)
 	}
 
 	// Check if the table object belongs to the user
 	if (collectionTableObject.userId != user.id) {
-		throwApiError(Errors.actionNotAllowed)
+		throwApiError(apiErrors.actionNotAllowed)
 	}
 
 	// Validate the args
@@ -91,7 +91,7 @@ export async function setStoreBookCollectionName(
 		})
 
 		if (!isSuccessStatusCode(response.status)) {
-			throwApiError(Errors.unexpectedError)
+			throwApiError(apiErrors.unexpectedError)
 		}
 	} else {
 		// Update the existing StoreBookCollectionName
@@ -104,7 +104,7 @@ export async function setStoreBookCollectionName(
 		})
 
 		if (!isSuccessStatusCode(response.status)) {
-			throwApiError(Errors.unexpectedError)
+			throwApiError(apiErrors.unexpectedError)
 		}
 	}
 
@@ -131,7 +131,7 @@ export async function setStoreBookCollectionName(
 			})
 
 		if (!isSuccessStatusCode(updateCollectionTableObjectResponse.status)) {
-			throwApiError(Errors.unexpectedError)
+			throwApiError(apiErrors.unexpectedError)
 		}
 	}
 

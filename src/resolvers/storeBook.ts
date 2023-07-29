@@ -27,7 +27,7 @@ import {
 	convertTableObjectToStoreBookFile,
 	convertTableObjectToCategory
 } from "../utils.js"
-import * as Errors from "../errors.js"
+import { apiErrors, validationErrors } from "../errors.js"
 import {
 	admins,
 	storeBookCollectionTableId,
@@ -145,9 +145,9 @@ export async function listStoreBooks(
 		const user = context.user
 
 		if (user == null) {
-			throwApiError(Errors.notAuthenticated)
+			throwApiError(apiErrors.notAuthenticated)
 		} else if (!admins.includes(user.id)) {
-			throwApiError(Errors.actionNotAllowed)
+			throwApiError(apiErrors.actionNotAllowed)
 		}
 
 		// Get the StoreBooks in review
@@ -198,7 +198,7 @@ export async function createStoreBook(
 
 	// Check if the user is logged in
 	if (user == null) {
-		throwApiError(Errors.notAuthenticated)
+		throwApiError(apiErrors.notAuthenticated)
 	}
 
 	let isAdmin = admins.includes(user.id)
@@ -206,14 +206,14 @@ export async function createStoreBook(
 
 	if (isAdmin) {
 		if (args.author == null) {
-			throwValidationError(Errors.authorRequired)
+			throwValidationError(validationErrors.authorRequired)
 		}
 
 		// Get the author
 		authorTableObject = await getTableObject(args.author)
 
 		if (authorTableObject == null) {
-			throwApiError(Errors.authorDoesNotExist)
+			throwApiError(apiErrors.authorDoesNotExist)
 		}
 	} else {
 		// Check if the user is an author
@@ -225,7 +225,7 @@ export async function createStoreBook(
 		})
 
 		if (response.items.length == 0) {
-			throwApiError(Errors.actionNotAllowed)
+			throwApiError(apiErrors.actionNotAllowed)
 		} else {
 			authorTableObject = response.items[0]
 		}
@@ -269,7 +269,7 @@ export async function createStoreBook(
 			})
 
 		if (!isSuccessStatusCode(createCollectionNameResponse.status)) {
-			throwApiError(Errors.unexpectedError)
+			throwApiError(apiErrors.unexpectedError)
 		}
 
 		let createCollectionNameResponseData = (
@@ -288,7 +288,7 @@ export async function createStoreBook(
 			})
 
 		if (!isSuccessStatusCode(createCollectionResponse.status)) {
-			throwApiError(Errors.unexpectedError)
+			throwApiError(apiErrors.unexpectedError)
 		}
 
 		let createCollectionResponseData = (
@@ -319,7 +319,7 @@ export async function createStoreBook(
 		)
 
 		if (!isSuccessStatusCode(updateAuthorResponse.status)) {
-			throwApiError(Errors.unexpectedError)
+			throwApiError(apiErrors.unexpectedError)
 		}
 
 		storeBookCollection = {
@@ -340,7 +340,7 @@ export async function createStoreBook(
 		storeBookCollection = await getTableObject(args.collection)
 
 		if (storeBookCollection == null) {
-			throwApiError(Errors.storeBookCollectionDoesNotExist)
+			throwApiError(apiErrors.storeBookCollectionDoesNotExist)
 		}
 
 		// Check if the collection already has a name for the given language
@@ -374,7 +374,7 @@ export async function createStoreBook(
 				})
 
 			if (!isSuccessStatusCode(createCollectionNameResponse.status)) {
-				throwApiError(Errors.unexpectedError)
+				throwApiError(apiErrors.unexpectedError)
 			}
 
 			let createCollectionNameResponseData = (
@@ -433,7 +433,7 @@ export async function createStoreBook(
 		})
 
 	if (!isSuccessStatusCode(createStoreBookReleaseResponse.status)) {
-		throwApiError(Errors.unexpectedError)
+		throwApiError(apiErrors.unexpectedError)
 	}
 
 	let createStoreBookReleaseResponseData = (
@@ -454,7 +454,7 @@ export async function createStoreBook(
 	)
 
 	if (!isSuccessStatusCode(createStoreBookResponse.status)) {
-		throwApiError(Errors.unexpectedError)
+		throwApiError(apiErrors.unexpectedError)
 	}
 
 	let createStoreBookResponseData = (
@@ -470,7 +470,7 @@ export async function createStoreBook(
 	})
 
 	if (storeBookPrice == null) {
-		throwApiError(Errors.unexpectedError)
+		throwApiError(apiErrors.unexpectedError)
 	}
 
 	// Add the store book to the books of the store book collection
@@ -492,7 +492,7 @@ export async function createStoreBook(
 		})
 
 	if (!isSuccessStatusCode(updateStoreBookCollectionResponse.status)) {
-		throwApiError(Errors.unexpectedError)
+		throwApiError(apiErrors.unexpectedError)
 	}
 
 	// Add the store book to the release
@@ -506,7 +506,7 @@ export async function createStoreBook(
 		})
 
 	if (!isSuccessStatusCode(updateStoreBookReleaseResponse.status)) {
-		throwApiError(Errors.unexpectedError)
+		throwApiError(apiErrors.unexpectedError)
 	}
 
 	return {
@@ -552,44 +552,44 @@ export async function updateStoreBook(
 	let storeBookTableObject = await getTableObject(uuid)
 
 	if (storeBookTableObject == null) {
-		throwApiError(Errors.storeBookDoesNotExist)
+		throwApiError(apiErrors.storeBookDoesNotExist)
 	}
 
 	// Check if the store book belongs to the user
 	if (!isAdmin && storeBookTableObject.userId != user.id) {
-		throwApiError(Errors.actionNotAllowed)
+		throwApiError(apiErrors.actionNotAllowed)
 	}
 
 	// Get the latest release
 	let releaseUuidsString = storeBookTableObject.properties.releases as string
 
 	if (releaseUuidsString == null) {
-		throwApiError(Errors.unexpectedError)
+		throwApiError(apiErrors.unexpectedError)
 	}
 
 	let releaseUuids = releaseUuidsString.split(",").reverse()
 
 	if (releaseUuids.length == 0) {
-		throwApiError(Errors.unexpectedError)
+		throwApiError(apiErrors.unexpectedError)
 	}
 
 	let storeBookReleaseTableObject = await getTableObject(releaseUuids[0])
 
 	if (storeBookReleaseTableObject == null) {
-		throwApiError(Errors.storeBookReleaseDoesNotExist)
+		throwApiError(apiErrors.storeBookReleaseDoesNotExist)
 	}
 
 	// Get the collection
 	let collectionUuid = storeBookTableObject.properties.collection as string
 
 	if (collectionUuid == null) {
-		throwApiError(Errors.unexpectedError)
+		throwApiError(apiErrors.unexpectedError)
 	}
 
 	let collectionTableObject = await getTableObject(collectionUuid)
 
 	if (collectionTableObject == null) {
-		throwApiError(Errors.storeBookCollectionDoesNotExist)
+		throwApiError(apiErrors.storeBookCollectionDoesNotExist)
 	}
 
 	// Validate the args
@@ -645,7 +645,7 @@ export async function updateStoreBook(
 			storeBookTableObject.properties.status == "hidden") &&
 		args.language != null
 	) {
-		throwApiError(Errors.cannotUpdateStoreBookLanguage)
+		throwApiError(apiErrors.cannotUpdateStoreBookLanguage)
 	}
 
 	// Check if the store book release is already published
@@ -668,7 +668,7 @@ export async function updateStoreBook(
 			})
 
 		if (!isSuccessStatusCode(createReleaseResponse.status)) {
-			throwApiError(Errors.unexpectedError)
+			throwApiError(apiErrors.unexpectedError)
 		}
 
 		let createReleaseResponseData = (
@@ -707,7 +707,7 @@ export async function updateStoreBook(
 			})
 
 		if (!isSuccessStatusCode(updateStoreBookResponse.status)) {
-			throwApiError(Errors.unexpectedError)
+			throwApiError(apiErrors.unexpectedError)
 		}
 	}
 
@@ -761,7 +761,7 @@ export async function updateStoreBook(
 				})
 
 				if (collection == null) {
-					throwApiError(Errors.unexpectedError)
+					throwApiError(apiErrors.unexpectedError)
 				}
 			}
 		} else {
@@ -794,7 +794,7 @@ export async function updateStoreBook(
 				// Change the status of the book to "hidden"
 				newStoreBookStatus = "hidden"
 			} else {
-				throwApiError(Errors.actionNotAllowed)
+				throwApiError(apiErrors.actionNotAllowed)
 			}
 		}
 
@@ -810,7 +810,7 @@ export async function updateStoreBook(
 				})
 
 			if (!isSuccessStatusCode(updateStoreBookResponse.status)) {
-				throwApiError(Errors.unexpectedError)
+				throwApiError(apiErrors.unexpectedError)
 			}
 		}
 	}
@@ -835,7 +835,7 @@ export async function updateStoreBook(
 		})
 
 	if (!isSuccessStatusCode(storeBookReleaseUpdateResponse.status)) {
-		throwApiError(Errors.unexpectedError)
+		throwApiError(apiErrors.unexpectedError)
 	}
 
 	if (args.price != null) {
@@ -847,7 +847,7 @@ export async function updateStoreBook(
 		})
 
 		if (updatedStoreBookPrice == null) {
-			throwApiError(Errors.unexpectedError)
+			throwApiError(apiErrors.unexpectedError)
 		}
 	}
 
@@ -1029,15 +1029,15 @@ function checkPropertiesForPublishing(storeBookRelease: TableObject) {
 	let errors = []
 
 	if (storeBookRelease.properties.description == null) {
-		errors.push(Errors.cannotPublishStoreBookWithoutDescription)
+		errors.push(validationErrors.cannotPublishStoreBookWithoutDescription)
 	}
 
 	if (storeBookRelease.properties.cover == null) {
-		errors.push(Errors.cannotPublishStoreBookWithoutCover)
+		errors.push(validationErrors.cannotPublishStoreBookWithoutCover)
 	}
 
 	if (storeBookRelease.properties.file == null) {
-		errors.push(Errors.cannotPublishStoreBookWithoutFile)
+		errors.push(validationErrors.cannotPublishStoreBookWithoutFile)
 	}
 
 	throwValidationError(...errors)

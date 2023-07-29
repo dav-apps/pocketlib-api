@@ -16,7 +16,7 @@ import {
 	convertTableObjectToCategory
 } from "../utils.js"
 import { admins } from "../constants.js"
-import * as Errors from "../errors.js"
+import { apiErrors } from "../errors.js"
 import { getTableObject } from "../services/apiService.js"
 import {
 	validateReleaseNameLength,
@@ -43,17 +43,17 @@ export async function publishStoreBookRelease(
 	let storeBookReleaseTableObject = await getTableObject(uuid)
 
 	if (storeBookReleaseTableObject == null) {
-		throwApiError(Errors.storeBookReleaseDoesNotExist)
+		throwApiError(apiErrors.storeBookReleaseDoesNotExist)
 	}
 
 	// Check if the release belongs to the user
 	if (user.id != storeBookReleaseTableObject.userId && !isAdmin) {
-		throwApiError(Errors.actionNotAllowed)
+		throwApiError(apiErrors.actionNotAllowed)
 	}
 
 	// Check if the release is unpublished
 	if (storeBookReleaseTableObject.properties.status == "published") {
-		throwApiError(Errors.storeBookReleaseAlreadyPublished)
+		throwApiError(apiErrors.storeBookReleaseAlreadyPublished)
 	}
 
 	// Get the store book
@@ -61,20 +61,20 @@ export async function publishStoreBookRelease(
 		.store_book as string
 
 	if (storeBookUuid == null) {
-		throwApiError(Errors.unexpectedError)
+		throwApiError(apiErrors.unexpectedError)
 	}
 
 	let storeBookTableObject = await getTableObject(storeBookUuid)
 
 	if (storeBookTableObject == null) {
-		throwApiError(Errors.unexpectedError)
+		throwApiError(apiErrors.unexpectedError)
 	}
 
 	// Check if the store book is published or hidden
 	let storeBookStatus = storeBookTableObject.properties.status
 
 	if (storeBookStatus != "published" && storeBookStatus != "hidden") {
-		throwApiError(Errors.storeBookNotPublished)
+		throwApiError(apiErrors.storeBookNotPublished)
 	}
 
 	// Validate args
@@ -104,7 +104,7 @@ export async function publishStoreBookRelease(
 	})
 
 	if (!isSuccessStatusCode(updateReleaseResponse.status)) {
-		throwApiError(Errors.unexpectedError)
+		throwApiError(apiErrors.unexpectedError)
 	}
 
 	// Update the local release table object & return it

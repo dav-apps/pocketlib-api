@@ -27,7 +27,7 @@ import {
 	convertTableObjectToStoreBookCollection,
 	convertTableObjectToStoreBookSeries
 } from "../utils.js"
-import * as Errors from "../errors.js"
+import { apiErrors, validationErrors } from "../errors.js"
 import { admins, publisherTableId } from "../constants.js"
 import { getTableObject, listTableObjects } from "../services/apiService.js"
 import {
@@ -51,9 +51,9 @@ export async function retrieveAuthor(
 		const user = context.user
 
 		if (user == null) {
-			throwApiError(Errors.notAuthenticated)
+			throwApiError(apiErrors.notAuthenticated)
 		} else if (admins.includes(user.id)) {
-			throwApiError(Errors.actionNotAllowed)
+			throwApiError(apiErrors.actionNotAllowed)
 		}
 
 		// Get the author of the user
@@ -114,9 +114,9 @@ export async function listAuthors(
 		const user = context.user
 
 		if (user == null) {
-			throwApiError(Errors.notAuthenticated)
+			throwApiError(apiErrors.notAuthenticated)
 		} else if (!admins.includes(user.id)) {
-			throwApiError(Errors.actionNotAllowed)
+			throwApiError(apiErrors.actionNotAllowed)
 		}
 
 		// Get the authors of the user
@@ -177,7 +177,7 @@ export async function createAuthor(
 
 	// Check if the user is logged in
 	if (user == null) {
-		throwApiError(Errors.notAuthenticated)
+		throwApiError(apiErrors.notAuthenticated)
 	}
 
 	let isAdmin = admins.includes(user.id)
@@ -187,7 +187,7 @@ export async function createAuthor(
 		let publisherTableObject = await getTableObject(args.publisher)
 
 		if (publisherTableObject == null) {
-			throwApiError(Errors.publisherDoesNotExist)
+			throwApiError(apiErrors.publisherDoesNotExist)
 		}
 	} else if (!isAdmin) {
 		// Check if the user already is an author
@@ -199,7 +199,7 @@ export async function createAuthor(
 		})
 
 		if (response.items.length > 0) {
-			throwApiError(Errors.actionNotAllowed)
+			throwApiError(apiErrors.actionNotAllowed)
 		}
 	}
 
@@ -226,7 +226,7 @@ export async function createAuthor(
 	})
 
 	if (!isSuccessStatusCode(createResponse.status)) {
-		throwApiError(Errors.unexpectedError)
+		throwApiError(apiErrors.unexpectedError)
 	}
 
 	let createResponseData = (
@@ -276,9 +276,9 @@ export async function updateAuthor(
 	if (uuid == "mine") {
 		// Check if the user is an author
 		if (user == null) {
-			throwApiError(Errors.notAuthenticated)
+			throwApiError(apiErrors.notAuthenticated)
 		} else if (admins.includes(user.id)) {
-			throwApiError(Errors.actionNotAllowed)
+			throwApiError(apiErrors.actionNotAllowed)
 		}
 
 		// Get the author of the user
@@ -292,26 +292,26 @@ export async function updateAuthor(
 		if (response.items.length > 0) {
 			authorTableObject = response.items[0]
 		} else {
-			throwApiError(Errors.actionNotAllowed)
+			throwApiError(apiErrors.actionNotAllowed)
 		}
 	} else {
 		// Check if the user is an admin
 		if (user == null) {
-			throwApiError(Errors.notAuthenticated)
+			throwApiError(apiErrors.notAuthenticated)
 		} else if (!admins.includes(user.id)) {
-			throwApiError(Errors.actionNotAllowed)
+			throwApiError(apiErrors.actionNotAllowed)
 		}
 
 		// Get the table object
 		authorTableObject = await getTableObject(uuid)
 
 		if (authorTableObject == null) {
-			throwApiError(Errors.authorDoesNotExist)
+			throwApiError(apiErrors.authorDoesNotExist)
 		}
 
 		// Check if the table object belongs to the user
 		if (authorTableObject.userId != user.id) {
-			throwApiError(Errors.actionNotAllowed)
+			throwApiError(apiErrors.actionNotAllowed)
 		}
 	}
 
@@ -342,15 +342,15 @@ export async function updateAuthor(
 	}
 
 	if (args.facebookUsername != null && facebookUsername == null) {
-		errors.push(Errors.facebookUsernameInvalid)
+		errors.push(validationErrors.facebookUsernameInvalid)
 	}
 
 	if (args.instagramUsername != null && instagramUsername == null) {
-		errors.push(Errors.instagramUsernameInvalid)
+		errors.push(validationErrors.instagramUsernameInvalid)
 	}
 
 	if (args.twitterUsername != null && twitterUsername == null) {
-		errors.push(Errors.twitterUsernameInvalid)
+		errors.push(validationErrors.twitterUsernameInvalid)
 	}
 
 	throwValidationError(...errors)
@@ -389,7 +389,7 @@ export async function updateAuthor(
 	})
 
 	if (!isSuccessStatusCode(updateResponse.status)) {
-		throwApiError(Errors.unexpectedError)
+		throwApiError(apiErrors.unexpectedError)
 	}
 
 	let updateResponseData = (
