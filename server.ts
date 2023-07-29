@@ -1,8 +1,12 @@
 import { ApolloServer } from "@apollo/server"
-import { startStandaloneServer } from "@apollo/server/standalone"
+import { expressMiddleware } from "@apollo/server/express4"
+import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer"
 import { defaultFieldResolver } from "graphql"
 import { makeExecutableSchema } from "@graphql-tools/schema"
 import { mapSchema, getDirective, MapperKind } from "@graphql-tools/utils"
+import express from "express"
+import http from "http"
+import bodyParser from "body-parser"
 import { User } from "./src/types.js"
 import { throwApiError } from "./src/utils.js"
 import * as Errors from "./src/errors.js"
@@ -10,6 +14,10 @@ import { admins } from "./src/constants.js"
 import { getUser, getTableObject } from "./src/services/apiService.js"
 import { typeDefs } from "./src/typeDefs.js"
 import { resolvers } from "./src/resolvers.js"
+
+const port = process.env.PORT || 4000
+const app = express()
+const httpServer = http.createServer(app)
 
 const authDirectiveTransformer = (schema, directiveName) => {
 	return mapSchema(schema, {
@@ -73,23 +81,31 @@ let schema = makeExecutableSchema({
 schema = authDirectiveTransformer(schema, "auth")
 
 const server = new ApolloServer({
-	schema
+	schema,
+	plugins: [ApolloServerPluginDrainHttpServer({ httpServer })]
 })
 
-const { url } = await startStandaloneServer(server, {
-	context: async ({ req }) => {
-		const token = req.headers.authorization
-		let user: User = null
+await server.start()
 
-		if (token) {
-			user = await getUser(token)
+app.use(
+	"/",
+	bodyParser.json({ limit: "50mb" }),
+	expressMiddleware(server, {
+		context: async ({ req }) => {
+			const token = req.headers.authorization
+			let user: User = null
+
+			if (token) {
+				user = await getUser(token)
+			}
+
+			return {
+				token,
+				user
+			}
 		}
+	})
+)
 
-		return {
-			token,
-			user
-		}
-	}
-})
-
-console.log(`🚀 Server ready at ${url}`)
+await new Promise<void>(resolve => httpServer.listen({ port }, resolve))
+console.log(`🚀 Server ready at http://localhost:${port}/`)
