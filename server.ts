@@ -4,7 +4,7 @@ import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHt
 import { makeExecutableSchema } from "@graphql-tools/schema"
 import express from "express"
 import http from "http"
-import bodyParser from "body-parser"
+import cors from "cors"
 import { User } from "./src/types.js"
 import { getUser } from "./src/services/apiService.js"
 import { typeDefs } from "./src/typeDefs.js"
@@ -31,7 +31,8 @@ await server.start()
 
 app.use(
 	"/",
-	bodyParser.json({ limit: "50mb" }),
+	cors<cors.CorsRequest>(),
+	express.json({ type: "application/json", limit: "50mb" }),
 	expressMiddleware(server, {
 		context: async ({ req }) => {
 			const token = req.headers.authorization
