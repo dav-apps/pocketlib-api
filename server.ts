@@ -12,6 +12,7 @@ import { resolvers } from "./src/resolvers.js"
 import { authDirectiveTransformer } from "./src/directives.js"
 import { setup as publisherLogoSetup } from "./src/endpoints/publisherLogo.js"
 import { setup as authorProfileImageSetup } from "./src/endpoints/authorProfileImage.js"
+import { setup as storeBookCoverSetup } from "./src/endpoints/storeBookCover.js"
 
 const port = process.env.PORT || 4000
 const app = express()
@@ -34,6 +35,7 @@ await server.start()
 // Call setup function of each endpoint file
 publisherLogoSetup(app)
 authorProfileImageSetup(app)
+storeBookCoverSetup(app)
 
 app.use(
 	"/",

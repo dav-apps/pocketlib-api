@@ -19,6 +19,7 @@ import {
 	throwApiError,
 	throwValidationError,
 	loadStoreBookData,
+	createNewStoreBookRelease,
 	convertTableObjectToStoreBookCollection,
 	convertTableObjectToStoreBookSeries,
 	convertTableObjectToStoreBook,
@@ -651,21 +652,11 @@ export async function updateStoreBook(
 	// Check if the store book release is already published
 	if (storeBookReleaseTableObject.properties.status == "published") {
 		// Create a new release
-		let createReleaseResponse =
-			await TableObjectsController.CreateTableObject({
-				accessToken,
-				tableId: storeBookReleaseTableId,
-				properties: {
-					store_book: storeBookTableObject.uuid,
-					title: storeBookReleaseTableObject.properties.title,
-					description: storeBookReleaseTableObject.properties.description,
-					price: storeBookReleaseTableObject.properties.price,
-					isbn: storeBookReleaseTableObject.properties.isbn,
-					cover_item: storeBookReleaseTableObject.properties.cover_item,
-					file_item: storeBookReleaseTableObject.properties.file_item,
-					categories: storeBookReleaseTableObject.properties.categories
-				}
-			})
+		let createReleaseResponse = await createNewStoreBookRelease(
+			accessToken,
+			storeBookTableObject,
+			storeBookReleaseTableObject
+		)
 
 		if (!isSuccessStatusCode(createReleaseResponse.status)) {
 			throwApiError(apiErrors.unexpectedError)
@@ -678,7 +669,7 @@ export async function updateStoreBook(
 		// Add the new release to the releases of the store book
 		releaseUuidsString += `,${createReleaseResponseData.tableObject.Uuid}`
 
-		// Update the release table object
+		// Update the release object with the data of the new release
 		storeBookReleaseTableObject = {
 			uuid: createReleaseResponseData.tableObject.Uuid,
 			userId: user.id,

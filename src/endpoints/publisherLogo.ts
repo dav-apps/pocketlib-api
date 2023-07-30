@@ -5,13 +5,13 @@ import {
 	ApiResponse,
 	TableObjectsController
 } from "dav-js"
+import { TableObject, PublisherLogo } from "../types.js"
 import {
 	handleEndpointError,
 	throwEndpointError,
 	blurhashEncode,
 	getTableObjectFileUrl
 } from "../utils.js"
-import { TableObject } from "../types.js"
 import { apiErrors } from "../errors.js"
 import { admins, publisherLogoTableId } from "../constants.js"
 import {
@@ -73,14 +73,13 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 		// Get the logo of the publisher
 		let logoUuid = publisher.properties.logo as string
 		let logo: TableObject = null
-		let result = null
 
 		if (logoUuid != null) {
 			logo = await getTableObject(logoUuid)
 		}
 
 		let ext = contentType == "image/png" ? "png" : "jpg"
-		let blurhash = await blurhashEncode(req.body)
+		let encodeResult = await blurhashEncode(req.body)
 
 		if (logo == null) {
 			// Create a new logo table object
@@ -91,7 +90,7 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 					file: true,
 					properties: {
 						ext,
-						blurhash
+						blurhash: encodeResult.blurhash
 					}
 				})
 
@@ -112,7 +111,7 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 					uuid: logoUuid,
 					properties: {
 						ext,
-						blurhash
+						blurhash: encodeResult.blurhash
 					}
 				})
 
@@ -134,13 +133,13 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 			throwEndpointError(apiErrors.unexpectedError)
 		}
 
-		result = {
+		let result: PublisherLogo = {
 			uuid: logoUuid,
 			url: getTableObjectFileUrl(logoUuid),
-			blurhash
+			blurhash: encodeResult.blurhash
 		}
 
-		res.status(201).json(result)
+		res.status(200).json(result)
 	} catch (error) {
 		handleEndpointError(res, error)
 	}

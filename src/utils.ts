@@ -2,6 +2,7 @@ import { Response } from "express"
 import { GraphQLError } from "graphql"
 import { encode } from "blurhash"
 import { createCanvas, loadImage, Image } from "canvas"
+import { ApiResponse, ApiErrorResponse, TableObjectsController } from "dav-js"
 import {
 	ApiError,
 	TableObject,
@@ -21,6 +22,7 @@ import {
 	CategoryName
 } from "./types.js"
 import {
+	storeBookReleaseTableId,
 	facebookUsernameRegex,
 	instagramUsernameRegex,
 	twitterUsernameRegex
@@ -142,6 +144,52 @@ export async function getLastReleaseOfStoreBook(
 	return await getTableObject(releaseUuids[0])
 }
 
+export async function createNewStoreBookRelease(
+	accessToken: string,
+	storeBook: TableObject,
+	oldRelease: TableObject
+): Promise<
+	| ApiResponse<TableObjectsController.TableObjectResponseData>
+	| ApiErrorResponse
+> {
+	return await TableObjectsController.CreateTableObject({
+		accessToken,
+		tableId: storeBookReleaseTableId,
+		properties: {
+			store_book: storeBook.uuid,
+			title: oldRelease.properties.title,
+			description: oldRelease.properties.description,
+			price: oldRelease.properties.price,
+			isbn: oldRelease.properties.isbn,
+			cover_item: oldRelease.properties.cover_item,
+			file_item: oldRelease.properties.file_item,
+			categories: oldRelease.properties.categories
+		}
+	})
+}
+
+export async function blurhashEncode(data: Buffer): Promise<{
+	blurhash: string
+	width: number
+	height: number
+}> {
+	const getImageData = (image: Image) => {
+		const canvas = createCanvas(image.width, image.height)
+		const context = canvas.getContext("2d")
+		context.drawImage(image, 0, 0)
+		return context.getImageData(0, 0, image.width, image.height)
+	}
+
+	const image = await loadImage(data)
+	const imageData = getImageData(image)
+
+	return {
+		blurhash: encode(imageData.data, imageData.width, imageData.height, 4, 4),
+		width: image.width,
+		height: image.height
+	}
+}
+
 export function getFacebookUsername(input: string) {
 	if (input == null) return null
 
@@ -158,20 +206,6 @@ export function getTwitterUsername(input: string) {
 	if (input == null) return null
 
 	return twitterUsernameRegex.exec(input)?.groups?.username
-}
-
-export async function blurhashEncode(data: Buffer) {
-	const getImageData = (image: Image) => {
-		const canvas = createCanvas(image.width, image.height)
-		const context = canvas.getContext("2d")
-		context.drawImage(image, 0, 0)
-		return context.getImageData(0, 0, image.width, image.height)
-	}
-
-	const image = await loadImage(data)
-	const imageData = getImageData(image)
-
-	return encode(imageData.data, imageData.width, imageData.height, 4, 4)
 }
 
 export function getTableObjectFileUrl(uuid: string) {
