@@ -13,6 +13,7 @@ import { authDirectiveTransformer } from "./src/directives.js"
 import { setup as publisherLogoSetup } from "./src/endpoints/publisherLogo.js"
 import { setup as authorProfileImageSetup } from "./src/endpoints/authorProfileImage.js"
 import { setup as storeBookCoverSetup } from "./src/endpoints/storeBookCover.js"
+import { setup as storeBookFileSetup } from "./src/endpoints/storeBookFile.js"
 
 const port = process.env.PORT || 4000
 const app = express()
@@ -36,6 +37,7 @@ await server.start()
 publisherLogoSetup(app)
 authorProfileImageSetup(app)
 storeBookCoverSetup(app)
+storeBookFileSetup(app)
 
 app.use(
 	"/",

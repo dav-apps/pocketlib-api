@@ -29,4 +29,5 @@ export const twitterUsernameRegex =
 export const urlRegex =
 	/^(https?:\/\/)?[\w.-]+(\.[\w.-]+)+[\w\-._~/?#@&\+,;=]+$/
 export const isbnRegex = /^([0-9]{10}|[0-9]{13})$/
+export const filenameRegex = /filename=\"(?<filename>.*)\"/
 //#endregion

@@ -25,7 +25,8 @@ import {
 	storeBookReleaseTableId,
 	facebookUsernameRegex,
 	instagramUsernameRegex,
-	twitterUsernameRegex
+	twitterUsernameRegex,
+	filenameRegex
 } from "./constants.js"
 import { apiErrors } from "./errors.js"
 import { getTableObject } from "./services/apiService.js"
@@ -206,6 +207,12 @@ export function getTwitterUsername(input: string) {
 	if (input == null) return null
 
 	return twitterUsernameRegex.exec(input)?.groups?.username
+}
+
+export function getFilename(input: string) {
+	if (input == null) return null
+
+	return filenameRegex.exec(input)?.groups?.filename
 }
 
 export function getTableObjectFileUrl(uuid: string) {
