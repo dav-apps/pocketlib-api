@@ -1,3 +1,4 @@
+import { Response } from "express"
 import { GraphQLError } from "graphql"
 import { encode } from "blurhash"
 import { createCanvas, loadImage, Image } from "canvas"
@@ -48,6 +49,28 @@ export function throwValidationError(...errors: string[]) {
 			}
 		})
 	}
+}
+
+export function throwEndpointError(error: ApiError) {
+	throw new Error(error.code)
+}
+
+export function handleEndpointError(res: Response, e: Error) {
+	// Find the error by error code
+	let error = Object.values(apiErrors).find(err => err.code == e.message)
+
+	if (error != null) {
+		sendEndpointError(res, error)
+	} else {
+		sendEndpointError(res, apiErrors.unexpectedError)
+	}
+}
+
+function sendEndpointError(res: Response, error: ApiError) {
+	res.status(error.status || 400).json({
+		code: error.code,
+		message: error.message
+	})
 }
 
 export async function loadStoreBookData(

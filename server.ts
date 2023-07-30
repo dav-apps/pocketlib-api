@@ -10,6 +10,7 @@ import { getUser } from "./src/services/apiService.js"
 import { typeDefs } from "./src/typeDefs.js"
 import { resolvers } from "./src/resolvers.js"
 import { authDirectiveTransformer } from "./src/directives.js"
+import { setup as publisherLogoSetup } from "./src/endpoints/publisherLogo.js"
 
 const port = process.env.PORT || 4000
 const app = express()
@@ -28,6 +29,9 @@ const server = new ApolloServer({
 })
 
 await server.start()
+
+// Call setup function of each endpoint file
+publisherLogoSetup(app)
 
 app.use(
 	"/",

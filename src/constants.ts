@@ -5,6 +5,7 @@ export const languages = ["en", "de"]
 //#region App & Table ids
 export const appId = 6
 export const publisherTableId = 36
+export const publisherLogoTableId = 38
 export const authorBioTableId = 20
 export const storeBookCollectionTableId = 22
 export const storeBookCollectionNameTableId = 23

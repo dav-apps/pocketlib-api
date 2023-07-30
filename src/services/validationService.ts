@@ -1,6 +1,16 @@
+import { throwEndpointError } from "../utils.js"
 import { languages, urlRegex, isbnRegex } from "../constants.js"
 import { apiErrors, validationErrors } from "../errors.js"
 
+//#region Endpoint validations
+export async function validateImageContentType(contentType: string) {
+	if (contentType != "image/png" && contentType != "image/jpeg") {
+		throwEndpointError(apiErrors.contentTypeNotSupported)
+	}
+}
+//#endregion
+
+//#region Field validations
 export function validateNameLength(name: string) {
 	if (name.length < 2) {
 		return validationErrors.nameTooShort
