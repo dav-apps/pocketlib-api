@@ -5,23 +5,23 @@ import {
 	ApiResponse,
 	TableObjectsController
 } from "dav-js"
+import { TableObject } from "../types.js"
 import {
 	handleEndpointError,
 	throwEndpointError,
 	blurhashEncode,
 	getTableObjectFileUrl
 } from "../utils.js"
-import { TableObject } from "../types.js"
+import { admins, authorProfileImageTableId } from "../constants.js"
 import { apiErrors } from "../errors.js"
-import { admins, publisherLogoTableId } from "../constants.js"
 import {
-	getUser,
 	getTableObject,
+	getUser,
 	listTableObjects
 } from "../services/apiService.js"
 import { validateImageContentType } from "../services/validationService.js"
 
-async function uploadPublisherLogo(req: Request, res: Response) {
+async function uploadAuthorProfileImage(req: Request, res: Response) {
 	try {
 		const uuid = req.params.uuid
 		const accessToken = req.headers.authorization
@@ -37,57 +37,57 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 		const contentType = req.headers["content-type"]
 		validateImageContentType(contentType)
 
-		let publisher: TableObject = null
+		let author: TableObject = null
 
 		if (uuid == "mine") {
 			if (isAdmin) {
 				throwEndpointError(apiErrors.actionNotAllowed)
 			}
 
-			// Get the publisher of the user
-			let listPublishersResponse = await listTableObjects({
+			// Get the author of the user
+			let listAuthorsResponse = await listTableObjects({
 				caching: false,
 				limit: 1,
-				tableName: "Publisher",
+				tableName: "Author",
 				userId: user.id
 			})
 
-			if (listPublishersResponse.items.length == 0) {
-				throwEndpointError(apiErrors.publisherDoesNotExist)
+			if (listAuthorsResponse.items.length == 0) {
+				throwEndpointError(apiErrors.authorDoesNotExist)
 			}
 
-			publisher = listPublishersResponse.items[0]
+			author = listAuthorsResponse.items[0]
 		} else {
 			if (!isAdmin) {
 				throwEndpointError(apiErrors.actionNotAllowed)
 			}
 
-			// Get the publisher
-			publisher = await getTableObject(uuid)
+			// Get the author
+			author = await getTableObject(uuid)
 
-			if (publisher == null) {
-				throwEndpointError(apiErrors.publisherDoesNotExist)
+			if (author == null) {
+				throwEndpointError(apiErrors.authorDoesNotExist)
 			}
 		}
 
-		// Get the logo of the publisher
-		let logoUuid = publisher.properties.logo as string
-		let logo: TableObject = null
+		// Get the profile image of the author
+		let profileImageUuid = author.properties.profile_image as string
+		let profileImage: TableObject = null
 		let result = null
 
-		if (logoUuid != null) {
-			logo = await getTableObject(logoUuid)
+		if (profileImageUuid != null) {
+			profileImage = await getTableObject(profileImageUuid)
 		}
 
 		let ext = contentType == "image/png" ? "png" : "jpg"
 		let blurhash = await blurhashEncode(req.body)
 
-		if (logo == null) {
-			// Create a new logo table object
-			let createLogoResponse =
+		if (profileImage == null) {
+			// Create a new profile image table object
+			let createProfileImageResponse =
 				await TableObjectsController.CreateTableObject({
 					accessToken,
-					tableId: publisherLogoTableId,
+					tableId: authorProfileImageTableId,
 					file: true,
 					properties: {
 						ext,
@@ -95,28 +95,28 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 					}
 				})
 
-			if (!isSuccessStatusCode(createLogoResponse.status)) {
+			if (!isSuccessStatusCode(createProfileImageResponse.status)) {
 				throwEndpointError(apiErrors.unexpectedError)
 			}
 
-			let createLogoResponseData = (
-				createLogoResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
+			let createProfileImageResponseData = (
+				createProfileImageResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
 			).data
 
-			logoUuid = createLogoResponseData.tableObject.Uuid
+			profileImageUuid = createProfileImageResponseData.tableObject.Uuid
 		} else {
-			// Update the existing logo table object
-			let updateLogoResponse =
+			// Update the existing profile image table object
+			let updateProfileImageResponse =
 				await TableObjectsController.UpdateTableObject({
 					accessToken,
-					uuid: logoUuid,
+					uuid: profileImageUuid,
 					properties: {
 						ext,
 						blurhash
 					}
 				})
 
-			if (!isSuccessStatusCode(updateLogoResponse.status)) {
+			if (!isSuccessStatusCode(updateProfileImageResponse.status)) {
 				throwEndpointError(apiErrors.unexpectedError)
 			}
 		}
@@ -125,7 +125,7 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 		let setTableObjectFileResponse =
 			await TableObjectsController.SetTableObjectFile({
 				accessToken,
-				uuid: logoUuid,
+				uuid: profileImageUuid,
 				data: req.body,
 				type: contentType
 			})
@@ -135,8 +135,8 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 		}
 
 		result = {
-			uuid: logoUuid,
-			url: getTableObjectFileUrl(logoUuid),
+			uuid: profileImageUuid,
+			url: getTableObjectFileUrl(profileImageUuid),
 			blurhash
 		}
 
@@ -148,9 +148,9 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 
 export function setup(app: Express) {
 	app.put(
-		"/publishers/:uuid/logo",
+		"/authors/:uuid/profileImage",
 		raw({ type: "*/*", limit: "100mb" }),
 		cors(),
-		uploadPublisherLogo
+		uploadAuthorProfileImage
 	)
 }

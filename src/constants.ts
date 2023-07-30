@@ -7,6 +7,7 @@ export const appId = 6
 export const publisherTableId = 36
 export const publisherLogoTableId = 38
 export const authorBioTableId = 20
+export const authorProfileImageTableId = 21
 export const storeBookCollectionTableId = 22
 export const storeBookCollectionNameTableId = 23
 export const storeBookSeriesTableId = 16
