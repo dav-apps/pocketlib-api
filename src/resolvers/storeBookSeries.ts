@@ -99,8 +99,13 @@ export async function createStoreBookSeries(
 	},
 	context: ResolverContext
 ): Promise<StoreBookSeries> {
+	const accessToken = context.accessToken
 	const user = context.user
-	const accessToken = context.token
+
+	if (user == null) {
+		throwApiError(apiErrors.notAuthenticated)
+	}
+
 	const isAdmin = admins.includes(user.id)
 
 	// Validate the args
@@ -200,8 +205,13 @@ export async function updateStoreBookSeries(
 	const uuid = args.uuid
 	if (uuid == null) return null
 
+	const accessToken = context.accessToken
 	const user = context.user
-	const accessToken = context.token
+
+	if (user == null) {
+		throwApiError(apiErrors.notAuthenticated)
+	}
+
 	const isAdmin = admins.includes(user.id)
 
 	// Get the store book series

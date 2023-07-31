@@ -20,7 +20,7 @@ export async function createBook(
 	context: ResolverContext
 ): Promise<Book> {
 	const user = context.user
-	const accessToken = context.token
+	const accessToken = context.accessToken
 
 	// Check if the user is logged in
 	if (user == null) {

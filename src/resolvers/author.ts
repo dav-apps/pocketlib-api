@@ -173,7 +173,7 @@ export async function createAuthor(
 	context: ResolverContext
 ): Promise<Author> {
 	const user = context.user
-	const accessToken = context.token
+	const accessToken = context.accessToken
 
 	// Check if the user is logged in
 	if (user == null) {
@@ -271,7 +271,7 @@ export async function updateAuthor(
 
 	let authorTableObject: TableObject = null
 	const user = context.user
-	const accessToken = context.token
+	const accessToken = context.accessToken
 
 	if (uuid == "mine") {
 		// Check if the user is an author

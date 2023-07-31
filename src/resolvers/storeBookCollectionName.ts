@@ -31,10 +31,9 @@ export async function setStoreBookCollectionName(
 	const uuid = args.uuid
 	if (uuid == null) return null
 
+	const accessToken = context.accessToken
 	const user = context.user
-	const accessToken = context.token
 
-	// Check if the user is logged in
 	if (user == null) {
 		throwApiError(apiErrors.notAuthenticated)
 	}

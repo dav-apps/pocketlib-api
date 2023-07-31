@@ -105,7 +105,7 @@ export async function createPublisher(
 	context: ResolverContext
 ): Promise<Publisher> {
 	const user = context.user
-	const accessToken = context.token
+	const accessToken = context.accessToken
 
 	// Check if the user is logged in
 	if (user == null) {
@@ -186,7 +186,7 @@ export async function updatePublisher(
 
 	let publisherTableObject: TableObject = null
 	const user = context.user
-	const accessToken = context.token
+	const accessToken = context.accessToken
 
 	if (uuid == "mine") {
 		// Check if the user is a publisher

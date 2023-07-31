@@ -195,7 +195,7 @@ export async function createStoreBook(
 	context: ResolverContext
 ): Promise<StoreBook> {
 	const user = context.user
-	const accessToken = context.token
+	const accessToken = context.accessToken
 
 	// Check if the user is logged in
 	if (user == null) {
@@ -545,8 +545,13 @@ export async function updateStoreBook(
 	const uuid = args.uuid
 	if (uuid == null) return null
 
+	const accessToken = context.accessToken
 	const user = context.user
-	const accessToken = context.token
+
+	if (user == null) {
+		throwApiError(apiErrors.notAuthenticated)
+	}
+
 	const isAdmin = admins.includes(user.id)
 
 	// Get the store book

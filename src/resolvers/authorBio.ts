@@ -29,7 +29,7 @@ export async function setAuthorBio(
 
 	let authorTableObject: TableObject = null
 	const user = context.user
-	const accessToken = context.token
+	const accessToken = context.accessToken
 
 	if (uuid == "mine") {
 		// Check if the user is an author

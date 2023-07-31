@@ -1,40 +1,49 @@
 import axios, { AxiosRequestConfig } from "axios"
-import { apiBaseUrl, appId } from "../constants.js"
 import {
 	List,
-	User,
+	UserApiResponse,
 	TableObject,
 	TableObjectPrice,
 	Collection,
 	Purchase
 } from "../types.js"
+import { apiBaseUrl, appId } from "../constants.js"
 
-export async function getUser(token: string): Promise<User> {
+export async function getUser(accessToken: string): Promise<UserApiResponse> {
+	if (accessToken == null) {
+		return null
+	}
+
 	try {
 		let response = await axios({
 			method: "get",
 			url: `${apiBaseUrl}/v1/user`,
 			headers: {
-				Authorization: token
+				Authorization: accessToken
 			}
 		})
 
 		return {
-			id: response.data.id,
-			email: response.data.email,
-			firstName: response.data.first_name,
-			confirmed: response.data.confirmed,
-			totalStorage: response.data.total_storage,
-			usedStorage: response.data.used_storage,
-			plan: response.data.plan,
-			dev: response.data.dev,
-			provider: response.data.provider,
-			profileImage: response.data.profile_image,
-			profileImageEtag: response.data.profile_image_etag
+			status: response.status,
+			data: {
+				id: response.data.id,
+				email: response.data.email,
+				firstName: response.data.first_name,
+				confirmed: response.data.confirmed,
+				totalStorage: response.data.total_storage,
+				usedStorage: response.data.used_storage,
+				plan: response.data.plan,
+				dev: response.data.dev,
+				provider: response.data.provider,
+				profileImage: response.data.profile_image,
+				profileImageEtag: response.data.profile_image_etag
+			}
 		}
 	} catch (error) {
-		console.error(error.response?.data || error)
-		return null
+		return {
+			status: error.response?.status || 500,
+			errors: error.response?.data?.errors
+		}
 	}
 }
 

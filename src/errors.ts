@@ -25,6 +25,11 @@ export const apiErrors = {
 		message: "Validation failed",
 		status: 400
 	},
+	sessionEnded: {
+		code: "SESSION_ENDED",
+		message: "Session has ended and must be renewed",
+		status: 403
+	},
 	publisherDoesNotExist: {
 		code: "PUBLISHER_NOT_EXISTS",
 		message: "Publisher does not exist",

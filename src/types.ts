@@ -1,5 +1,5 @@
 export interface ResolverContext {
-	token?: string
+	accessToken?: string
 	user?: User
 }
 
@@ -12,6 +12,12 @@ export interface ApiError {
 	code: string
 	message: string
 	status?: number
+}
+
+export interface UserApiResponse {
+	status: number
+	data?: User
+	errors?: { code: number; message: string }[]
 }
 
 //#region Platform models
