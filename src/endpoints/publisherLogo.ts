@@ -10,27 +10,24 @@ import {
 	handleEndpointError,
 	throwEndpointError,
 	blurhashEncode,
+	getUserForEndpoint,
 	getTableObjectFileUrl
 } from "../utils.js"
 import { apiErrors } from "../errors.js"
 import { admins, publisherLogoTableId } from "../constants.js"
-import {
-	getUser,
-	getTableObject,
-	listTableObjects
-} from "../services/apiService.js"
+import { getTableObject, listTableObjects } from "../services/apiService.js"
 import { validateImageContentType } from "../services/validationService.js"
 
 async function uploadPublisherLogo(req: Request, res: Response) {
 	try {
 		const uuid = req.params.uuid
 		const accessToken = req.headers.authorization
+		const user = await getUserForEndpoint(accessToken)
 
-		if (accessToken == null) {
+		if (user == null) {
 			throwEndpointError(apiErrors.notAuthenticated)
 		}
 
-		const user = await getUser(accessToken)
 		const isAdmin = admins.includes(user.id)
 
 		// Check if content type is supported

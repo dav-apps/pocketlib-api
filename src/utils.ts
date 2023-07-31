@@ -2,9 +2,15 @@ import { Response } from "express"
 import { GraphQLError } from "graphql"
 import { encode } from "blurhash"
 import { createCanvas, loadImage, Image } from "canvas"
-import { ApiResponse, ApiErrorResponse, TableObjectsController } from "dav-js"
+import {
+	isSuccessStatusCode,
+	ApiResponse,
+	ApiErrorResponse,
+	TableObjectsController
+} from "dav-js"
 import {
 	ApiError,
+	User,
 	TableObject,
 	Publisher,
 	PublisherLogo,
@@ -29,7 +35,7 @@ import {
 	filenameRegex
 } from "./constants.js"
 import { apiErrors } from "./errors.js"
-import { getTableObject } from "./services/apiService.js"
+import { getUser, getTableObject } from "./services/apiService.js"
 
 export function throwApiError(error: ApiError) {
 	throw new GraphQLError(error.message, {
@@ -189,6 +195,26 @@ export async function blurhashEncode(data: Buffer): Promise<{
 		width: image.width,
 		height: image.height
 	}
+}
+
+export async function getUserForEndpoint(accessToken: string): Promise<User> {
+	if (accessToken == null) {
+		return null
+	}
+
+	let userResponse = await getUser(accessToken)
+
+	if (isSuccessStatusCode(userResponse.status)) {
+		return userResponse.data
+	} else if (
+		userResponse.errors != null &&
+		userResponse.errors.length > 0 &&
+		userResponse.errors[0].code == 3101
+	) {
+		throwEndpointError(apiErrors.sessionEnded)
+	}
+
+	return null
 }
 
 export function getFacebookUsername(input: string) {

@@ -12,23 +12,23 @@ import {
 	getLastReleaseOfStoreBook,
 	createNewStoreBookRelease,
 	blurhashEncode,
+	getUserForEndpoint,
 	getTableObjectFileUrl
 } from "../utils.js"
 import { storeBookCoverTableId } from "../constants.js"
 import { apiErrors } from "../errors.js"
-import { getUser, getTableObject } from "../services/apiService.js"
+import { getTableObject } from "../services/apiService.js"
 import { validateImageContentType } from "../services/validationService.js"
 
 export async function uploadStoreBookCover(req: Request, res: Response) {
 	try {
 		const uuid = req.params.uuid
 		const accessToken = req.headers.authorization
+		const user = await getUserForEndpoint(accessToken)
 
-		if (accessToken == null) {
+		if (user == null) {
 			throwEndpointError(apiErrors.notAuthenticated)
 		}
-
-		const user = await getUser(accessToken)
 
 		// Check if content type is supported
 		const contentType = req.headers["content-type"]

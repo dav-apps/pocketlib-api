@@ -10,27 +10,24 @@ import {
 	handleEndpointError,
 	throwEndpointError,
 	blurhashEncode,
+	getUserForEndpoint,
 	getTableObjectFileUrl
 } from "../utils.js"
 import { admins, authorProfileImageTableId } from "../constants.js"
 import { apiErrors } from "../errors.js"
-import {
-	getTableObject,
-	getUser,
-	listTableObjects
-} from "../services/apiService.js"
+import { getTableObject, listTableObjects } from "../services/apiService.js"
 import { validateImageContentType } from "../services/validationService.js"
 
 async function uploadAuthorProfileImage(req: Request, res: Response) {
 	try {
 		const uuid = req.params.uuid
 		const accessToken = req.headers.authorization
+		const user = await getUserForEndpoint(accessToken)
 
-		if (accessToken == null) {
+		if (user == null) {
 			throwEndpointError(apiErrors.notAuthenticated)
 		}
 
-		const user = await getUser(accessToken)
 		const isAdmin = admins.includes(user.id)
 
 		// Check if content type is supported
@@ -80,7 +77,7 @@ async function uploadAuthorProfileImage(req: Request, res: Response) {
 		}
 
 		let ext = contentType == "image/png" ? "png" : "jpg"
-		let blurhash = await blurhashEncode(req.body)
+		let blurhash = (await blurhashEncode(req.body)).blurhash
 
 		if (profileImage == null) {
 			// Create a new profile image table object

@@ -11,23 +11,23 @@ import {
 	throwEndpointError,
 	getLastReleaseOfStoreBook,
 	createNewStoreBookRelease,
+	getUserForEndpoint,
 	getFilename
 } from "../utils.js"
 import { storeBookFileTableId } from "../constants.js"
 import { apiErrors } from "../errors.js"
-import { getUser, getTableObject } from "../services/apiService.js"
+import { getTableObject } from "../services/apiService.js"
 import { validateEbookContentType } from "../services/validationService.js"
 
 export async function uploadStoreBookFile(req: Request, res: Response) {
 	try {
 		const uuid = req.params.uuid
 		const accessToken = req.headers.authorization
+		const user = await getUserForEndpoint(accessToken)
 
-		if (accessToken == null) {
+		if (user == null) {
 			throwEndpointError(apiErrors.notAuthenticated)
 		}
-
-		const user = await getUser(accessToken)
 
 		// Check if content type is supported
 		const contentType = req.headers["content-type"]
