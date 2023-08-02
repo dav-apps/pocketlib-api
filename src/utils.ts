@@ -40,8 +40,7 @@ import { getUser, getTableObject } from "./services/apiService.js"
 export function throwApiError(error: ApiError) {
 	throw new GraphQLError(error.message, {
 		extensions: {
-			code: error.code,
-			http: { status: error.status || 500 }
+			code: error.code
 		}
 	})
 }
@@ -53,7 +52,6 @@ export function throwValidationError(...errors: string[]) {
 		throw new GraphQLError(apiErrors.validationFailed.message, {
 			extensions: {
 				code: apiErrors.validationFailed.code,
-				http: { status: apiErrors.validationFailed.status || 500 },
 				errors: filteredErrors
 			}
 		})

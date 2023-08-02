@@ -1,5 +1,3 @@
-import { ApiError } from "./types.js"
-
 export const apiErrors = {
 	unexpectedError: {
 		code: "UNEXPECTED_ERROR",
