@@ -5,6 +5,7 @@ import { makeExecutableSchema } from "@graphql-tools/schema"
 import express from "express"
 import http from "http"
 import cors from "cors"
+import { PrismaClient } from "@prisma/client"
 import { isSuccessStatusCode } from "dav-js"
 import { User } from "./src/types.js"
 import { throwApiError } from "./src/utils.js"
@@ -18,9 +19,10 @@ import { setup as authorProfileImageSetup } from "./src/endpoints/authorProfileI
 import { setup as storeBookCoverSetup } from "./src/endpoints/storeBookCover.js"
 import { setup as storeBookFileSetup } from "./src/endpoints/storeBookFile.js"
 
-const port = process.env.PORT || 4000
+const port = process.env.PORT || 4001
 const app = express()
 const httpServer = http.createServer(app)
+const prisma = new PrismaClient()
 
 let schema = makeExecutableSchema({
 	typeDefs,
@@ -66,6 +68,7 @@ app.use(
 			}
 
 			return {
+				prisma,
 				accessToken,
 				user
 			}

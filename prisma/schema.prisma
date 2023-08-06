@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Publisher {
+  id                BigInt         @id @default(autoincrement())
+  uuid              String         @unique @db.VarChar
+  name              String         @db.VarChar
+  description       String?        @db.VarChar
+  websiteUrl        String?        @db.VarChar
+  facebookUsername  String?        @db.VarChar
+  instagramUsername String?        @db.VarChar
+  twitterUsername   String?        @db.VarChar
+  logo              PublisherLogo?
+  authors           Author[]
+}
+
+model PublisherLogo {
+  id          BigInt    @id @default(autoincrement())
+  uuid        String    @unique @db.VarChar
+  publisher   Publisher @relation(fields: [publisherId], references: [id])
+  publisherId BigInt    @unique
+  blurhash    String?   @db.VarChar
+}
+
+model Author {
+  id                   BigInt                @id @default(autoincrement())
+  uuid                 String                @unique @db.VarChar
+  publisher            Publisher?            @relation(fields: [publisherId], references: [id])
+  publisherId          BigInt?
+  firstName            String?               @db.VarChar
+  lastName             String?               @db.VarChar
+  websiteUrl           String?               @db.VarChar
+  facebookUsername     String?               @db.VarChar
+  instagramUsername    String?               @db.VarChar
+  twitterUsername      String?               @db.VarChar
+  profileImage         AuthorProfileImage?
+  bios                 AuthorBio[]
+  storeBookCollections StoreBookCollection[]
+  storeBookSeries      StoreBookSeries[]
+}
+
+model AuthorProfileImage {
+  id       BigInt  @id @default(autoincrement())
+  uuid     String  @unique @db.VarChar
+  author   Author  @relation(fields: [authorId], references: [id])
+  authorId BigInt  @unique
+  blurhash String? @db.VarChar
+}
+
+model AuthorBio {
+  id       BigInt @id @default(autoincrement())
+  uuid     String @unique @db.VarChar
+  author   Author @relation(fields: [authorId], references: [id])
+  authorId BigInt
+  bio      String @db.VarChar
+  language String @db.VarChar
+}
+
+model StoreBookCollection {
+  id         BigInt                    @id @default(autoincrement())
+  uuid       String                    @unique @db.VarChar
+  author     Author                    @relation(fields: [authorId], references: [id])
+  authorId   BigInt
+  names      StoreBookCollectionName[]
+  storeBooks StoreBook[]
+}
+
+model StoreBookCollectionName {
+  id           BigInt              @id @default(autoincrement())
+  uuid         String              @unique @db.VarChar
+  collection   StoreBookCollection @relation(fields: [collectionId], references: [id])
+  collectionId BigInt
+  name         String              @db.VarChar
+  language     String              @db.VarChar
+}
+
+model StoreBookSeries {
+  id         BigInt      @id @default(autoincrement())
+  uuid       String      @unique @db.VarChar
+  author     Author      @relation(fields: [authorId], references: [id])
+  authorId   BigInt
+  name       String      @db.VarChar
+  language   String      @db.VarChar
+  storeBooks StoreBook[]
+}
+
+model StoreBook {
+  id           BigInt              @id @default(autoincrement())
+  uuid         String              @unique @db.VarChar
+  collection   StoreBookCollection @relation(fields: [collectionId], references: [id])
+  collectionId BigInt
+  language     String              @db.VarChar
+  status       String              @db.VarChar
+  releases     StoreBookRelease[]
+  series       StoreBookSeries[]
+}
+
+model StoreBookRelease {
+  id           BigInt          @id @default(autoincrement())
+  uuid         String          @unique @db.VarChar
+  storeBook    StoreBook       @relation(fields: [storeBookId], references: [id])
+  storeBookId  BigInt
+  releaseName  String?         @db.VarChar
+  releaseNotes String?         @db.VarChar
+  publishedAt  DateTime?       @db.Timestamp(6)
+  title        String?         @db.VarChar
+  description  String?         @db.VarChar
+  price        Int?            @default(0)
+  isbn         String?         @db.VarChar
+  status       String?         @db.VarChar
+  cover        StoreBookCover?
+  file         StoreBookFile?
+  categories   Category[]
+}
+
+model StoreBookCover {
+  id          BigInt           @id @default(autoincrement())
+  uuid        String           @unique @db.VarChar
+  release     StoreBookRelease @relation(fields: [releaseId], references: [id])
+  releaseId   BigInt           @unique
+  aspectRatio String?          @db.VarChar
+  blurhash    String?          @db.VarChar
+}
+
+model StoreBookFile {
+  id        BigInt           @id @default(autoincrement())
+  uuid      String           @unique @db.VarChar
+  release   StoreBookRelease @relation(fields: [releaseId], references: [id])
+  releaseId BigInt           @unique
+  fileName  String?          @db.VarChar
+}
+
+model Category {
+  id       BigInt             @id @default(autoincrement())
+  uuid     String             @unique @db.VarChar
+  key      String             @db.VarChar
+  names    CategoryName[]
+  releases StoreBookRelease[]
+}
+
+model CategoryName {
+  id         BigInt   @id @default(autoincrement())
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId BigInt
+  uuid       String   @unique @db.VarChar
+  name       String   @db.VarChar
+  language   String   @db.VarChar
+}
