@@ -4,6 +4,23 @@ import { listTableObjects } from "./services/apiService.js"
 const prisma = new PrismaClient()
 const limit = 1000
 
+async function migrateUserIds() {
+	await prisma.publisher.updateMany({ data: { userId: 1 } })
+	await prisma.publisherLogo.updateMany({ data: { userId: 1 } })
+	await prisma.author.updateMany({ data: { userId: 1 } })
+	await prisma.authorProfileImage.updateMany({ data: { userId: 1 } })
+	await prisma.authorBio.updateMany({ data: { userId: 1 } })
+	await prisma.storeBookCollection.updateMany({ data: { userId: 1 } })
+	await prisma.storeBookCollectionName.updateMany({ data: { userId: 1 } })
+	await prisma.storeBookSeries.updateMany({ data: { userId: 1 } })
+	await prisma.storeBook.updateMany({ data: { userId: 1 } })
+	await prisma.storeBookRelease.updateMany({ data: { userId: 1 } })
+	await prisma.storeBookCover.updateMany({ data: { userId: 1 } })
+	await prisma.storeBookFile.updateMany({ data: { userId: 1 } })
+	await prisma.category.updateMany({ data: { userId: 1 } })
+	await prisma.categoryName.updateMany({ data: { userId: 1 } })
+}
+
 async function migrateCategoryNames() {
 	let tableObjectsResponse = await listTableObjects({
 		tableName: "CategoryName",
@@ -533,60 +550,52 @@ async function migrateAuthorProfileImages() {
 }
 
 async function migrateAuthors() {
-	const limit = 10
-	let currentPosition = 0
-	let total = 0
+	let tableObjectsResponse = await listTableObjects({
+		tableName: "Author",
+		limit
+	})
 
-	do {
-		console.log("------------------")
-		console.log({ currentPosition })
+	let publisherResponse = await listTableObjects({
+		tableName: "Publisher",
+		limit
+	})
 
-		let tableObjectsResponse = await listTableObjects({
-			tableName: "Author",
-			limit,
-			offset: currentPosition
-		})
+	for (let tableObject of tableObjectsResponse.items) {
+		// Find the publisher of the author
+		let publisher = null
 
-		total = tableObjectsResponse.total
+		for (let publisherTableObject of publisherResponse.items) {
+			let authors = publisherTableObject.properties.authors as string
 
-		for (let tableObject of tableObjectsResponse.items) {
-			console.log(tableObject.uuid)
-
-			// Check if the author already exists
-			let author = await prisma.author.findFirst({
-				where: { uuid: tableObject.uuid }
-			})
-			if (author != null) continue
-
-			let publisherUuid = tableObject.properties.publisher as string
-			let publisher = null
-
-			if (publisherUuid != null) {
-				// Get the publisher
+			if (authors != null && authors.includes(tableObject.uuid)) {
 				publisher = await prisma.publisher.findFirst({
-					where: { uuid: publisherUuid }
+					where: { uuid: publisherTableObject.uuid }
 				})
-			}
 
-			await prisma.author.create({
-				data: {
-					uuid: tableObject.uuid,
-					publisherId: publisher && publisher.id,
-					firstName: tableObject.properties.first_name as string,
-					lastName: tableObject.properties.last_name as string,
-					websiteUrl: tableObject.properties.website_url as string,
-					facebookUsername: tableObject.properties
-						.facebook_username as string,
-					instagramUsername: tableObject.properties
-						.instagram_username as string,
-					twitterUsername: tableObject.properties
-						.twitter_username as string
-				}
-			})
+				break
+			}
 		}
 
-		currentPosition += limit
-	} while (currentPosition < total)
+		let data = {
+			uuid: tableObject.uuid,
+			firstName: tableObject.properties.first_name as string,
+			lastName: tableObject.properties.last_name as string,
+			websiteUrl: tableObject.properties.website_url as string,
+			facebookUsername: tableObject.properties.facebook_username as string,
+			instagramUsername: tableObject.properties.instagram_username as string,
+			twitterUsername: tableObject.properties.twitter_username as string
+		}
+
+		if (publisher != null) {
+			data["publisher"] = {
+				connect: { id: publisher.id }
+			}
+		}
+
+		await prisma.author.create({
+			data
+		})
+	}
 }
 
 async function migratePublisherLogos() {
