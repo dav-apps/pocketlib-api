@@ -1,35 +1,21 @@
 import {
-	isSuccessStatusCode,
-	ApiResponse,
-	TableObjectsController
-} from "dav-js"
-import {
-	ResolverContext,
-	List,
-	TableObject,
 	Publisher,
 	Author,
 	AuthorBio,
-	AuthorProfileImage,
 	StoreBookCollection,
 	StoreBookSeries
-} from "../types.js"
+} from "@prisma/client"
+import { ResolverContext, List, AuthorProfileImage } from "../types.js"
 import {
 	throwApiError,
 	throwValidationError,
 	getFacebookUsername,
 	getInstagramUsername,
 	getTwitterUsername,
-	convertTableObjectToPublisher,
-	convertTableObjectToAuthor,
-	convertTableObjectToAuthorBio,
-	convertTableObjectToAuthorProfileImage,
-	convertTableObjectToStoreBookCollection,
-	convertTableObjectToStoreBookSeries
+	getTableObjectFileUrl
 } from "../utils.js"
 import { apiErrors, validationErrors } from "../errors.js"
-import { admins, publisherTableId } from "../constants.js"
-import { getTableObject, listTableObjects } from "../services/apiService.js"
+import { admins } from "../constants.js"
 import {
 	validateFirstNameLength,
 	validateLastNameLength,
@@ -44,7 +30,7 @@ export async function retrieveAuthor(
 	const uuid = args.uuid
 	if (uuid == null) return null
 
-	let tableObject: TableObject = null
+	let where = {}
 
 	if (uuid == "mine") {
 		// Check if the user is an author
@@ -57,30 +43,17 @@ export async function retrieveAuthor(
 		}
 
 		// Get the author of the user
-		let response = await listTableObjects({
-			caching: false,
-			limit: 1,
-			tableName: "Author",
-			userId: user.id
-		})
-
-		if (response.items.length == 1) {
-			tableObject = response.items[0]
-		} else {
-			return null
-		}
+		where = { userId: user.id }
 	} else {
-		tableObject = await getTableObject(uuid)
-		if (tableObject == null) return null
+		where = { uuid: uuid }
 	}
 
-	return convertTableObjectToAuthor(tableObject)
+	return await context.prisma.author.findFirst({ where })
 }
 
 export async function listAuthors(
 	parent: any,
 	args: {
-		latest?: boolean
 		mine?: boolean
 		languages?: string[]
 		limit?: number
@@ -88,28 +61,16 @@ export async function listAuthors(
 	},
 	context: ResolverContext
 ): Promise<List<Author>> {
-	let total = 0
-	let tableObjects: TableObject[] = []
+	let take = args.limit || 10
+	if (take <= 0) take = 10
 
-	let limit = args.limit || 10
-	if (limit <= 0) limit = 10
+	let skip = args.offset || 0
+	if (skip < 0) skip = 0
 
-	let offset = args.offset || 0
-	if (offset < 0) offset = 0
+	let mine = args.mine || false
+	let where = {}
 
-	let latest = args.latest || false
-	let mine = (args.mine || false) && !latest
-
-	if (latest) {
-		let response = await listTableObjects({
-			limit,
-			offset,
-			collectionName: "latest_authors"
-		})
-
-		total = response.total
-		tableObjects = response.items
-	} else if (mine) {
+	if (mine) {
 		// Check if the user is an admin
 		const user = context.user
 
@@ -120,50 +81,21 @@ export async function listAuthors(
 		}
 
 		// Get the authors of the user
-		let response = await listTableObjects({
-			userId: user.id,
-			tableName: "Author",
-			caching: false
-		})
-
-		tableObjects = response.items
-	} else {
-		let response = await listTableObjects({
-			limit,
-			offset,
-			tableName: "Author"
-		})
-
-		total = response.total
-		tableObjects = response.items
+		where = { userId: user.id, publisher: null }
 	}
 
-	let result: Author[] = []
+	const [total, items] = await context.prisma.$transaction([
+		context.prisma.author.count(),
+		context.prisma.author.findMany({
+			where,
+			take,
+			skip
+		})
+	])
 
-	if (mine) {
-		for (let obj of tableObjects) {
-			let author = convertTableObjectToAuthor(obj)
-
-			if (author.publisher == null) {
-				result.push(author)
-			}
-		}
-	} else {
-		for (let obj of tableObjects) {
-			result.push(convertTableObjectToAuthor(obj))
-		}
-	}
-
-	if (mine) {
-		return {
-			total: result.length,
-			items: result.slice(offset, limit + offset)
-		}
-	} else {
-		return {
-			total,
-			items: result
-		}
+	return {
+		total,
+		items
 	}
 }
 
@@ -173,7 +105,6 @@ export async function createAuthor(
 	context: ResolverContext
 ): Promise<Author> {
 	const user = context.user
-	const accessToken = context.accessToken
 
 	// Check if the user is logged in
 	if (user == null) {
@@ -181,24 +112,24 @@ export async function createAuthor(
 	}
 
 	let isAdmin = admins.includes(user.id)
+	let publisher: Publisher = null
 
 	if (isAdmin && args.publisher != null) {
 		// Get the publisher
-		let publisherTableObject = await getTableObject(args.publisher)
+		publisher = await context.prisma.publisher.findFirst({
+			where: { uuid: args.publisher }
+		})
 
-		if (publisherTableObject == null) {
+		if (publisher == null) {
 			throwApiError(apiErrors.publisherDoesNotExist)
 		}
 	} else if (!isAdmin) {
 		// Check if the user already is an author
-		let response = await listTableObjects({
-			caching: false,
-			limit: 1,
-			tableName: "Author",
-			userId: user.id
+		let author = await context.prisma.author.findFirst({
+			where: { userId: user.id }
 		})
 
-		if (response.items.length > 0) {
+		if (author == null) {
 			throwApiError(apiErrors.actionNotAllowed)
 		}
 	}
@@ -210,43 +141,21 @@ export async function createAuthor(
 	)
 
 	// Create the author
-	let properties = {
-		first_name: args.firstName,
-		last_name: args.lastName
+	let data = {
+		uuid: crypto.randomUUID(),
+		firstName: args.firstName,
+		lastName: args.lastName
 	}
 
-	if (isAdmin && args.publisher != null) {
-		properties["publisher"] = args.publisher
+	if (isAdmin && publisher != null) {
+		data["publisher"] = {
+			connect: {
+				id: publisher.id
+			}
+		}
 	}
 
-	let createResponse = await TableObjectsController.CreateTableObject({
-		accessToken,
-		tableId: publisherTableId,
-		properties
-	})
-
-	if (!isSuccessStatusCode(createResponse.status)) {
-		throwApiError(apiErrors.unexpectedError)
-	}
-
-	let createResponseData = (
-		createResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
-	).data
-
-	// Convert from TableObjectResponseData to TableObject
-	let responseTableObject: TableObject = {
-		uuid: createResponseData.tableObject.Uuid,
-		userId: user.id,
-		tableId: createResponseData.tableObject.TableId,
-		properties: {}
-	}
-
-	for (let key of Object.keys(createResponseData.tableObject.Properties)) {
-		let value = createResponseData.tableObject.Properties[key]
-		responseTableObject.properties[key] = value.value
-	}
-
-	return convertTableObjectToAuthor(responseTableObject)
+	return await context.prisma.author.create({ data })
 }
 
 export async function updateAuthor(
@@ -269,9 +178,8 @@ export async function updateAuthor(
 	let instagramUsername = getInstagramUsername(args.instagramUsername)
 	let twitterUsername = getTwitterUsername(args.twitterUsername)
 
-	let authorTableObject: TableObject = null
+	let author: Author = null
 	const user = context.user
-	const accessToken = context.accessToken
 
 	if (uuid == "mine") {
 		// Check if the user is an author
@@ -282,18 +190,9 @@ export async function updateAuthor(
 		}
 
 		// Get the author of the user
-		let response = await listTableObjects({
-			caching: false,
-			limit: 1,
-			tableName: "Author",
-			userId: user.id
+		author = await context.prisma.author.findFirst({
+			where: { userId: user.id }
 		})
-
-		if (response.items.length > 0) {
-			authorTableObject = response.items[0]
-		} else {
-			throwApiError(apiErrors.actionNotAllowed)
-		}
 	} else {
 		// Check if the user is an admin
 		if (user == null) {
@@ -303,16 +202,13 @@ export async function updateAuthor(
 		}
 
 		// Get the table object
-		authorTableObject = await getTableObject(uuid)
+		author = await context.prisma.author.findFirst({
+			where: { uuid }
+		})
+	}
 
-		if (authorTableObject == null) {
-			throwApiError(apiErrors.authorDoesNotExist)
-		}
-
-		// Check if the table object belongs to the user
-		if (authorTableObject.userId != user.id) {
-			throwApiError(apiErrors.actionNotAllowed)
-		}
+	if (author == null) {
+		throwApiError(apiErrors.authorDoesNotExist)
 	}
 
 	if (
@@ -323,7 +219,7 @@ export async function updateAuthor(
 		args.instagramUsername == null &&
 		args.twitterUsername == null
 	) {
-		return convertTableObjectToAuthor(authorTableObject)
+		return author
 	}
 
 	// Validate the args
@@ -356,70 +252,46 @@ export async function updateAuthor(
 	throwValidationError(...errors)
 
 	// Update the author
-	let properties = {}
+	let data = {}
 
 	if (args.firstName != null) {
-		properties["first_name"] = args.firstName
+		data["firstName"] = args.firstName
 	}
 
 	if (args.lastName != null) {
-		properties["last_name"] = args.lastName
+		data["lastName"] = args.lastName
 	}
 
 	if (args.websiteUrl != null) {
-		properties["website_url"] = args.websiteUrl
+		data["websiteUrl"] = args.websiteUrl
 	}
 
 	if (facebookUsername != null) {
-		properties["facebook_username"] = facebookUsername
+		data["facebookUsername"] = facebookUsername
 	}
 
 	if (instagramUsername != null) {
-		properties["instagram_username"] = instagramUsername
+		data["instagramUsername"] = instagramUsername
 	}
 
 	if (twitterUsername != null) {
-		properties["twitter_username"] = twitterUsername
+		data["twitterUsername"] = twitterUsername
 	}
 
-	let updateResponse = await TableObjectsController.UpdateTableObject({
-		accessToken,
-		uuid: authorTableObject.uuid,
-		properties
+	return await context.prisma.author.update({
+		where: { id: author.id },
+		data
 	})
-
-	if (!isSuccessStatusCode(updateResponse.status)) {
-		throwApiError(apiErrors.unexpectedError)
-	}
-
-	let updateResponseData = (
-		updateResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
-	).data
-
-	// Convert from TableObjectResponseData to TableObject
-	let responseTableObject: TableObject = {
-		uuid: updateResponseData.tableObject.Uuid,
-		userId: user.id,
-		tableId: updateResponseData.tableObject.TableId,
-		properties: {}
-	}
-
-	for (let key of Object.keys(updateResponseData.tableObject.Properties)) {
-		let value = updateResponseData.tableObject.Properties[key]
-		responseTableObject.properties[key] = value.value
-	}
-
-	return convertTableObjectToAuthor(responseTableObject)
 }
 
-export async function publisher(author: Author): Promise<Publisher> {
-	const uuid = author.publisher
-	if (uuid == null) return null
-
-	let tableObject = await getTableObject(uuid)
-	if (tableObject == null) return null
-
-	return convertTableObjectToPublisher(tableObject)
+export async function publisher(
+	author: Author,
+	args: any,
+	context: ResolverContext
+): Promise<Publisher> {
+	return await context.prisma.publisher.findFirst({
+		where: { id: author.publisherId }
+	})
 }
 
 export async function bio(
@@ -428,152 +300,126 @@ export async function bio(
 	context: ResolverContext,
 	info: any
 ): Promise<AuthorBio> {
-	const biosString = author.bios
-	if (biosString == null) return null
+	let languages = info?.variableValues?.languages || ["en"]
+	let where = { OR: [], AND: { authorId: author.id } }
 
-	// Get all bios
-	let bioUuids = biosString.split(",")
-	let bios: AuthorBio[] = []
+	for (let lang of languages) {
+		where.OR.push({ language: lang })
+	}
 
-	for (let uuid of bioUuids) {
-		let bioObj = await getTableObject(uuid)
-		if (bioObj == null) continue
+	let bios = await context.prisma.authorBio.findMany({ where })
 
-		bios.push(convertTableObjectToAuthorBio(bioObj))
+	if (bios.length == null) {
+		return null
 	}
 
 	// Find the optimal bio for the given languages
-	let languages = info?.variableValues?.languages || ["en"]
-	let selectedBios: AuthorBio[] = []
-
 	for (let lang of languages) {
 		let bio = bios.find(b => b.language == lang)
 
 		if (bio != null) {
-			selectedBios.push(bio)
+			return bio
 		}
-	}
-
-	if (selectedBios.length > 0) {
-		return selectedBios[0]
 	}
 
 	return bios[0]
 }
 
 export async function profileImage(
-	author: Author
+	author: Author,
+	args: any,
+	context: ResolverContext
 ): Promise<AuthorProfileImage> {
-	const uuid = author.profileImage
-	if (uuid == null) return null
+	let profileImage = await context.prisma.authorProfileImage.findFirst({
+		where: { authorId: author.id }
+	})
 
-	let tableObject = await getTableObject(uuid)
-	if (tableObject == null) return null
-
-	return convertTableObjectToAuthorProfileImage(tableObject)
+	return {
+		...profileImage,
+		url: getTableObjectFileUrl(profileImage.uuid)
+	}
 }
 
 export async function bios(
 	author: Author,
-	args: { limit?: number; offset?: number }
+	args: { limit?: number; offset?: number },
+	context: ResolverContext
 ): Promise<List<AuthorBio>> {
-	let bioUuidsString = author.bios
+	let take = args.limit || 10
+	if (take <= 0) take = 10
 
-	if (bioUuidsString == null) {
-		return {
-			total: 0,
-			items: []
-		}
-	}
+	let skip = args.offset || 0
+	if (skip < 0) skip = 0
 
-	let limit = args.limit || 10
-	if (limit <= 0) limit = 10
+	let where = { authorId: author.id }
 
-	let offset = args.offset || 0
-	if (offset < 0) offset = 0
-
-	let bioUuids = bioUuidsString.split(",")
-	let bios: AuthorBio[] = []
-
-	for (let uuid of bioUuids) {
-		let tableObject = await getTableObject(uuid)
-		if (tableObject == null) continue
-
-		bios.push(convertTableObjectToAuthorBio(tableObject))
-	}
+	const [total, items] = await context.prisma.$transaction([
+		context.prisma.authorBio.count({ where }),
+		context.prisma.authorBio.findMany({
+			where,
+			take,
+			skip
+		})
+	])
 
 	return {
-		total: bios.length,
-		items: bios.slice(offset, limit + offset)
+		total,
+		items
 	}
 }
 
 export async function collections(
 	author: Author,
-	args: { limit?: number; offset?: number }
+	args: { limit?: number; offset?: number },
+	context: ResolverContext
 ): Promise<List<StoreBookCollection>> {
-	let collectionUuidsString = author.collections
+	let take = args.limit || 10
+	if (take <= 0) take = 10
 
-	if (collectionUuidsString == null) {
-		return {
-			total: 0,
-			items: []
-		}
-	}
+	let skip = args.offset || 0
+	if (skip < 0) skip = 0
 
-	let limit = args.limit || 10
-	if (limit <= 0) limit = 10
+	let where = { authorId: author.id }
 
-	let offset = args.offset || 0
-	if (offset < 0) offset = 0
-
-	let collectionUuids = collectionUuidsString.split(",")
-	let collections: StoreBookCollection[] = []
-
-	for (let uuid of collectionUuids) {
-		let tableObject = await getTableObject(uuid)
-		if (tableObject == null) continue
-
-		collections.push(convertTableObjectToStoreBookCollection(tableObject))
-	}
+	const [total, items] = await context.prisma.$transaction([
+		context.prisma.storeBookCollection.count({ where }),
+		context.prisma.storeBookCollection.findMany({
+			where,
+			take,
+			skip
+		})
+	])
 
 	return {
-		total: collections.length,
-		items: collections.slice(offset, limit + offset)
+		total,
+		items
 	}
 }
 
 export async function series(
 	author: Author,
-	args: { limit?: number; offset?: number }
+	args: { limit?: number; offset?: number },
+	context: ResolverContext
 ): Promise<List<StoreBookSeries>> {
-	let seriesUuidsString = author.series
+	let take = args.limit || 10
+	if (take <= 0) take = 10
 
-	if (seriesUuidsString == null) {
-		return {
-			total: 0,
-			items: []
-		}
-	}
+	let skip = args.offset || 0
+	if (skip < 0) skip = 0
 
-	let limit = args.limit || 10
-	if (limit <= 0) limit = 10
+	let where = { authorId: author.id }
 
-	let offset = args.offset || 0
-	if (offset < 0) offset = 0
-
-	let seriesUuids = seriesUuidsString.split(",")
-	let series: StoreBookSeries[] = []
-
-	for (let uuid of seriesUuids) {
-		let tableObject = await getTableObject(uuid)
-		if (tableObject == null) continue
-
-		series.push(convertTableObjectToStoreBookSeries(tableObject))
-	}
+	const [total, items] = await context.prisma.$transaction([
+		context.prisma.storeBookSeries.count({ where }),
+		context.prisma.storeBookSeries.findMany({
+			where,
+			take,
+			skip
+		})
+	])
 
 	return {
-		total: series.length,
-		items: series.slice(offset, limit + offset)
+		total,
+		items
 	}
 }

@@ -1,4 +1,7 @@
-import { PrismaClient } from "@prisma/client"
+import {
+	PrismaClient,
+	AuthorProfileImage as AuthorProfileImageModel
+} from "@prisma/client"
 
 export interface ResolverContext {
 	prisma: PrismaClient
@@ -112,10 +115,8 @@ export interface AuthorBio {
 	language: string
 }
 
-export interface AuthorProfileImage {
-	uuid: string
+export interface AuthorProfileImage extends AuthorProfileImageModel {
 	url: string
-	blurhash: string
 }
 
 export interface StoreBookCollection {
