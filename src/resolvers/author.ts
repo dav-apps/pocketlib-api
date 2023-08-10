@@ -86,7 +86,7 @@ export async function listAuthors(
 	}
 
 	const [total, items] = await context.prisma.$transaction([
-		context.prisma.author.count(),
+		context.prisma.author.count({ where }),
 		context.prisma.author.findMany({
 			where,
 			take,

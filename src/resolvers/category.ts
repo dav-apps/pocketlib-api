@@ -1,35 +1,28 @@
-import { ResolverContext, List, Category, CategoryName } from "../types.js"
-import {
-	convertTableObjectToCategory,
-	convertTableObjectToCategoryName
-} from "../utils.js"
-import { getTableObject, listTableObjects } from "../services/apiService.js"
+import { Category, CategoryName } from "@prisma/client"
+import { ResolverContext, List } from "../types.js"
 
 export async function listCategories(
 	parent: any,
-	args: { limit?: number; offset?: number }
+	args: { limit?: number; offset?: number },
+	context: ResolverContext
 ): Promise<List<Category>> {
-	let limit = args.limit || 10
-	if (limit <= 0) limit = 10
+	let take = args.limit || 10
+	if (take <= 0) take = 10
 
-	let offset = args.offset || 0
-	if (offset < 0) offset = 0
+	let skip = args.offset || 0
+	if (skip < 0) skip = 0
 
-	let response = await listTableObjects({
-		tableName: "Category",
-		limit,
-		offset
-	})
-
-	let result: Category[] = []
-
-	for (let obj of response.items) {
-		result.push(convertTableObjectToCategory(obj))
-	}
+	let [total, items] = await context.prisma.$transaction([
+		context.prisma.category.count(),
+		context.prisma.category.findMany({
+			take,
+			skip
+		})
+	])
 
 	return {
-		total: response.total,
-		items: result
+		total,
+		items
 	}
 }
 
@@ -39,34 +32,26 @@ export async function name(
 	context: ResolverContext,
 	info: any
 ): Promise<CategoryName> {
-	const namesString = category.names
-	if (namesString == null) return null
+	let languages = info?.variableValues?.languages || ["en"]
+	let where = { OR: [], AND: { categoryId: category.id } }
 
-	// Get all names
-	let nameUuids = namesString.split(",")
-	let names: CategoryName[] = []
+	for (let lang of languages) {
+		where.OR.push({ language: lang })
+	}
 
-	for (let uuid of nameUuids) {
-		let nameObj = await getTableObject(uuid)
-		if (nameObj == null) continue
+	let names = await context.prisma.categoryName.findMany({ where })
 
-		names.push(convertTableObjectToCategoryName(nameObj))
+	if (names.length == null) {
+		return null
 	}
 
 	// Find the optimal name for the given languages
-	let languages = info?.variableValues?.languages || ["en"]
-	let selectedNames: CategoryName[] = []
-
 	for (let lang of languages) {
 		let name = names.find(n => n.language == lang)
 
 		if (name != null) {
-			selectedNames.push(name)
+			return name
 		}
-	}
-
-	if (selectedNames.length > 0) {
-		return selectedNames[0]
 	}
 
 	return names[0]
@@ -74,35 +59,28 @@ export async function name(
 
 export async function names(
 	category: Category,
-	args: { limit?: number; offset?: number }
+	args: { limit?: number; offset?: number },
+	context: ResolverContext
 ): Promise<List<CategoryName>> {
-	let categoryNameUuidsString = category.names
+	let take = args.limit || 10
+	if (take <= 0) take = 10
 
-	if (categoryNameUuidsString == null) {
-		return {
-			total: 0,
-			items: []
-		}
-	}
+	let skip = args.offset || 0
+	if (skip < 0) skip = 0
 
-	let limit = args.limit || 10
-	if (limit <= 0) limit = 10
+	let where = { categoryId: category.id }
 
-	let offset = args.offset || 0
-	if (offset < 0) offset = 0
-
-	let categoryNameUuids = categoryNameUuidsString.split(",")
-	let categoryNames: CategoryName[] = []
-
-	for (let uuid of categoryNameUuids) {
-		let tableObject = await getTableObject(uuid)
-		if (tableObject == null) continue
-
-		categoryNames.push(convertTableObjectToCategoryName(tableObject))
-	}
+	const [total, items] = await context.prisma.$transaction([
+		context.prisma.categoryName.count({ where }),
+		context.prisma.categoryName.findMany({
+			where,
+			take,
+			skip
+		})
+	])
 
 	return {
-		total: categoryNames.length,
-		items: categoryNames.slice(offset, limit + offset)
+		total,
+		items
 	}
 }
