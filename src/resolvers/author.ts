@@ -5,6 +5,7 @@ import {
 	StoreBookCollection,
 	StoreBookSeries
 } from "@prisma/client"
+import * as crypto from "crypto"
 import { ResolverContext, List, AuthorProfileImage } from "../types.js"
 import {
 	throwApiError,
