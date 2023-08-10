@@ -46,7 +46,7 @@ export async function retrieveAuthor(
 		// Get the author of the user
 		where = { userId: user.id }
 	} else {
-		where = { uuid: uuid }
+		where = { uuid }
 	}
 
 	return await context.prisma.author.findFirst({ where })
@@ -130,7 +130,7 @@ export async function createAuthor(
 			where: { userId: user.id }
 		})
 
-		if (author == null) {
+		if (author != null) {
 			throwApiError(apiErrors.actionNotAllowed)
 		}
 	}
@@ -202,7 +202,7 @@ export async function updateAuthor(
 			throwApiError(apiErrors.actionNotAllowed)
 		}
 
-		// Get the table object
+		// Get the author
 		author = await context.prisma.author.findFirst({
 			where: { uuid }
 		})

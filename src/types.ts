@@ -1,5 +1,6 @@
 import {
 	PrismaClient,
+	PublisherLogo as PublisherLogoModel,
 	AuthorProfileImage as AuthorProfileImageModel
 } from "@prisma/client"
 
@@ -88,10 +89,8 @@ export interface Publisher {
 	authors: string
 }
 
-export interface PublisherLogo {
-	uuid: string
+export interface PublisherLogo extends PublisherLogoModel {
 	url: string
-	blurhash: string
 }
 
 export interface Author {

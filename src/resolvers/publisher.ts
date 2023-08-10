@@ -1,29 +1,16 @@
-import {
-	isSuccessStatusCode,
-	ApiResponse,
-	TableObjectsController
-} from "dav-js"
-import {
-	ResolverContext,
-	List,
-	TableObject,
-	Publisher,
-	PublisherLogo,
-	Author
-} from "../types.js"
+import { Publisher, Author } from "@prisma/client"
+import * as crypto from "crypto"
+import { ResolverContext, List, PublisherLogo } from "../types.js"
 import {
 	throwApiError,
 	throwValidationError,
 	getFacebookUsername,
 	getInstagramUsername,
 	getTwitterUsername,
-	convertTableObjectToPublisher,
-	convertTableObjectToPublisherLogo,
-	convertTableObjectToAuthor
+	getTableObjectFileUrl
 } from "../utils.js"
-import { admins, publisherTableId } from "../constants.js"
+import { admins } from "../constants.js"
 import { apiErrors, validationErrors } from "../errors.js"
-import { getTableObject, listTableObjects } from "../services/apiService.js"
 import {
 	validateNameLength,
 	validateDescriptionLength,
@@ -38,7 +25,7 @@ export async function retrievePublisher(
 	const uuid = args.uuid
 	if (uuid == null) return null
 
-	let tableObject: TableObject = null
+	let where = {}
 
 	if (uuid == "mine") {
 		// Check if the user is a publisher
@@ -51,51 +38,36 @@ export async function retrievePublisher(
 		}
 
 		// Get the publisher of the user
-		let response = await listTableObjects({
-			caching: false,
-			limit: 1,
-			tableName: "Publisher",
-			userId: user.id
-		})
-
-		if (response.items.length == 1) {
-			tableObject = response.items[0]
-		} else {
-			return null
-		}
+		where = { userId: user.id }
 	} else {
-		tableObject = await getTableObject(uuid)
-		if (tableObject == null) return null
+		where = { uuid }
 	}
 
-	return convertTableObjectToPublisher(tableObject)
+	return await context.prisma.publisher.findFirst({ where })
 }
 
 export async function listPublishers(
 	parent: any,
-	args: { limit?: number; offset?: number }
+	args: { limit?: number; offset?: number },
+	context: ResolverContext
 ): Promise<List<Publisher>> {
-	let limit = args.limit || 10
-	if (limit <= 0) limit = 10
+	let take = args.limit || 10
+	if (take <= 0) take = 10
 
-	let offset = args.offset || 0
-	if (offset < 0) offset = 0
+	let skip = args.offset || 0
+	if (skip < 0) skip = 0
 
-	let response = await listTableObjects({
-		tableName: "Publisher",
-		limit,
-		offset
-	})
-
-	let result: Publisher[] = []
-
-	for (let obj of response.items) {
-		result.push(convertTableObjectToPublisher(obj))
-	}
+	const [total, items] = await context.prisma.$transaction([
+		context.prisma.publisher.count(),
+		context.prisma.publisher.findMany({
+			take,
+			skip
+		})
+	])
 
 	return {
-		total: response.total,
-		items: result
+		total,
+		items
 	}
 }
 
@@ -105,7 +77,6 @@ export async function createPublisher(
 	context: ResolverContext
 ): Promise<Publisher> {
 	const user = context.user
-	const accessToken = context.accessToken
 
 	// Check if the user is logged in
 	if (user == null) {
@@ -113,17 +84,15 @@ export async function createPublisher(
 	}
 
 	let isAdmin = admins.includes(user.id)
+	let publisher: Publisher = null
 
 	if (!isAdmin) {
 		// Check if the user is already a publisher
-		let response = await listTableObjects({
-			caching: false,
-			limit: 1,
-			tableName: "Publisher",
-			userId: user.id
+		publisher = await context.prisma.publisher.findFirst({
+			where: { userId: user.id }
 		})
 
-		if (response.items.length > 0) {
+		if (publisher != null) {
 			throwApiError(apiErrors.actionNotAllowed)
 		}
 	}
@@ -132,36 +101,12 @@ export async function createPublisher(
 	throwValidationError(validateNameLength(args.name))
 
 	// Create the publisher
-	let createResponse = await TableObjectsController.CreateTableObject({
-		accessToken,
-		tableId: publisherTableId,
-		properties: {
+	return await context.prisma.publisher.create({
+		data: {
+			uuid: crypto.randomUUID(),
 			name: args.name
 		}
 	})
-
-	if (!isSuccessStatusCode(createResponse.status)) {
-		throwApiError(apiErrors.unexpectedError)
-	}
-
-	let createResponseData = (
-		createResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
-	).data
-
-	// Convert from TableObjectResponseData to TableObject
-	let responseTableObject: TableObject = {
-		uuid: createResponseData.tableObject.Uuid,
-		userId: user.id,
-		tableId: createResponseData.tableObject.TableId,
-		properties: {}
-	}
-
-	for (let key of Object.keys(createResponseData.tableObject.Properties)) {
-		let value = createResponseData.tableObject.Properties[key]
-		responseTableObject.properties[key] = value.value
-	}
-
-	return convertTableObjectToPublisher(responseTableObject)
 }
 
 export async function updatePublisher(
@@ -184,9 +129,8 @@ export async function updatePublisher(
 	let instagramUsername = getInstagramUsername(args.instagramUsername)
 	let twitterUsername = getTwitterUsername(args.twitterUsername)
 
-	let publisherTableObject: TableObject = null
+	let publisher: Publisher = null
 	const user = context.user
-	const accessToken = context.accessToken
 
 	if (uuid == "mine") {
 		// Check if the user is a publisher
@@ -197,18 +141,9 @@ export async function updatePublisher(
 		}
 
 		// Get the publisher of the user
-		let response = await listTableObjects({
-			caching: false,
-			limit: 1,
-			tableName: "Publisher",
-			userId: user.id
+		publisher = await context.prisma.publisher.findFirst({
+			where: { userId: user.id }
 		})
-
-		if (response.items.length > 0) {
-			publisherTableObject = response.items[0]
-		} else {
-			throwApiError(apiErrors.actionNotAllowed)
-		}
 	} else {
 		// Check if the user is an admin
 		if (user == null) {
@@ -217,17 +152,14 @@ export async function updatePublisher(
 			throwApiError(apiErrors.actionNotAllowed)
 		}
 
-		// Get the table object
-		publisherTableObject = await getTableObject(uuid)
+		// Get the publisher
+		publisher = await context.prisma.publisher.findFirst({
+			where: { uuid }
+		})
+	}
 
-		if (publisherTableObject == null) {
-			throwApiError(apiErrors.publisherDoesNotExist)
-		}
-
-		// Check if the table object belongs to the user
-		if (publisherTableObject.userId != user.id) {
-			throwApiError(apiErrors.actionNotAllowed)
-		}
+	if (publisher == null) {
+		throwApiError(apiErrors.publisherDoesNotExist)
 	}
 
 	if (
@@ -238,7 +170,7 @@ export async function updatePublisher(
 		args.instagramUsername == null &&
 		args.twitterUsername == null
 	) {
-		return convertTableObjectToPublisher(publisherTableObject)
+		return publisher
 	}
 
 	// Validate the args
@@ -271,101 +203,77 @@ export async function updatePublisher(
 	throwValidationError(...errors)
 
 	// Update the publisher
-	let properties = {}
+	let data = {}
 
 	if (args.name != null) {
-		properties["name"] = args.name
+		data["name"] = args.name
 	}
 
 	if (args.description != null) {
-		properties["description"] = args.description
+		data["description"] = args.description
 	}
 
 	if (args.websiteUrl != null) {
-		properties["website_url"] = args.websiteUrl
+		data["website_url"] = args.websiteUrl
 	}
 
 	if (facebookUsername != null) {
-		properties["facebook_username"] = facebookUsername
+		data["facebook_username"] = facebookUsername
 	}
 
 	if (instagramUsername != null) {
-		properties["instagram_username"] = instagramUsername
+		data["instagram_username"] = instagramUsername
 	}
 
 	if (twitterUsername != null) {
-		properties["twitter_username"] = twitterUsername
+		data["twitter_username"] = twitterUsername
 	}
 
-	let updateResponse = await TableObjectsController.UpdateTableObject({
-		accessToken,
-		uuid: publisherTableObject.uuid,
-		properties
+	return await context.prisma.publisher.update({
+		where: { id: publisher.id },
+		data
 	})
-
-	if (!isSuccessStatusCode(updateResponse.status)) {
-		throwApiError(apiErrors.unexpectedError)
-	}
-
-	let updateResponseData = (
-		updateResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
-	).data
-
-	// Convert from TableObjectResponseData to TableObject
-	let responseTableObject: TableObject = {
-		uuid: updateResponseData.tableObject.Uuid,
-		userId: user.id,
-		tableId: updateResponseData.tableObject.TableId,
-		properties: {}
-	}
-
-	for (let key of Object.keys(updateResponseData.tableObject.Properties)) {
-		let value = updateResponseData.tableObject.Properties[key]
-		responseTableObject.properties[key] = value.value
-	}
-
-	return convertTableObjectToPublisher(responseTableObject)
 }
 
-export async function logo(publisher: Publisher): Promise<PublisherLogo> {
-	const uuid = publisher.logo
-	if (uuid == null) return null
+export async function logo(
+	publisher: Publisher,
+	args: any,
+	context: ResolverContext
+): Promise<PublisherLogo> {
+	let publisherLogo = await context.prisma.publisherLogo.findFirst({
+		where: { publisherId: publisher.id }
+	})
 
-	let tableObject = await getTableObject(uuid)
-	if (tableObject == null) return null
-
-	return convertTableObjectToPublisherLogo(tableObject)
+	return {
+		...publisherLogo,
+		url: getTableObjectFileUrl(publisherLogo.uuid)
+	}
 }
 
 export async function authors(
 	publisher: Publisher,
-	args: { limit?: number; offset?: number }
+	args: { limit?: number; offset?: number },
+	context: ResolverContext
 ): Promise<List<Author>> {
-	if (publisher.authors == null) {
-		return {
-			total: 0,
-			items: []
-		}
-	}
+	let take = args.limit || 10
+	if (take <= 0) take = 10
 
-	let limit = args.limit || 10
-	if (limit <= 0) limit = 10
+	let skip = args.offset || 0
+	if (skip < 0) skip = 0
 
-	let offset = args.offset || 0
-	if (offset < 0) offset = 0
+	let where = { publisherId: publisher.id }
 
-	let authorUuids = publisher.authors.split(",")
-	let authors: Author[] = []
-
-	for (let uuid of authorUuids) {
-		let author = await getTableObject(uuid)
-		if (author == null) continue
-
-		authors.push(convertTableObjectToAuthor(author))
-	}
+	const [total, items] = await context.prisma.$transaction([
+		context.prisma.author.count({ where }),
+		context.prisma.author.findMany({
+			where,
+			take,
+			skip
+		})
+	])
 
 	return {
-		total: authors.length,
-		items: authors.slice(offset, limit + offset)
+		total,
+		items
 	}
 }
