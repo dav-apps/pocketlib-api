@@ -105,7 +105,7 @@ model StoreBook {
   collection   StoreBookCollection @relation(fields: [collectionId], references: [id])
   collectionId BigInt
   language     String              @db.VarChar
-  status       String              @db.VarChar
+  status       String?             @db.VarChar
   releases     StoreBookRelease[]
   series       StoreBookSeries[]
 }
@@ -124,28 +124,28 @@ model StoreBookRelease {
   price        Int?            @default(0)
   isbn         String?         @db.VarChar
   status       String?         @db.VarChar
-  cover        StoreBookCover?
-  file         StoreBookFile?
+  cover        StoreBookCover? @relation(fields: [coverId], references: [id])
+  coverId      BigInt?
+  file         StoreBookFile?  @relation(fields: [fileId], references: [id])
+  fileId       BigInt?
   categories   Category[]
 }
 
 model StoreBookCover {
-  id          BigInt           @id @default(autoincrement())
-  uuid        String           @unique @db.VarChar
-  userId      BigInt           @default(0)
-  release     StoreBookRelease @relation(fields: [releaseId], references: [id])
-  releaseId   BigInt           @unique
-  aspectRatio String?          @db.VarChar
-  blurhash    String?          @db.VarChar
+  id          BigInt             @id @default(autoincrement())
+  uuid        String             @unique @db.VarChar
+  userId      BigInt             @default(0)
+  releases    StoreBookRelease[]
+  aspectRatio String?            @db.VarChar
+  blurhash    String?            @db.VarChar
 }
 
 model StoreBookFile {
-  id        BigInt           @id @default(autoincrement())
-  uuid      String           @unique @db.VarChar
-  userId    BigInt           @default(0)
-  release   StoreBookRelease @relation(fields: [releaseId], references: [id])
-  releaseId BigInt           @unique
-  fileName  String?          @db.VarChar
+  id       BigInt             @id @default(autoincrement())
+  uuid     String             @unique @db.VarChar
+  userId   BigInt             @default(0)
+  releases StoreBookRelease[]
+  fileName String?            @db.VarChar
 }
 
 model Category {
