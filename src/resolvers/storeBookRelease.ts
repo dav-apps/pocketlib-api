@@ -1,23 +1,12 @@
-import { isSuccessStatusCode, TableObjectsController } from "dav-js"
-import {
-	ResolverContext,
-	List,
-	StoreBookRelease,
-	StoreBookCover,
-	StoreBookFile,
-	Category
-} from "../types.js"
+import { StoreBookRelease, StoreBookFile, Category } from "@prisma/client"
+import { ResolverContext, List, StoreBookCover } from "../types.js"
 import {
 	throwApiError,
 	throwValidationError,
-	convertTableObjectToStoreBookCover,
-	convertTableObjectToStoreBookFile,
-	convertTableObjectToStoreBookRelease,
-	convertTableObjectToCategory
+	getTableObjectFileUrl
 } from "../utils.js"
 import { admins } from "../constants.js"
 import { apiErrors } from "../errors.js"
-import { getTableObject } from "../services/apiService.js"
 import {
 	validateReleaseNameLength,
 	validateReleaseNotesLength
@@ -35,7 +24,6 @@ export async function publishStoreBookRelease(
 	const uuid = args.uuid
 	if (uuid == null) return null
 
-	const accessToken = context.accessToken
 	const user = context.user
 
 	if (user == null) {
@@ -45,40 +33,31 @@ export async function publishStoreBookRelease(
 	const isAdmin = admins.includes(user.id)
 
 	// Get the store book release
-	let storeBookReleaseTableObject = await getTableObject(uuid)
+	let storeBookRelease = await context.prisma.storeBookRelease.findFirst({
+		where: { uuid }
+	})
 
-	if (storeBookReleaseTableObject == null) {
+	if (storeBookRelease == null) {
 		throwApiError(apiErrors.storeBookReleaseDoesNotExist)
 	}
 
 	// Check if the release belongs to the user
-	if (user.id != storeBookReleaseTableObject.userId && !isAdmin) {
+	if (!isAdmin && storeBookRelease.userId != BigInt(user.id)) {
 		throwApiError(apiErrors.actionNotAllowed)
 	}
 
 	// Check if the release is unpublished
-	if (storeBookReleaseTableObject.properties.status == "published") {
+	if (storeBookRelease.status == "published") {
 		throwApiError(apiErrors.storeBookReleaseAlreadyPublished)
 	}
 
 	// Get the store book
-	let storeBookUuid = storeBookReleaseTableObject.properties
-		.store_book as string
-
-	if (storeBookUuid == null) {
-		throwApiError(apiErrors.unexpectedError)
-	}
-
-	let storeBookTableObject = await getTableObject(storeBookUuid)
-
-	if (storeBookTableObject == null) {
-		throwApiError(apiErrors.unexpectedError)
-	}
+	let storeBook = await context.prisma.storeBook.findFirst({
+		where: { id: storeBookRelease.storeBookId }
+	})
 
 	// Check if the store book is published or hidden
-	let storeBookStatus = storeBookTableObject.properties.status
-
-	if (storeBookStatus != "published" && storeBookStatus != "hidden") {
+	if (storeBook.status != "published" && storeBook.status != "hidden") {
 		throwApiError(apiErrors.storeBookNotPublished)
 	}
 
@@ -92,89 +71,78 @@ export async function publishStoreBookRelease(
 	throwValidationError(...errors)
 
 	// Publish the release
-	let releaseProperties = {
-		status: "published",
-		release_name: args.releaseName,
-		published_at: Math.floor(Date.now() / 1000)
-	}
-
-	if (args.releaseNotes != null) {
-		releaseProperties["release_notes"] = args.releaseNotes
-	}
-
-	let updateReleaseResponse = await TableObjectsController.UpdateTableObject({
-		accessToken,
-		uuid: storeBookReleaseTableObject.uuid,
-		properties: releaseProperties
+	return await context.prisma.storeBookRelease.update({
+		where: { id: storeBookRelease.id },
+		data: {
+			status: "published",
+			releaseName: args.releaseName,
+			releaseNotes: args.releaseNotes,
+			publishedAt: new Date()
+		}
 	})
-
-	if (!isSuccessStatusCode(updateReleaseResponse.status)) {
-		throwApiError(apiErrors.unexpectedError)
-	}
-
-	// Update the local release table object & return it
-	for (let key of Object.keys(releaseProperties)) {
-		storeBookReleaseTableObject.properties[key] = releaseProperties[key]
-	}
-
-	return convertTableObjectToStoreBookRelease(storeBookReleaseTableObject)
 }
 
 export async function cover(
-	storeBookRelease: StoreBookRelease
+	storeBookRelease: StoreBookRelease,
+	args: any,
+	context: ResolverContext
 ): Promise<StoreBookCover> {
-	const uuid = storeBookRelease.cover
-	if (uuid == null) return null
+	if (storeBookRelease.coverId == null) {
+		return null
+	}
 
-	let tableObject = await getTableObject(uuid)
-	if (tableObject == null) return null
+	let cover = await context.prisma.storeBookCover.findFirst({
+		where: { id: storeBookRelease.coverId }
+	})
 
-	return convertTableObjectToStoreBookCover(tableObject)
+	if (cover == null) {
+		return null
+	}
+
+	return {
+		...cover,
+		url: getTableObjectFileUrl(cover.uuid)
+	}
 }
 
 export async function file(
-	storeBookRelease: StoreBookRelease
+	storeBookRelease: StoreBookRelease,
+	args: any,
+	context: ResolverContext
 ): Promise<StoreBookFile> {
-	const uuid = storeBookRelease.file
-	if (uuid == null) return null
+	if (storeBookRelease.fileId == null) {
+		return null
+	}
 
-	let tableObject = await getTableObject(uuid)
-	if (tableObject == null) return null
-
-	return convertTableObjectToStoreBookFile(tableObject)
+	return await context.prisma.storeBookFile.findFirst({
+		where: { id: storeBookRelease.fileId }
+	})
 }
 
 export async function categories(
 	storeBookRelease: StoreBookRelease,
-	args: { limit?: number; offset?: number }
+	args: { limit?: number; offset?: number },
+	context: ResolverContext
 ): Promise<List<Category>> {
-	let categoryUuidsString = storeBookRelease.categories
+	let take = args.limit || 10
+	if (take <= 0) take = 10
 
-	if (categoryUuidsString == null) {
-		return {
-			total: 0,
-			items: []
-		}
-	}
+	let skip = args.offset || 0
+	if (skip < 0) skip = 0
 
-	let limit = args.limit || 10
-	if (limit <= 0) limit = 10
+	let where = { releases: { some: { id: storeBookRelease.id } } }
 
-	let offset = args.offset || 0
-	if (offset < 0) offset = 0
-
-	let categoryUuids = categoryUuidsString.split(",")
-	let categories: Category[] = []
-
-	for (let uuid of categoryUuids) {
-		let tableObject = await getTableObject(uuid)
-		if (tableObject == null) continue
-
-		categories.push(convertTableObjectToCategory(tableObject))
-	}
+	let [total, items] = await context.prisma.$transaction([
+		context.prisma.category.count({ where }),
+		context.prisma.category.findMany({
+			where,
+			take,
+			skip
+		})
+	])
 
 	return {
-		total: categories.length,
-		items: categories.slice(offset, limit + offset)
+		total,
+		items
 	}
 }
