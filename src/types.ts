@@ -1,7 +1,8 @@
 import {
 	PrismaClient,
 	PublisherLogo as PublisherLogoModel,
-	AuthorProfileImage as AuthorProfileImageModel
+	AuthorProfileImage as AuthorProfileImageModel,
+	StoreBook as StoreBookModel
 } from "@prisma/client"
 
 export interface ResolverContext {
@@ -139,21 +140,11 @@ export interface StoreBookSeries {
 	storeBooks: string
 }
 
-export interface StoreBook {
-	uuid: string
-	collection: string
+export interface StoreBook extends StoreBookModel {
 	title: string
 	description: string
-	language: string
 	price: number
 	isbn: string
-	status: string
-	cover: string
-	file: string
-	categories: string
-	releases: string
-	inLibrary: boolean
-	purchased: boolean
 }
 
 export interface StoreBookRelease {

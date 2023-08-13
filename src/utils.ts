@@ -2,12 +2,9 @@ import { Response } from "express"
 import { GraphQLError } from "graphql"
 import { encode } from "blurhash"
 import { createCanvas, loadImage, Image } from "canvas"
-import {
-	isSuccessStatusCode,
-	ApiResponse,
-	ApiErrorResponse,
-	TableObjectsController
-} from "dav-js"
+import * as crypto from "crypto"
+import { PrismaClient, StoreBookRelease } from "@prisma/client"
+import { isSuccessStatusCode } from "dav-js"
 import {
 	ApiError,
 	User,
@@ -15,27 +12,23 @@ import {
 	Publisher,
 	PublisherLogo,
 	Author,
-	AuthorBio,
-	AuthorProfileImage,
 	StoreBookCollection,
 	StoreBookCollectionName,
 	StoreBookSeries,
 	StoreBook,
-	StoreBookRelease,
 	StoreBookCover,
 	StoreBookFile,
 	Category,
 	CategoryName
 } from "./types.js"
 import {
-	storeBookReleaseTableId,
 	facebookUsernameRegex,
 	instagramUsernameRegex,
 	twitterUsernameRegex,
 	filenameRegex
 } from "./constants.js"
 import { apiErrors } from "./errors.js"
-import { getUser, getTableObject } from "./services/apiService.js"
+import { getUser } from "./services/apiService.js"
 
 export function throwApiError(error: ApiError) {
 	throw new GraphQLError(error.message, {
@@ -81,95 +74,87 @@ function sendEndpointError(res: Response, error: ApiError) {
 }
 
 export async function loadStoreBookData(
+	prisma: PrismaClient,
 	storeBook: StoreBook,
 	published: boolean = true
 ) {
 	// Get the latest release of the StoreBook
-	const releasesString = storeBook.releases
+	const release = await getLastReleaseOfStoreBook(prisma, storeBook, published)
+	if (release == null) return
 
-	if (releasesString != null) {
-		let releaseUuids = releasesString.split(",").reverse()
-		let releases: StoreBookRelease[] = []
-		let releaseFound = false
-
-		for (let uuid of releaseUuids) {
-			let releaseTableObject = await getTableObject(uuid)
-			if (releaseTableObject == null) continue
-
-			let release = convertTableObjectToStoreBookRelease(releaseTableObject)
-			releases.push(release)
-
-			if (!published || (published && release.status == "published")) {
-				storeBook.title = release.title
-				storeBook.description = release.description
-				storeBook.price = release.price || 0
-				storeBook.isbn = release.isbn
-				storeBook.cover = release.cover
-				storeBook.file = release.file
-				storeBook.categories = release.categories
-
-				releaseFound = true
-				break
-			}
-		}
-
-		if (!releaseFound && releases.length > 0) {
-			// Retrieve the data of the first release
-			let release = releases[0]
-
-			storeBook.title = release.title
-			storeBook.description = release.description
-			storeBook.price = release.price || 0
-			storeBook.isbn = release.isbn
-			storeBook.cover = release.cover
-			storeBook.file = release.file
-			storeBook.categories = release.categories
-		}
-	}
+	storeBook.title = release.title
+	storeBook.description = release.description
+	storeBook.price = release.price
+	storeBook.isbn = release.isbn
 }
 
 export async function getLastReleaseOfStoreBook(
-	storeBook: TableObject,
+	prisma: PrismaClient,
+	storeBook: StoreBook,
 	published: boolean = false
-): Promise<TableObject> {
-	let releaseUuidsString = storeBook.properties.releases as string
-	let releaseUuids = releaseUuidsString.split(",").reverse()
-	if (releaseUuidsString.length == 0) return null
-
+): Promise<StoreBookRelease> {
 	if (published) {
-		for (let releaseUuid of releaseUuids) {
-			let release = await getTableObject(releaseUuid)
+		return await prisma.storeBookRelease.findFirst({
+			where: { storeBookId: storeBook.id, status: "published" },
+			orderBy: {
+				publishedAt: "desc"
+			}
+		})
+	}
 
-			if (release.properties.status == "published") {
-				return release
+	return await prisma.storeBookRelease.findFirst({
+		where: { storeBookId: storeBook.id },
+		orderBy: { id: "desc" }
+	})
+}
+
+export async function createNewStoreBookRelease(
+	prisma: PrismaClient,
+	storeBook: StoreBook,
+	oldRelease: StoreBookRelease
+): Promise<StoreBookRelease> {
+	let data = {
+		uuid: crypto.randomUUID(),
+		storeBook: {
+			connect: {
+				id: storeBook.id
+			}
+		},
+		title: oldRelease.title,
+		description: oldRelease.description,
+		price: oldRelease.price,
+		isbn: oldRelease.isbn,
+		categories: {
+			connect: []
+		}
+	}
+
+	if (oldRelease.coverId != null) {
+		data["cover"] = {
+			connect: {
+				id: oldRelease.coverId
 			}
 		}
 	}
 
-	return await getTableObject(releaseUuids[0])
-}
-
-export async function createNewStoreBookRelease(
-	accessToken: string,
-	storeBook: TableObject,
-	oldRelease: TableObject
-): Promise<
-	| ApiResponse<TableObjectsController.TableObjectResponseData>
-	| ApiErrorResponse
-> {
-	return await TableObjectsController.CreateTableObject({
-		accessToken,
-		tableId: storeBookReleaseTableId,
-		properties: {
-			store_book: storeBook.uuid,
-			title: oldRelease.properties.title,
-			description: oldRelease.properties.description,
-			price: oldRelease.properties.price,
-			isbn: oldRelease.properties.isbn,
-			cover_item: oldRelease.properties.cover_item,
-			file_item: oldRelease.properties.file_item,
-			categories: oldRelease.properties.categories
+	if (oldRelease.fileId != null) {
+		data["file"] = {
+			connect: {
+				id: oldRelease.fileId
+			}
 		}
+	}
+
+	let categories = await prisma.category.findMany({
+		where: { releases: { some: { id: oldRelease.id } } }
+	})
+
+	for (let category of categories) {
+		data.categories.connect.push({ id: category.id })
+	}
+
+	return await prisma.storeBookRelease.create({
+		data
 	})
 }
 
