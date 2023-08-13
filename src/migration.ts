@@ -4,23 +4,6 @@ import { listTableObjects } from "./services/apiService.js"
 const prisma = new PrismaClient()
 const limit = 1000
 
-async function migrateUserIds() {
-	await prisma.publisher.updateMany({ data: { userId: 1 } })
-	await prisma.publisherLogo.updateMany({ data: { userId: 1 } })
-	await prisma.author.updateMany({ data: { userId: 1 } })
-	await prisma.authorProfileImage.updateMany({ data: { userId: 1 } })
-	await prisma.authorBio.updateMany({ data: { userId: 1 } })
-	await prisma.storeBookCollection.updateMany({ data: { userId: 1 } })
-	await prisma.storeBookCollectionName.updateMany({ data: { userId: 1 } })
-	await prisma.storeBookSeries.updateMany({ data: { userId: 1 } })
-	await prisma.storeBook.updateMany({ data: { userId: 1 } })
-	await prisma.storeBookRelease.updateMany({ data: { userId: 1 } })
-	await prisma.storeBookCover.updateMany({ data: { userId: 1 } })
-	await prisma.storeBookFile.updateMany({ data: { userId: 1 } })
-	await prisma.category.updateMany({ data: { userId: 1 } })
-	await prisma.categoryName.updateMany({ data: { userId: 1 } })
-}
-
 async function migrateCategoryNames() {
 	let tableObjectsResponse = await listTableObjects({
 		tableName: "CategoryName",
@@ -54,6 +37,7 @@ async function migrateCategoryNames() {
 			await prisma.categoryName.create({
 				data: {
 					uuid: tableObject.uuid,
+					userId: tableObject.userId,
 					category: {
 						connect: {
 							id: category.id
@@ -99,6 +83,7 @@ async function migrateCategories() {
 
 		let data = {
 			uuid: tableObject.uuid,
+			userId: tableObject.userId,
 			releases: {
 				connect: []
 			},
@@ -148,11 +133,7 @@ async function migrateStoreBookFiles() {
 			await prisma.storeBookFile.create({
 				data: {
 					uuid: tableObject.uuid,
-					release: {
-						connect: {
-							id: storeBookRelease.id
-						}
-					},
+					userId: tableObject.userId,
 					fileName: tableObject.properties.file_name as string
 				}
 			})
@@ -191,11 +172,7 @@ async function migrateStoreBookCovers() {
 			await prisma.storeBookCover.create({
 				data: {
 					uuid: tableObject.uuid,
-					release: {
-						connect: {
-							id: storeBookRelease.id
-						}
-					},
+					userId: tableObject.userId,
 					aspectRatio: tableObject.properties.aspect_ratio as string,
 					blurhash: tableObject.properties.blurhash as string
 				}
@@ -239,6 +216,26 @@ async function migrateStoreBookReleases() {
 			}
 		}
 
+		// Find the cover of the StoreBookRelease
+		let coverUuid = tableObject.properties.cover as string
+		let cover = null
+
+		if (coverUuid != null) {
+			cover = await prisma.storeBookCover.findFirst({
+				where: { uuid: coverUuid }
+			})
+		}
+
+		// Find the file of the StoreBookRelease
+		let fileUuid = tableObject.properties.file as string
+		let file = null
+
+		if (fileUuid != null) {
+			file = await prisma.storeBookFile.findFirst({
+				where: { uuid: fileUuid }
+			})
+		}
+
 		if (storeBook != null) {
 			let publishedAtString = tableObject.properties.published_at as string
 			let publishedAt = null
@@ -247,23 +244,39 @@ async function migrateStoreBookReleases() {
 				publishedAt = new Date(+publishedAtString * 1000)
 			}
 
-			await prisma.storeBookRelease.create({
-				data: {
-					uuid: tableObject.uuid,
-					storeBook: {
-						connect: { id: storeBook.id }
-					},
-					releaseName: tableObject.properties.release_name as string,
-					releaseNotes: tableObject.properties.release_notes as string,
-					publishedAt,
-					title: tableObject.properties.title as string,
-					description: tableObject.properties.description as string,
-					price: +tableObject.properties.price,
-					isbn: tableObject.properties.isbn as string,
-					status:
-						(tableObject.properties.status as string) || "unpublished"
+			let data = {
+				uuid: tableObject.uuid,
+				userId: tableObject.userId,
+				storeBook: {
+					connect: { id: storeBook.id }
+				},
+				releaseName: tableObject.properties.release_name as string,
+				releaseNotes: tableObject.properties.release_notes as string,
+				publishedAt,
+				title: tableObject.properties.title as string,
+				description: tableObject.properties.description as string,
+				price: +tableObject.properties.price,
+				isbn: tableObject.properties.isbn as string,
+				status: tableObject.properties.status as string
+			}
+
+			if (cover != null) {
+				data["cover"] = {
+					connect: {
+						id: cover.id
+					}
 				}
-			})
+			}
+
+			if (file != null) {
+				data["file"] = {
+					connect: {
+						id: file.id
+					}
+				}
+			}
+
+			await prisma.storeBookRelease.create({ data })
 		}
 	}
 }
@@ -326,9 +339,10 @@ async function migrateStoreBooks() {
 		if (collection != null) {
 			let data = {
 				uuid: tableObject.uuid,
+				userId: tableObject.userId,
 				collectionId: collection.id,
 				language: tableObject.properties.language as string,
-				status: (tableObject.properties.status as string) || "unpublished"
+				status: tableObject.properties.status as string
 			}
 
 			if (storeBookSeries != null) {
@@ -377,6 +391,7 @@ async function migrateStoreBookSeries() {
 			await prisma.storeBookSeries.create({
 				data: {
 					uuid: tableObject.uuid,
+					userId: tableObject.userId,
 					authorId: author.id,
 					name: tableObject.properties.name as string,
 					language: tableObject.properties.language as string
@@ -419,6 +434,7 @@ async function migrateStoreBookCollectionNames() {
 			await prisma.storeBookCollectionName.create({
 				data: {
 					uuid: tableObject.uuid,
+					userId: tableObject.userId,
 					collectionId: storeBookCollection.id,
 					name: tableObject.properties.name as string,
 					language: tableObject.properties.language as string
@@ -461,6 +477,7 @@ async function migrateStoreBookCollections() {
 			await prisma.storeBookCollection.create({
 				data: {
 					uuid: tableObject.uuid,
+					userId: tableObject.userId,
 					authorId: author.id
 				}
 			})
@@ -501,6 +518,7 @@ async function migrateAuthorBios() {
 			await prisma.authorBio.create({
 				data: {
 					uuid: tableObject.uuid,
+					userId: tableObject.userId,
 					authorId: author.id,
 					bio: tableObject.properties.bio as string,
 					language: tableObject.properties.language as string
@@ -541,6 +559,7 @@ async function migrateAuthorProfileImages() {
 			await prisma.authorProfileImage.create({
 				data: {
 					uuid: tableObject.uuid,
+					userId: tableObject.userId,
 					authorId: author.id,
 					blurhash: tableObject.properties.blurhash as string
 				}
@@ -578,6 +597,7 @@ async function migrateAuthors() {
 
 		let data = {
 			uuid: tableObject.uuid,
+			userId: tableObject.userId,
 			firstName: tableObject.properties.first_name as string,
 			lastName: tableObject.properties.last_name as string,
 			websiteUrl: tableObject.properties.website_url as string,
@@ -627,6 +647,7 @@ async function migratePublisherLogos() {
 			await prisma.publisherLogo.create({
 				data: {
 					uuid: tableObject.uuid,
+					userId: tableObject.userId,
 					publisherId: publisher.id,
 					blurhash: tableObject.properties.blurhash as string
 				}
@@ -645,6 +666,7 @@ async function migratePublishers() {
 		await prisma.publisher.create({
 			data: {
 				uuid: tableObject.uuid,
+				userId: tableObject.userId,
 				name: tableObject.properties.name as string,
 				description: tableObject.properties.description as string,
 				websiteUrl: tableObject.properties.website_url as string,
