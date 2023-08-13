@@ -137,6 +137,22 @@ export async function listStoreBooks(
 			total,
 			items
 		}
+	} else {
+		let total = await context.prisma.storeBook.count()
+
+		let items = await context.prisma.storeBook.findMany({
+			take,
+			skip
+		}) as StoreBook[]
+
+		for (let storeBook of items) {
+			await loadStoreBookData(context.prisma, storeBook)
+		}
+
+		return {
+			total,
+			items
+		}
 	}
 }
 
