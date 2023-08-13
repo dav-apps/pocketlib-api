@@ -1,23 +1,7 @@
-import {
-	isSuccessStatusCode,
-	ApiResponse,
-	ApiErrorResponse,
-	TableObjectsController
-} from "dav-js"
-import {
-	ResolverContext,
-	TableObject,
-	StoreBookCollectionName
-} from "../types.js"
-import {
-	throwApiError,
-	throwValidationError,
-	convertTableObjectToStoreBookCollection,
-	convertTableObjectToStoreBookCollectionName
-} from "../utils.js"
+import * as crypto from "crypto"
+import { ResolverContext, StoreBookCollectionName } from "../types.js"
+import { throwApiError, throwValidationError } from "../utils.js"
 import { apiErrors } from "../errors.js"
-import { storeBookCollectionNameTableId } from "../constants.js"
-import { getTableObject } from "../services/apiService.js"
 import {
 	validateNameLength,
 	validateLanguage
@@ -31,22 +15,19 @@ export async function setStoreBookCollectionName(
 	const uuid = args.uuid
 	if (uuid == null) return null
 
-	const accessToken = context.accessToken
 	const user = context.user
 
 	if (user == null) {
 		throwApiError(apiErrors.notAuthenticated)
 	}
 
-	// Get the collection table object
-	let collectionTableObject = await getTableObject(uuid)
+	// Get the collection
+	let collection = await context.prisma.storeBookCollection.findFirst({
+		where: { uuid: args.uuid }
+	})
 
-	if (collectionTableObject == null) {
-		throwApiError(apiErrors.storeBookCollectionDoesNotExist)
-	}
-
-	// Check if the table object belongs to the user
-	if (collectionTableObject.userId != user.id) {
+	// Check if the collection belongs to the user
+	if (collection.userId != BigInt(user.id)) {
 		throwApiError(apiErrors.actionNotAllowed)
 	}
 
@@ -56,96 +37,34 @@ export async function setStoreBookCollectionName(
 		validateLanguage(args.language)
 	)
 
-	let collection = convertTableObjectToStoreBookCollection(
-		collectionTableObject
-	)
-	let namesString = collection.names || ""
-
-	// Get all names
-	const nameUuids = namesString.split(",")
-	let names: StoreBookCollectionName[] = []
-
-	for (let nameUuid of nameUuids) {
-		let nameObj = await getTableObject(nameUuid)
-		if (nameObj == null) continue
-
-		names.push(convertTableObjectToStoreBookCollectionName(nameObj))
-	}
-
 	// Find the name with the given language
-	let name = names.find(n => n.language == args.language)
-	let response:
-		| ApiResponse<TableObjectsController.TableObjectResponseData>
-		| ApiErrorResponse = null
+	let name = await context.prisma.storeBookCollectionName.findFirst({
+		where: { collectionId: collection.id, language: args.language }
+	})
 
 	if (name == null) {
 		// Create a new StoreBookCollectionName
-		response = await TableObjectsController.CreateTableObject({
-			accessToken,
-			tableId: storeBookCollectionNameTableId,
-			properties: {
+		name = await context.prisma.storeBookCollectionName.create({
+			data: {
+				uuid: crypto.randomUUID(),
+				collection: {
+					connect: {
+						id: collection.id
+					}
+				},
 				name: args.name,
 				language: args.language
 			}
 		})
-
-		if (!isSuccessStatusCode(response.status)) {
-			throwApiError(apiErrors.unexpectedError)
-		}
 	} else {
 		// Update the existing StoreBookCollectionName
-		response = await TableObjectsController.UpdateTableObject({
-			accessToken,
-			uuid: name.uuid,
-			properties: {
+		name = await context.prisma.storeBookCollectionName.update({
+			where: { id: name.id },
+			data: {
 				name: args.name
 			}
 		})
-
-		if (!isSuccessStatusCode(response.status)) {
-			throwApiError(apiErrors.unexpectedError)
-		}
 	}
 
-	let responseData = (
-		response as ApiResponse<TableObjectsController.TableObjectResponseData>
-	).data
-
-	if (name == null) {
-		// Add the new name to the names of the collection
-		if (namesString.length == 0) {
-			namesString = responseData.tableObject.Uuid
-		} else {
-			namesString += `,${responseData.tableObject.Uuid}`
-		}
-
-		// Update the collection table object
-		let updateCollectionTableObjectResponse =
-			await TableObjectsController.UpdateTableObject({
-				accessToken,
-				uuid: collectionTableObject.uuid,
-				properties: {
-					names: namesString
-				}
-			})
-
-		if (!isSuccessStatusCode(updateCollectionTableObjectResponse.status)) {
-			throwApiError(apiErrors.unexpectedError)
-		}
-	}
-
-	// Convert from TableObjectResponseData to TableObject
-	let responseTableObject: TableObject = {
-		uuid: responseData.tableObject.Uuid,
-		userId: user.id,
-		tableId: responseData.tableObject.TableId,
-		properties: {}
-	}
-
-	for (let key of Object.keys(responseData.tableObject.Properties)) {
-		let value = responseData.tableObject.Properties[key]
-		responseTableObject.properties[key] = value.value
-	}
-
-	return convertTableObjectToStoreBookCollectionName(responseTableObject)
+	return name
 }
