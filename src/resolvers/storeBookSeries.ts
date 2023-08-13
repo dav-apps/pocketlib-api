@@ -1,29 +1,13 @@
-import {
-	isSuccessStatusCode,
-	ApiResponse,
-	TableObjectsController
-} from "dav-js"
-import {
-	ResolverContext,
-	List,
-	TableObject,
-	StoreBookSeries,
-	StoreBook
-} from "../types.js"
+import { PrismaClient, Author, StoreBookSeries } from "@prisma/client"
+import * as crypto from "crypto"
+import { ResolverContext, List, StoreBook } from "../types.js"
 import {
 	throwApiError,
 	throwValidationError,
-	loadStoreBookData,
-	convertTableObjectToStoreBookSeries,
-	convertTableObjectToStoreBook
+	loadStoreBookData
 } from "../utils.js"
-import { admins, storeBookSeriesTableId } from "../constants.js"
+import { admins } from "../constants.js"
 import { apiErrors, validationErrors } from "../errors.js"
-import {
-	getTableObject,
-	listTableObjects,
-	addTableObjectToCollection
-} from "../services/apiService.js"
 import {
 	validateNameLength,
 	validateLanguage
@@ -31,61 +15,44 @@ import {
 
 export async function retrieveStoreBookSeries(
 	parent: any,
-	args: { uuid: string }
+	args: { uuid: string },
+	context: ResolverContext
 ): Promise<StoreBookSeries> {
-	const uuid = args.uuid
-	if (uuid == null) return null
-
-	let tableObject = await getTableObject(uuid)
-	if (tableObject == null) return null
-
-	return convertTableObjectToStoreBookSeries(tableObject)
+	return await context.prisma.storeBookSeries.findFirst({
+		where: { uuid: args.uuid }
+	})
 }
 
 export async function listStoreBookSeries(
 	parent: any,
 	args: {
-		latest?: boolean
 		languages?: string[]
 		limit?: number
 		offset?: number
-	}
+	},
+	context: ResolverContext
 ): Promise<List<StoreBookSeries>> {
-	let total = 0
-	let tableObjects: TableObject[] = []
+	let take = args.limit || 10
+	if (take <= 0) take = 10
 
-	let limit = args.limit || 10
-	if (limit <= 0) limit = 10
-
-	let offset = args.offset || 0
-	if (offset < 0) offset = 0
+	let skip = args.offset || 0
+	if (skip < 0) skip = 0
 
 	let languages = args.languages || ["en"]
+	let where = { language: { in: languages } }
 
-	if (args.latest) {
-		let response = await listTableObjects({
-			limit,
-			offset,
-			collectionName: "latest_series"
+	let [total, items] = await context.prisma.$transaction([
+		context.prisma.storeBookSeries.count({ where }),
+		context.prisma.storeBookSeries.findMany({
+			where,
+			take,
+			skip
 		})
-
-		total = response.total
-		tableObjects = response.items
-	}
-
-	let result: StoreBookSeries[] = []
-
-	for (let obj of tableObjects) {
-		let storeBookSeries = convertTableObjectToStoreBookSeries(obj)
-
-		if (languages.includes(storeBookSeries.language)) {
-			result.push(storeBookSeries)
-		}
-	}
+	])
 
 	return {
 		total,
-		items: result
+		items
 	}
 }
 
@@ -99,7 +66,6 @@ export async function createStoreBookSeries(
 	},
 	context: ResolverContext
 ): Promise<StoreBookSeries> {
-	const accessToken = context.accessToken
 	const user = context.user
 
 	if (user == null) {
@@ -114,83 +80,59 @@ export async function createStoreBookSeries(
 		validateLanguage(args.language)
 	)
 
-	let authorTableObject: TableObject = null
+	let author: Author = null
 
 	if (isAdmin) {
 		if (args.author == null) {
 			throwValidationError(validationErrors.authorRequired)
 		}
 
-		authorTableObject = await getTableObject(args.author)
+		author = await context.prisma.author.findFirst({
+			where: { uuid: args.author }
+		})
 
-		if (authorTableObject == null) {
+		if (author == null) {
 			throwApiError(apiErrors.authorDoesNotExist)
 		}
 	} else {
 		// Get the author of the user
-		let response = await listTableObjects({
-			caching: false,
-			limit: 1,
-			tableName: "Author",
-			userId: user.id
+		author = await context.prisma.author.findFirst({
+			where: { userId: user.id }
 		})
 
-		if (response.items.length > 0) {
-			authorTableObject = response.items[0]
-		} else {
+		if (author == null) {
 			throwApiError(apiErrors.actionNotAllowed)
 		}
 	}
 
-	validateStoreBooksParam(args.storeBooks, args.language)
+	let storeBookIds = await validateStoreBooksParam(
+		context.prisma,
+		args.storeBooks,
+		args.language
+	)
 
 	// Create the store book series
-	let seriesProperties = {
+	let seriesData = {
+		uuid: crypto.randomUUID(),
+		author: {
+			connect: {
+				id: author.id
+			}
+		},
 		name: args.name,
 		language: args.language,
-		store_books: args.storeBooks.join(",")
+		storeBooks: {
+			connect: []
+		}
 	}
 
-	if (args.author != null) {
-		seriesProperties["author"] = args.author
+	for (let id of storeBookIds) {
+		seriesData.storeBooks.connect.push({ id })
 	}
 
-	let createSeriesResponse = await TableObjectsController.CreateTableObject({
-		accessToken,
-		tableId: storeBookSeriesTableId,
-		properties: seriesProperties
+	return await context.prisma.storeBookSeries.create({
+		data: seriesData
 	})
-
-	if (!isSuccessStatusCode(createSeriesResponse.status)) {
-		throwApiError(apiErrors.unexpectedError)
-	}
-
-	let createSeriesResponseData = (
-		createSeriesResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
-	).data
-
-	// Add the store book to the latest series collection
-	let collection = await addTableObjectToCollection({
-		name: "latest_series",
-		uuid: createSeriesResponseData.tableObject.Uuid,
-		tableId: storeBookSeriesTableId
-	})
-
-	if (collection == null) {
-		throwApiError(apiErrors.unexpectedError)
-	}
-
-	return {
-		uuid: createSeriesResponseData.tableObject.Uuid,
-		author: createSeriesResponseData.tableObject.Properties.author
-			.value as string,
-		name: createSeriesResponseData.tableObject.Properties.name
-			.value as string,
-		language: createSeriesResponseData.tableObject.Properties.language
-			.value as string,
-		storeBooks: createSeriesResponseData.tableObject.Properties.store_books
-			.value as string
-	}
 }
 
 export async function updateStoreBookSeries(
@@ -205,7 +147,6 @@ export async function updateStoreBookSeries(
 	const uuid = args.uuid
 	if (uuid == null) return null
 
-	const accessToken = context.accessToken
 	const user = context.user
 
 	if (user == null) {
@@ -215,110 +156,115 @@ export async function updateStoreBookSeries(
 	const isAdmin = admins.includes(user.id)
 
 	// Get the store book series
-	let storeBookSeriesTableObject = await getTableObject(args.uuid)
+	let storeBookSeries = await context.prisma.storeBookSeries.findFirst({
+		where: { uuid: args.uuid }
+	})
 
-	if (storeBookSeriesTableObject == null) {
+	if (storeBookSeries == null) {
 		throwApiError(apiErrors.storeBookSeriesDoesNotExist)
 	}
 
 	// Check if the store book series belongs to the user
-	if (!isAdmin && storeBookSeriesTableObject.userId != user.id) {
+	if (!isAdmin && storeBookSeries.userId != BigInt(user.id)) {
 		throwApiError(apiErrors.actionNotAllowed)
 	}
 
 	// Validate the args
 	if (args.name == null && args.storeBooks == null) {
-		return convertTableObjectToStoreBookSeries(storeBookSeriesTableObject)
+		return storeBookSeries
 	}
 
 	if (args.name != null) {
 		throwValidationError(validateNameLength(args.name))
 	}
 
-	validateStoreBooksParam(
-		args.storeBooks,
-		storeBookSeriesTableObject.properties.language as string
-	)
-
 	// Update the store book series
-	let updatedSeriesProperties = {}
+	let data = {}
 
 	if (args.name != null) {
-		updatedSeriesProperties["name"] = args.name
-		storeBookSeriesTableObject.properties.name = args.name
+		data["name"] = args.name
 	}
 
 	if (args.storeBooks != null) {
-		updatedSeriesProperties["store_books"] = args.storeBooks.join(",")
-		storeBookSeriesTableObject.properties.store_books =
-			args.storeBooks.join(",")
+		let storeBookIds = await validateStoreBooksParam(
+			context.prisma,
+			args.storeBooks,
+			storeBookSeries.language
+		)
+
+		let connect = []
+
+		for (let id of storeBookIds) {
+			connect.push({ id })
+		}
+
+		data["storeBooks"] = { connect }
 	}
 
-	let updateSeriesResponse = await TableObjectsController.UpdateTableObject({
-		accessToken,
-		uuid: storeBookSeriesTableObject.uuid,
-		properties: updatedSeriesProperties
+	return await context.prisma.storeBookSeries.update({
+		where: { id: storeBookSeries.id },
+		data
 	})
-
-	if (!isSuccessStatusCode(updateSeriesResponse.status)) {
-		throwApiError(apiErrors.unexpectedError)
-	}
-
-	return convertTableObjectToStoreBookSeries(storeBookSeriesTableObject)
 }
 
 export async function storeBooks(
 	storeBookSeries: StoreBookSeries,
-	args: { limit?: number; offset?: number }
+	args: { limit?: number; offset?: number },
+	context: ResolverContext
 ): Promise<List<StoreBook>> {
-	let storeBookUuidsString = storeBookSeries.storeBooks
+	let take = args.limit || 10
+	if (take <= 0) take = 10
 
-	if (storeBookUuidsString == null) {
-		return {
-			total: 0,
-			items: []
-		}
-	}
+	let skip = args.offset || 0
+	if (skip < 0) skip = 0
 
-	let limit = args.limit || 10
-	if (limit <= 0) limit = 10
+	let where = { series: { some: { id: storeBookSeries.id } } }
 
-	let offset = args.offset || 0
-	if (offset < 0) offset = 0
+	let total = await context.prisma.storeBook.count({ where })
 
-	let storeBookUuids = storeBookUuidsString.split(",")
-	let storeBooks: StoreBook[] = []
+	let items = (await context.prisma.storeBook.findMany({
+		where,
+		take,
+		skip
+	})) as StoreBook[]
 
-	for (let uuid of storeBookUuids) {
-		let tableObject = await getTableObject(uuid)
-		if (tableObject == null) continue
-
-		let storeBook = convertTableObjectToStoreBook(tableObject)
-		await loadStoreBookData(storeBook)
-		storeBooks.push(storeBook)
+	for (let storeBook of items) {
+		await loadStoreBookData(context.prisma, storeBook)
 	}
 
 	return {
-		total: storeBooks.length,
-		items: storeBooks.slice(offset, limit + offset)
+		total,
+		items
 	}
 }
 
 //#region Helper functions
-async function validateStoreBooksParam(storeBooks: string[], language: string) {
-	if (storeBooks == null) return
+async function validateStoreBooksParam(
+	prisma: PrismaClient,
+	storeBooks: string[],
+	language: string
+): Promise<bigint[]> {
+	if (storeBooks == null) {
+		return []
+	}
+
+	let storeBookIds = []
 
 	for (let uuid of storeBooks) {
 		// Get the store book
-		let storeBook = await getTableObject(uuid)
+		let storeBook = await prisma.storeBook.findFirst({ where: { uuid } })
 
 		if (storeBook == null) {
 			throwApiError(apiErrors.storeBookDoesNotExist)
 		}
 
-		if (storeBook.properties.language != language) {
+		if (storeBook.language != language) {
 			throwApiError(apiErrors.storeBookLanguageNotMatching)
 		}
+
+		storeBookIds.push(storeBook.id)
 	}
+
+	return storeBookIds
 }
 //#endregion
