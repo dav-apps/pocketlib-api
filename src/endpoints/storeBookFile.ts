@@ -6,7 +6,7 @@ import {
 	ApiResponse,
 	TableObjectsController
 } from "dav-js"
-import { StoreBook, StoreBookFile } from "../types.js"
+import { StoreBook } from "../types.js"
 import {
 	handleEndpointError,
 	throwEndpointError,
@@ -129,7 +129,7 @@ export async function uploadStoreBookFile(req: Request, res: Response) {
 			}
 		}
 
-		let result: StoreBookFile = {
+		let result = {
 			uuid: fileUuid,
 			fileName
 		}

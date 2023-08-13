@@ -2,7 +2,8 @@ import {
 	PrismaClient,
 	PublisherLogo as PublisherLogoModel,
 	AuthorProfileImage as AuthorProfileImageModel,
-	StoreBook as StoreBookModel
+	StoreBook as StoreBookModel,
+	StoreBookCover as StoreBookCoverModel
 } from "@prisma/client"
 
 export interface ResolverContext {
@@ -78,66 +79,12 @@ export interface Purchase {
 //#endregion
 
 //#region PocketLib models
-export interface Publisher {
-	uuid: string
-	name: string
-	description: string
-	websiteUrl: string
-	facebookUsername: string
-	instagramUsername: string
-	twitterUsername: string
-	logo: string
-	authors: string
-}
-
 export interface PublisherLogo extends PublisherLogoModel {
 	url: string
 }
 
-export interface Author {
-	uuid: string
-	publisher: string
-	firstName: string
-	lastName: string
-	websiteUrl: string
-	facebookUsername: string
-	instagramUsername: string
-	twitterUsername: string
-	profileImage: string
-	bios: string
-	collections: string
-	series: string
-}
-
-export interface AuthorBio {
-	uuid: string
-	bio: string
-	language: string
-}
-
 export interface AuthorProfileImage extends AuthorProfileImageModel {
 	url: string
-}
-
-export interface StoreBookCollection {
-	uuid: string
-	author: string
-	names: string
-	storeBooks: string
-}
-
-export interface StoreBookCollectionName {
-	uuid: string
-	name: string
-	language: string
-}
-
-export interface StoreBookSeries {
-	uuid: string
-	author: string
-	name: string
-	language: string
-	storeBooks: string
 }
 
 export interface StoreBook extends StoreBookModel {
@@ -147,44 +94,8 @@ export interface StoreBook extends StoreBookModel {
 	isbn: string
 }
 
-export interface StoreBookRelease {
-	uuid: string
-	storeBook: string
-	releaseName: string
-	releaseNotes: string
-	publishedAt: string
-	title: string
-	description: string
-	price: number
-	isbn: string
-	status: string
-	cover: string
-	file: string
-	categories: string
-}
-
-export interface StoreBookCover {
-	uuid: string
+export interface StoreBookCover extends StoreBookCoverModel {
 	url: string
-	aspectRatio: string
-	blurhash: string
-}
-
-export interface StoreBookFile {
-	uuid: string
-	fileName: string
-}
-
-export interface Category {
-	uuid: string
-	key: string
-	names: string
-}
-
-export interface CategoryName {
-	uuid: string
-	name: string
-	language: string
 }
 
 export interface Book {

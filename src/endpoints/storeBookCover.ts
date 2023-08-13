@@ -142,7 +142,7 @@ export async function uploadStoreBookCover(req: Request, res: Response) {
 			}
 		}
 
-		let result: StoreBookCover = {
+		let result = {
 			uuid: coverUuid,
 			url: getTableObjectFileUrl(coverUuid),
 			aspectRatio: aspectRatio,
