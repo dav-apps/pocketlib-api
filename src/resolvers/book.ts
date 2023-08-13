@@ -3,7 +3,7 @@ import {
 	ApiResponse,
 	TableObjectsController
 } from "dav-js"
-import { ResolverContext, TableObject, Book } from "../types.js"
+import { ResolverContext, StoreBook, Book } from "../types.js"
 import { throwApiError, getLastReleaseOfStoreBook } from "../utils.js"
 import { apiErrors } from "../errors.js"
 import { admins, bookTableId, bookFileTableId } from "../constants.js"
@@ -31,41 +31,43 @@ export async function createBook(
 
 	// Copy the store book into the library by creating a book with the file of the store book
 	// Get the store book
-	let storeBookTableObject = await getTableObject(args.storeBook)
+	let storeBook = (await context.prisma.storeBook.findFirst({
+		where: { uuid: args.storeBook }
+	})) as StoreBook
 
-	if (storeBookTableObject == null) {
+	if (storeBook == null) {
 		throwApiError(apiErrors.storeBookDoesNotExist)
 	}
 
 	// Get the latest store book release
-	let storeBookReleaseTableObject: TableObject =
-		await getLastReleaseOfStoreBook(storeBookTableObject, true)
+	let storeBookRelease = await getLastReleaseOfStoreBook(
+		context.prisma,
+		storeBook,
+		true
+	)
 
-	if (storeBookReleaseTableObject == null) {
+	if (storeBookRelease == null) {
 		throwApiError(apiErrors.unexpectedError)
 	} else if (
-		storeBookTableObject.properties.status != "published" ||
-		storeBookReleaseTableObject.properties.status != "published"
+		storeBook.status != "published" ||
+		storeBookRelease.status != "published"
 	) {
 		throwApiError(apiErrors.storeBookNotPublished)
 	}
 
 	// Check if the user has purchased the table object
 	let purchases = await listPurchasesOfTableObject({
-		uuid: storeBookTableObject.uuid,
+		uuid: storeBook.uuid,
 		userId: user.id
 	})
 
 	if (purchases.length == 0) {
 		// Check if the user is an admin or the author of the store book
-		const isAuthor = storeBookTableObject.userId == user.id
+		const isAuthor = storeBook.userId == BigInt(user.id)
 
 		if (!isAdmin && !isAuthor) {
-			let storeBookStatus =
-				(storeBookTableObject.properties.status as string) || "unpublished"
-			let storeBookReleaseStatus =
-				(storeBookReleaseTableObject.properties.status as string) ||
-				"unpublished"
+			let storeBookStatus = storeBook.status || "unpublished"
+			let storeBookReleaseStatus = storeBookRelease.status || "unpublished"
 
 			// Check if the user can access the store book
 			if (
@@ -76,8 +78,7 @@ export async function createBook(
 			}
 
 			// Check if the store book is free
-			let storeBookPrice =
-				(storeBookTableObject.properties.price as number) || 0
+			let storeBookPrice = storeBook.price || 0
 
 			if (storeBookPrice == 0) {
 				throwApiError(
@@ -100,7 +101,7 @@ export async function createBook(
 		tableName: "Book",
 		userId: user.id,
 		propertyName: "store_book",
-		propertyValue: storeBookTableObject.uuid,
+		propertyValue: storeBook.uuid,
 		exact: true
 	})
 
@@ -108,14 +109,17 @@ export async function createBook(
 		throwApiError(apiErrors.storeBookAlreadyInLibrary)
 	}
 
-	// Get the table object of the store book file
-	let fileUuid = storeBookTableObject.properties.file as string
+	// Get the store book file
+	let file = await context.prisma.storeBookFile.findFirst({
+		where: { id: storeBookRelease.fileId }
+	})
 
-	if (fileUuid == null) {
+	if (file == null) {
 		throwApiError(apiErrors.unexpectedError)
 	}
 
-	let storeBookFileTableObject = await getTableObject(fileUuid)
+	// Get the store book file table object
+	let storeBookFileTableObject = await getTableObject(file.uuid)
 
 	if (storeBookFileTableObject == null) {
 		throwApiError(apiErrors.unexpectedError)
@@ -125,13 +129,12 @@ export async function createBook(
 
 	// Create the book
 	let bookProperties = {
-		store_book: storeBookTableObject.uuid,
+		store_book: storeBook.uuid,
 		file: storeBookFileTableObject.uuid
 	}
 
 	if (bookType == "application/pdf") {
-		bookProperties["title"] = storeBookReleaseTableObject.properties
-			.title as string
+		bookProperties["title"] = storeBookRelease.title
 	}
 
 	let createBookResponse = await TableObjectsController.CreateTableObject({
@@ -151,7 +154,7 @@ export async function createBook(
 	// Create a TableObjectUserAccess for the file
 	let addTableObjectResponse = await addTableObject({
 		accessToken,
-		uuid: storeBookFileTableObject.uuid,
+		uuid: file.uuid,
 		tableAlias: bookFileTableId
 	})
 
@@ -161,7 +164,7 @@ export async function createBook(
 
 	return {
 		uuid: createBookResponseData.tableObject.Uuid,
-		storeBook: storeBookTableObject.uuid,
-		file: storeBookFileTableObject.uuid
+		storeBook: storeBook.uuid,
+		file: file.uuid
 	}
 }
