@@ -1,11 +1,12 @@
 import { Express, Request, Response, raw } from "express"
 import cors from "cors"
+import { PrismaClient } from "@prisma/client"
 import {
 	isSuccessStatusCode,
 	ApiResponse,
 	TableObjectsController
 } from "dav-js"
-import { StoreBookFile } from "../types.js"
+import { StoreBook, StoreBookFile } from "../types.js"
 import {
 	handleEndpointError,
 	throwEndpointError,
@@ -16,8 +17,8 @@ import {
 } from "../utils.js"
 import { storeBookFileTableId } from "../constants.js"
 import { apiErrors } from "../errors.js"
-import { getTableObject } from "../services/apiService.js"
 import { validateEbookContentType } from "../services/validationService.js"
+import { prisma } from "../../server.js"
 
 export async function uploadStoreBookFile(req: Request, res: Response) {
 	try {
@@ -34,15 +35,17 @@ export async function uploadStoreBookFile(req: Request, res: Response) {
 		validateEbookContentType(contentType)
 
 		// Get the store book
-		let storeBook = await getTableObject(uuid)
+		let storeBook = (await prisma.storeBook.findFirst({
+			where: { uuid }
+		})) as StoreBook
 
 		// Check if the store book belongs to the user
-		if (storeBook.userId != user.id) {
+		if (storeBook.userId != BigInt(user.id)) {
 			throwEndpointError(apiErrors.actionNotAllowed)
 		}
 
 		// Get the latest release of the store book
-		let release = await getLastReleaseOfStoreBook(storeBook)
+		let release = await getLastReleaseOfStoreBook(prisma, storeBook, false)
 
 		if (release == null) {
 			throwEndpointError(apiErrors.unexpectedError)
@@ -52,88 +55,58 @@ export async function uploadStoreBookFile(req: Request, res: Response) {
 		let fileUuid = null
 		let ext = contentType == "application/pdf" ? "pdf" : "epub"
 		let contentDisposition = req.headers["content-disposition"]
-		let filename = getFilename(contentDisposition)
+		let fileName = getFilename(contentDisposition)
 
-		if (release.properties.status == "published") {
+		if (release.status == "published") {
 			// Create a new release
-			let createReleaseResponse = await createNewStoreBookRelease(
-				accessToken,
+			let newRelease = await createNewStoreBookRelease(
+				prisma,
 				storeBook,
 				release
 			)
 
-			if (!isSuccessStatusCode) {
-				throwEndpointError(apiErrors.unexpectedError)
-			}
-
-			let createReleaseResponseData = (
-				createReleaseResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
-			).data
-
-			// Add the new release to the releases of the store book
-			let releaseUuidsString = storeBook.properties.releases as string
-			releaseUuidsString += `,${createReleaseResponseData.tableObject.Uuid}`
-
-			let updateStoreBookResponse =
-				await TableObjectsController.UpdateTableObject({
-					accessToken,
-					uuid: storeBook.uuid,
-					properties: {
-						reeases: releaseUuidsString
-					}
-				})
-
-			if (!isSuccessStatusCode(updateStoreBookResponse.status)) {
-				throwEndpointError(apiErrors.unexpectedError)
-			}
-
-			// Update the release object with the data of the new release
-			release = {
-				uuid: createReleaseResponseData.tableObject.Uuid,
-				userId: user.id,
-				tableId: createReleaseResponseData.tableObject.TableId,
-				properties: {}
-			}
-
-			for (let key of Object.keys(
-				createReleaseResponseData.tableObject.Properties
-			)) {
-				let value = createReleaseResponseData.tableObject.Properties[key]
-				release.properties[key] = value.value
-			}
-
 			// Create a new StoreBookFile & update the release
 			fileUuid = await createFile(
+				prisma,
 				accessToken,
-				release.uuid,
+				newRelease.id,
 				req.body,
 				contentType,
 				ext,
-				filename
+				fileName
 			)
 		} else {
-			// Check if the release already has a cover
-			if (release.properties.file == null) {
+			// Check if the release already has a file
+			if (release.fileId == null) {
 				// Create a new StoreBookFile & update the release
 				fileUuid = await createFile(
+					prisma,
 					accessToken,
-					release.uuid,
+					release.id,
 					req.body,
 					contentType,
 					ext,
-					filename
+					fileName
 				)
 			} else {
-				// Update the existing file table object
-				fileUuid = release.properties.file as string
+				// Update the existing file
+				let file = await prisma.storeBookFile.update({
+					where: { id: release.fileId },
+					data: {
+						fileName
+					}
+				})
 
+				fileUuid = file.uuid
+
+				// Update the existing file table object
 				let updateFileResponse =
 					await TableObjectsController.UpdateTableObject({
 						accessToken,
 						uuid: fileUuid,
 						properties: {
 							ext,
-							file_name: filename
+							file_name: fileName
 						}
 					})
 
@@ -158,7 +131,7 @@ export async function uploadStoreBookFile(req: Request, res: Response) {
 
 		let result: StoreBookFile = {
 			uuid: fileUuid,
-			fileName: filename
+			fileName
 		}
 
 		res.status(200).json(result)
@@ -178,20 +151,22 @@ export function setup(app: Express) {
 
 //#region Helper function
 async function createFile(
+	prisma: PrismaClient,
 	accessToken: string,
-	releaseUuid: string,
+	releaseId: bigint,
 	data: any,
 	contentType: string,
 	ext: string,
-	filename: string
+	fileName: string
 ) {
+	// Create the file table object
 	let createFileResponse = await TableObjectsController.CreateTableObject({
 		accessToken,
 		tableId: storeBookFileTableId,
 		file: true,
 		properties: {
 			ext,
-			file_name: filename
+			file_name: fileName
 		}
 	})
 
@@ -205,18 +180,16 @@ async function createFile(
 
 	const fileUuid = createFileResponseData.tableObject.Uuid
 
-	// Update the release with the new file
-	let updateReleaseResponse = await TableObjectsController.UpdateTableObject({
-		accessToken,
-		uuid: releaseUuid,
-		properties: {
-			file: createFileResponseData.tableObject.Uuid
+	// Create the file
+	await prisma.storeBookFile.create({
+		data: {
+			uuid: fileUuid,
+			releases: {
+				connect: [{ id: releaseId }]
+			},
+			fileName
 		}
 	})
-
-	if (!isSuccessStatusCode(updateReleaseResponse.status)) {
-		throwEndpointError(apiErrors.unexpectedError)
-	}
 
 	// Upload the data
 	let setTableObjectFileResponse =

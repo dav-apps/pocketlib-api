@@ -22,7 +22,7 @@ import { setup as storeBookFileSetup } from "./src/endpoints/storeBookFile.js"
 const port = process.env.PORT || 4001
 const app = express()
 const httpServer = http.createServer(app)
-const prisma = new PrismaClient()
+export const prisma = new PrismaClient()
 
 let schema = makeExecutableSchema({
 	typeDefs,

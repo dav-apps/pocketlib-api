@@ -1,11 +1,11 @@
 import { Express, Request, Response, raw } from "express"
 import cors from "cors"
+import { Publisher } from "@prisma/client"
 import {
 	isSuccessStatusCode,
 	ApiResponse,
 	TableObjectsController
 } from "dav-js"
-import { TableObject, PublisherLogo } from "../types.js"
 import {
 	handleEndpointError,
 	throwEndpointError,
@@ -15,8 +15,8 @@ import {
 } from "../utils.js"
 import { apiErrors } from "../errors.js"
 import { admins, publisherLogoTableId } from "../constants.js"
-import { getTableObject, listTableObjects } from "../services/apiService.js"
 import { validateImageContentType } from "../services/validationService.js"
+import { prisma } from "../../server.js"
 
 async function uploadPublisherLogo(req: Request, res: Response) {
 	try {
@@ -34,7 +34,7 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 		const contentType = req.headers["content-type"]
 		validateImageContentType(contentType)
 
-		let publisher: TableObject = null
+		let publisher: Publisher = null
 
 		if (uuid == "mine") {
 			if (isAdmin) {
@@ -42,25 +42,22 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 			}
 
 			// Get the publisher of the user
-			let listPublishersResponse = await listTableObjects({
-				caching: false,
-				limit: 1,
-				tableName: "Publisher",
-				userId: user.id
+			publisher = await prisma.publisher.findFirst({
+				where: { userId: user.id }
 			})
 
-			if (listPublishersResponse.items.length == 0) {
+			if (publisher == null) {
 				throwEndpointError(apiErrors.publisherDoesNotExist)
 			}
-
-			publisher = listPublishersResponse.items[0]
 		} else {
 			if (!isAdmin) {
 				throwEndpointError(apiErrors.actionNotAllowed)
 			}
 
 			// Get the publisher
-			publisher = await getTableObject(uuid)
+			publisher = await prisma.publisher.findFirst({
+				where: { uuid }
+			})
 
 			if (publisher == null) {
 				throwEndpointError(apiErrors.publisherDoesNotExist)
@@ -68,18 +65,16 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 		}
 
 		// Get the logo of the publisher
-		let logoUuid = publisher.properties.logo as string
-		let logo: TableObject = null
+		let logo = await prisma.publisherLogo.findFirst({
+			where: { publisherId: publisher.id }
+		})
 
-		if (logoUuid != null) {
-			logo = await getTableObject(logoUuid)
-		}
-
+		let logoUuid: string = null
 		let ext = contentType == "image/png" ? "png" : "jpg"
-		let encodeResult = await blurhashEncode(req.body)
+		let blurhash = (await blurhashEncode(req.body)).blurhash
 
 		if (logo == null) {
-			// Create a new logo table object
+			// Create the logo table object
 			let createLogoResponse =
 				await TableObjectsController.CreateTableObject({
 					accessToken,
@@ -87,7 +82,7 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 					file: true,
 					properties: {
 						ext,
-						blurhash: encodeResult.blurhash
+						blurhash
 					}
 				})
 
@@ -100,21 +95,44 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 			).data
 
 			logoUuid = createLogoResponseData.tableObject.Uuid
+
+			// Create the logo
+			await prisma.publisherLogo.create({
+				data: {
+					uuid: logoUuid,
+					publisher: {
+						connect: {
+							id: publisher.id
+						}
+					},
+					blurhash
+				}
+			})
 		} else {
-			// Update the existing logo table object
+			logoUuid = logo.uuid
+
+			// Update the logo table object
 			let updateLogoResponse =
 				await TableObjectsController.UpdateTableObject({
 					accessToken,
 					uuid: logoUuid,
 					properties: {
 						ext,
-						blurhash: encodeResult.blurhash
+						blurhash
 					}
 				})
 
 			if (!isSuccessStatusCode(updateLogoResponse.status)) {
 				throwEndpointError(apiErrors.unexpectedError)
 			}
+
+			// Update the logo
+			await prisma.publisherLogo.update({
+				where: { id: logo.id },
+				data: {
+					blurhash
+				}
+			})
 		}
 
 		// Upload the data
@@ -130,10 +148,10 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 			throwEndpointError(apiErrors.unexpectedError)
 		}
 
-		let result: PublisherLogo = {
+		let result = {
 			uuid: logoUuid,
 			url: getTableObjectFileUrl(logoUuid),
-			blurhash: encodeResult.blurhash
+			blurhash
 		}
 
 		res.status(200).json(result)

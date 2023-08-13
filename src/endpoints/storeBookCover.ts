@@ -1,11 +1,12 @@
 import { Express, Request, Response, raw } from "express"
 import cors from "cors"
+import { PrismaClient } from "@prisma/client"
 import {
 	isSuccessStatusCode,
 	ApiResponse,
 	TableObjectsController
 } from "dav-js"
-import { StoreBookCover } from "../types.js"
+import { StoreBook, StoreBookCover } from "../types.js"
 import {
 	handleEndpointError,
 	throwEndpointError,
@@ -17,8 +18,8 @@ import {
 } from "../utils.js"
 import { storeBookCoverTableId } from "../constants.js"
 import { apiErrors } from "../errors.js"
-import { getTableObject } from "../services/apiService.js"
 import { validateImageContentType } from "../services/validationService.js"
+import { prisma } from "../../server.js"
 
 export async function uploadStoreBookCover(req: Request, res: Response) {
 	try {
@@ -35,15 +36,17 @@ export async function uploadStoreBookCover(req: Request, res: Response) {
 		validateImageContentType(contentType)
 
 		// Get the store book
-		let storeBook = await getTableObject(uuid)
+		let storeBook = (await prisma.storeBook.findFirst({
+			where: { uuid }
+		})) as StoreBook
 
 		// Check if the store book belongs to the user
-		if (storeBook.userId != user.id) {
+		if (storeBook.userId != BigInt(user.id)) {
 			throwEndpointError(apiErrors.actionNotAllowed)
 		}
 
 		// Get the latest release of the store book
-		let release = await getLastReleaseOfStoreBook(storeBook)
+		let release = await getLastReleaseOfStoreBook(prisma, storeBook, false)
 
 		if (release == null) {
 			throwEndpointError(apiErrors.unexpectedError)
@@ -63,58 +66,19 @@ export async function uploadStoreBookCover(req: Request, res: Response) {
 			aspectRatio = `${value}:1`
 		}
 
-		if (release.properties.status == "published") {
+		if (release.status == "published") {
 			// Create a new release
-			let createReleaseResponse = await createNewStoreBookRelease(
-				accessToken,
+			let newRelease = await createNewStoreBookRelease(
+				prisma,
 				storeBook,
 				release
 			)
 
-			if (!isSuccessStatusCode(createReleaseResponse.status)) {
-				throwEndpointError(apiErrors.unexpectedError)
-			}
-
-			let createReleaseResponseData = (
-				createReleaseResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
-			).data
-
-			// Add the new release to the releases of the store book
-			let releaseUuidsString = storeBook.properties.releases as string
-			releaseUuidsString += `,${createReleaseResponseData.tableObject.Uuid}`
-
-			let updateStoreBookResponse =
-				await TableObjectsController.UpdateTableObject({
-					accessToken,
-					uuid: storeBook.uuid,
-					properties: {
-						releases: releaseUuidsString
-					}
-				})
-
-			if (!isSuccessStatusCode(updateStoreBookResponse.status)) {
-				throwEndpointError(apiErrors.unexpectedError)
-			}
-
-			// Update the release object with the data of the new release
-			release = {
-				uuid: createReleaseResponseData.tableObject.Uuid,
-				userId: user.id,
-				tableId: createReleaseResponseData.tableObject.TableId,
-				properties: {}
-			}
-
-			for (let key of Object.keys(
-				createReleaseResponseData.tableObject.Properties
-			)) {
-				let value = createReleaseResponseData.tableObject.Properties[key]
-				release.properties[key] = value.value
-			}
-
 			// Create a new StoreBookCover & update the release
 			coverUuid = await createCover(
+				prisma,
 				accessToken,
-				release.uuid,
+				newRelease.id,
 				req.body,
 				contentType,
 				ext,
@@ -123,11 +87,12 @@ export async function uploadStoreBookCover(req: Request, res: Response) {
 			)
 		} else {
 			// Check if the release already has a cover
-			if (release.properties.cover == null) {
+			if (release.coverId == null) {
 				// Create a new StoreBookCover & update the release
 				coverUuid = await createCover(
+					prisma,
 					accessToken,
-					release.uuid,
+					release.id,
 					req.body,
 					contentType,
 					ext,
@@ -135,9 +100,18 @@ export async function uploadStoreBookCover(req: Request, res: Response) {
 					aspectRatio
 				)
 			} else {
-				// Update the existing cover table object
-				coverUuid = release.properties.cover as string
+				// Update the existing cover
+				let cover = await prisma.storeBookCover.update({
+					where: { id: release.coverId },
+					data: {
+						blurhash: encodeResult.blurhash,
+						aspectRatio
+					}
+				})
 
+				coverUuid = cover.uuid
+
+				// Update the existing cover table object
 				let updateCoverResponse =
 					await TableObjectsController.UpdateTableObject({
 						accessToken,
@@ -192,14 +166,16 @@ export function setup(app: Express) {
 
 //#region Helper functions
 async function createCover(
+	prisma: PrismaClient,
 	accessToken: string,
-	releaseUuid: string,
+	releaseId: bigint,
 	data: any,
 	contentType: string,
 	ext: string,
 	blurhash: string,
 	aspectRatio: string
 ) {
+	// Create the cover table object
 	let createCoverResponse = await TableObjectsController.CreateTableObject({
 		accessToken,
 		tableId: storeBookCoverTableId,
@@ -221,18 +197,17 @@ async function createCover(
 
 	const coverUuid = createCoverResponseData.tableObject.Uuid
 
-	// Update the release with the new cover
-	let updateReleaseResponse = await TableObjectsController.UpdateTableObject({
-		accessToken,
-		uuid: releaseUuid,
-		properties: {
-			cover: createCoverResponseData.tableObject.Uuid
+	// Create the cover
+	await prisma.storeBookCover.create({
+		data: {
+			uuid: coverUuid,
+			releases: {
+				connect: [{ id: releaseId }]
+			},
+			blurhash,
+			aspectRatio
 		}
 	})
-
-	if (!isSuccessStatusCode(updateReleaseResponse.status)) {
-		throwEndpointError(apiErrors.unexpectedError)
-	}
 
 	// Upload the data
 	let setTableObjectFileResponse =

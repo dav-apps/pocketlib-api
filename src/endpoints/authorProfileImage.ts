@@ -1,11 +1,11 @@
 import { Express, Request, Response, raw } from "express"
 import cors from "cors"
+import { Author } from "@prisma/client"
 import {
 	isSuccessStatusCode,
 	ApiResponse,
 	TableObjectsController
 } from "dav-js"
-import { TableObject } from "../types.js"
 import {
 	handleEndpointError,
 	throwEndpointError,
@@ -15,8 +15,8 @@ import {
 } from "../utils.js"
 import { admins, authorProfileImageTableId } from "../constants.js"
 import { apiErrors } from "../errors.js"
-import { getTableObject, listTableObjects } from "../services/apiService.js"
 import { validateImageContentType } from "../services/validationService.js"
+import { prisma } from "../../server.js"
 
 async function uploadAuthorProfileImage(req: Request, res: Response) {
 	try {
@@ -34,7 +34,7 @@ async function uploadAuthorProfileImage(req: Request, res: Response) {
 		const contentType = req.headers["content-type"]
 		validateImageContentType(contentType)
 
-		let author: TableObject = null
+		let author: Author = null
 
 		if (uuid == "mine") {
 			if (isAdmin) {
@@ -42,25 +42,22 @@ async function uploadAuthorProfileImage(req: Request, res: Response) {
 			}
 
 			// Get the author of the user
-			let listAuthorsResponse = await listTableObjects({
-				caching: false,
-				limit: 1,
-				tableName: "Author",
-				userId: user.id
+			author = await prisma.author.findFirst({
+				where: { userId: user.id }
 			})
 
-			if (listAuthorsResponse.items.length == 0) {
+			if (author == null) {
 				throwEndpointError(apiErrors.authorDoesNotExist)
 			}
-
-			author = listAuthorsResponse.items[0]
 		} else {
 			if (!isAdmin) {
 				throwEndpointError(apiErrors.actionNotAllowed)
 			}
 
 			// Get the author
-			author = await getTableObject(uuid)
+			author = await prisma.author.findFirst({
+				where: { uuid }
+			})
 
 			if (author == null) {
 				throwEndpointError(apiErrors.authorDoesNotExist)
@@ -68,19 +65,16 @@ async function uploadAuthorProfileImage(req: Request, res: Response) {
 		}
 
 		// Get the profile image of the author
-		let profileImageUuid = author.properties.profile_image as string
-		let profileImage: TableObject = null
-		let result = null
+		let profileImage = await prisma.authorProfileImage.findFirst({
+			where: { authorId: author.id }
+		})
 
-		if (profileImageUuid != null) {
-			profileImage = await getTableObject(profileImageUuid)
-		}
-
+		let profileImageUuid: string = null
 		let ext = contentType == "image/png" ? "png" : "jpg"
 		let blurhash = (await blurhashEncode(req.body)).blurhash
 
 		if (profileImage == null) {
-			// Create a new profile image table object
+			// Create the profile image table object
 			let createProfileImageResponse =
 				await TableObjectsController.CreateTableObject({
 					accessToken,
@@ -101,8 +95,23 @@ async function uploadAuthorProfileImage(req: Request, res: Response) {
 			).data
 
 			profileImageUuid = createProfileImageResponseData.tableObject.Uuid
+
+			// Create the profile image
+			await prisma.authorProfileImage.create({
+				data: {
+					uuid: profileImageUuid,
+					author: {
+						connect: {
+							id: author.id
+						}
+					},
+					blurhash
+				}
+			})
 		} else {
-			// Update the existing profile image table object
+			profileImageUuid = profileImage.uuid
+
+			// Update the profile image table object
 			let updateProfileImageResponse =
 				await TableObjectsController.UpdateTableObject({
 					accessToken,
@@ -116,6 +125,14 @@ async function uploadAuthorProfileImage(req: Request, res: Response) {
 			if (!isSuccessStatusCode(updateProfileImageResponse.status)) {
 				throwEndpointError(apiErrors.unexpectedError)
 			}
+
+			// Update the profile image
+			await prisma.authorProfileImage.update({
+				where: { id: profileImage.id },
+				data: {
+					blurhash
+				}
+			})
 		}
 
 		// Upload the data
@@ -131,13 +148,13 @@ async function uploadAuthorProfileImage(req: Request, res: Response) {
 			throwEndpointError(apiErrors.unexpectedError)
 		}
 
-		result = {
+		let result = {
 			uuid: profileImageUuid,
 			url: getTableObjectFileUrl(profileImageUuid),
 			blurhash
 		}
 
-		res.status(201).json(result)
+		res.status(200).json(result)
 	} catch (error) {
 		handleEndpointError(res, error)
 	}
