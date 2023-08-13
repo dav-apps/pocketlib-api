@@ -45,7 +45,9 @@ export async function retrieveStoreBook(
 	let storeBook = (await context.prisma.storeBook.findFirst({
 		where: { uuid }
 	})) as StoreBook
+
 	await loadStoreBookData(context.prisma, storeBook)
+
 	return storeBook
 }
 

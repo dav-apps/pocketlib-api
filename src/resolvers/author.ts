@@ -310,7 +310,7 @@ export async function bio(
 
 	let bios = await context.prisma.authorBio.findMany({ where })
 
-	if (bios.length == null) {
+	if (bios.length == 0) {
 		return null
 	}
 
@@ -324,21 +324,6 @@ export async function bio(
 	}
 
 	return bios[0]
-}
-
-export async function profileImage(
-	author: Author,
-	args: any,
-	context: ResolverContext
-): Promise<AuthorProfileImage> {
-	let profileImage = await context.prisma.authorProfileImage.findFirst({
-		where: { authorId: author.id }
-	})
-
-	return {
-		...profileImage,
-		url: getTableObjectFileUrl(profileImage.uuid)
-	}
 }
 
 export async function bios(
@@ -366,6 +351,21 @@ export async function bios(
 	return {
 		total,
 		items
+	}
+}
+
+export async function profileImage(
+	author: Author,
+	args: any,
+	context: ResolverContext
+): Promise<AuthorProfileImage> {
+	let profileImage = await context.prisma.authorProfileImage.findFirst({
+		where: { authorId: author.id }
+	})
+
+	return {
+		...profileImage,
+		url: getTableObjectFileUrl(profileImage.uuid)
 	}
 }
 
