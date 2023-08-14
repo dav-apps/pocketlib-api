@@ -8,7 +8,7 @@ import { loadStoreBookData } from "../utils.js"
 
 export async function retrieveStoreBookCollection(
 	parent: any,
-	args: { uuid: string; languages?: string[] },
+	args: { uuid: string },
 	context: ResolverContext
 ): Promise<StoreBookCollection> {
 	return await context.prisma.storeBookCollection.findFirst({
@@ -28,11 +28,10 @@ export async function author(
 
 export async function name(
 	storeBookCollection: StoreBookCollection,
-	args: any,
-	context: ResolverContext,
-	info: any
+	args: { languages?: String[] },
+	context: ResolverContext
 ): Promise<StoreBookCollectionName> {
-	let languages = info?.variableValues?.languages || ["en"]
+	let languages = args.languages || ["en"]
 	let where = { OR: [], AND: { collectionId: storeBookCollection.id } }
 
 	for (let lang of languages) {

@@ -11,14 +11,10 @@ export const typeDefs = `#graphql
 		listAuthors(
 			latest: Boolean
 			mine: Boolean
-			languages: [String!]
 			limit: Int
 			offset: Int
 		): AuthorList!
-		retrieveStoreBookCollection(
-			uuid: String!
-			languages: [String!]
-		): StoreBookCollection
+		retrieveStoreBookCollection(uuid: String!): StoreBookCollection
 		retrieveStoreBookSeries(
 			uuid: String!
 			languages: [String!]
@@ -150,7 +146,7 @@ export const typeDefs = `#graphql
 		publisher: Publisher
 		firstName: String!
 		lastName: String!
-		bio: AuthorBio
+		bio(languages: [String!]): AuthorBio
 		websiteUrl: String
 		facebookUsername: String
 		instagramUsername: String
@@ -186,7 +182,7 @@ export const typeDefs = `#graphql
 	type StoreBookCollection {
 		uuid: String!
 		author: Author!
-		name: StoreBookCollectionName!
+		name(languages: [String!]): StoreBookCollectionName!
 		names(limit: Int, offset: Int): StoreBookCollectionNameList!
 		storeBooks(limit: Int, offset: Int): StoreBookList!
 	}
@@ -279,7 +275,7 @@ export const typeDefs = `#graphql
 	type Category {
 		uuid: String!
 		key: String!
-		name: CategoryName!
+		name(languages: [String!]): CategoryName!
 		names(limit: Int, offset: Int): CategoryNameList!
 	}
 

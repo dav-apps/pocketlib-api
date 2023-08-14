@@ -28,11 +28,10 @@ export async function listCategories(
 
 export async function name(
 	category: Category,
-	args: any,
-	context: ResolverContext,
-	info: any
+	args: { languages?: String[] },
+	context: ResolverContext
 ): Promise<CategoryName> {
-	let languages = info?.variableValues?.languages || ["en"]
+	let languages = args.languages || ["en"]
 	let where = { OR: [], AND: { categoryId: category.id } }
 
 	for (let lang of languages) {

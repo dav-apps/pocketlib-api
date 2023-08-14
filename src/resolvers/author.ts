@@ -56,7 +56,6 @@ export async function listAuthors(
 	parent: any,
 	args: {
 		mine?: boolean
-		languages?: string[]
 		limit?: number
 		offset?: number
 	},
@@ -297,11 +296,11 @@ export async function publisher(
 
 export async function bio(
 	author: Author,
-	args: any,
+	args: { languages?: String[] },
 	context: ResolverContext,
 	info: any
 ): Promise<AuthorBio> {
-	let languages = info?.variableValues?.languages || ["en"]
+	let languages = args.languages || ["en"]
 	let where = { OR: [], AND: { authorId: author.id } }
 
 	for (let lang of languages) {
