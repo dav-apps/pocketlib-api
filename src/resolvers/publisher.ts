@@ -244,6 +244,10 @@ export async function logo(
 		where: { publisherId: publisher.id }
 	})
 
+	if (publisherLogo == null) {
+		return null
+	}
+
 	return {
 		...publisherLogo,
 		url: getTableObjectFileUrl(publisherLogo.uuid)

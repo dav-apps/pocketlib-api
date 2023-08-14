@@ -9,7 +9,6 @@ export const typeDefs = `#graphql
 		): PublisherList!
 		retrieveAuthor(uuid: String!): Author
 		listAuthors(
-			latest: Boolean
 			mine: Boolean
 			limit: Int
 			offset: Int
@@ -20,17 +19,12 @@ export const typeDefs = `#graphql
 			languages: [String!]
 		): StoreBookSeries
 		listStoreBookSeries(
-			latest: Boolean
 			languages: [String!]
 			limit: Int
 			offset: Int
 		): StoreBookSeriesList!
-		retrieveStoreBook(
-			uuid: String!
-			languages: [String!]
-		): StoreBook
+		retrieveStoreBook(uuid: String!): StoreBook
 		listStoreBooks(
-			latest: Boolean
 			categories: [String!]
 			inReview: Boolean
 			languages: [String!]

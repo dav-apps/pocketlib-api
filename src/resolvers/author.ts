@@ -289,6 +289,10 @@ export async function publisher(
 	args: any,
 	context: ResolverContext
 ): Promise<Publisher> {
+	if (author.publisherId == null) {
+		return null
+	}
+
 	return await context.prisma.publisher.findFirst({
 		where: { id: author.publisherId }
 	})
