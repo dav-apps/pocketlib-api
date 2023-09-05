@@ -100,6 +100,7 @@ export async function listStoreBooks(
 			})) as StoreBook
 
 			if (storeBook != null) {
+				await loadStoreBookData(context.prisma, storeBook)
 				storeBooks.push(storeBook)
 			}
 		}
@@ -130,7 +131,7 @@ export async function listStoreBooks(
 		})) as StoreBook[]
 
 		for (let storeBook of items) {
-			await loadStoreBookData(context.prisma, storeBook)
+			await loadStoreBookData(context.prisma, storeBook, false)
 		}
 
 		return {
