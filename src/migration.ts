@@ -284,6 +284,7 @@ async function migrateStoreBookReleases() {
 async function migrateStoreBooks() {
 	let tableObjectsResponse = await listTableObjects({
 		tableName: "StoreBook",
+		collectionName: "latest_books",
 		limit
 	})
 
@@ -361,6 +362,7 @@ async function migrateStoreBooks() {
 async function migrateStoreBookSeries() {
 	let tableObjectsResponse = await listTableObjects({
 		tableName: "StoreBookSeries",
+		collectionName: "latest_series",
 		limit
 	})
 
@@ -576,6 +578,7 @@ async function migrateAuthors() {
 
 	let publisherResponse = await listTableObjects({
 		tableName: "Publisher",
+		collectionName: "latest_authors",
 		limit
 	})
 
