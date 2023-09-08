@@ -77,17 +77,13 @@ export async function listStoreBooks(
 		for (let key of args.categories) {
 			// Find the category table object
 			let category = await context.prisma.category.findFirst({
-				where: { key }
+				where: { key },
+				include: { releases: true }
 			})
 
 			if (category == null) continue
 
-			// Find StoreBookReleases with the category
-			let storeBookReleases = await context.prisma.storeBookRelease.findMany(
-				{ where: { categories: { every: { id: category.id } } } }
-			)
-
-			for (let storeBookRelease of storeBookReleases) {
+			for (let storeBookRelease of category.releases) {
 				if (!storeBookIds.includes(storeBookRelease.storeBookId)) {
 					storeBookIds.push(storeBookRelease.storeBookId)
 				}
