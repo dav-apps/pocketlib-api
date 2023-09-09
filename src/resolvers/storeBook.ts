@@ -84,7 +84,10 @@ export async function listStoreBooks(
 			if (category == null) continue
 
 			for (let storeBookRelease of category.releases) {
-				if (!storeBookIds.includes(storeBookRelease.storeBookId)) {
+				if (
+					!storeBookIds.includes(storeBookRelease.storeBookId) &&
+					storeBookRelease.status == "published"
+				) {
 					storeBookIds.push(storeBookRelease.storeBookId)
 				}
 			}
