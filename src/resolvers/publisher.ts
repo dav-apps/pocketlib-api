@@ -214,19 +214,19 @@ export async function updatePublisher(
 	}
 
 	if (args.websiteUrl != null) {
-		data["website_url"] = args.websiteUrl
+		data["websiteUrl"] = args.websiteUrl
 	}
 
 	if (facebookUsername != null) {
-		data["facebook_username"] = facebookUsername
+		data["facebookUsername"] = facebookUsername
 	}
 
 	if (instagramUsername != null) {
-		data["instagram_username"] = instagramUsername
+		data["instagramUsername"] = instagramUsername
 	}
 
 	if (twitterUsername != null) {
-		data["twitter_username"] = twitterUsername
+		data["twitterUsername"] = twitterUsername
 	}
 
 	return await context.prisma.publisher.update({
