@@ -23,6 +23,7 @@ export const resolvers = {
 		listStoreBooks: storeBookResolvers.listStoreBooks,
 		retrieveStoreBookRelease:
 			storeBookReleaseResolvers.retrieveStoreBookRelease,
+		retrieveCategory: categoryResolvers.retrieveCategory,
 		listCategories: categoryResolvers.listCategories
 	},
 	Mutation: {

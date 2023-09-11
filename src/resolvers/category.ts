@@ -1,6 +1,17 @@
 import { Category, CategoryName } from "@prisma/client"
 import { ResolverContext, List } from "../types.js"
 
+export async function retrieveCategory(
+	parent: any,
+	args: { uuid: string },
+	context: ResolverContext
+): Promise<Category> {
+	const uuid = args.uuid
+	if (uuid == null) return null
+
+	return context.prisma.category.findFirst({ where: { uuid } })
+}
+
 export async function listCategories(
 	parent: any,
 	args: { limit?: number; offset?: number },

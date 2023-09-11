@@ -29,6 +29,7 @@ export const typeDefs = `#graphql
 			offset: Int
 		): StoreBookList!
 		retrieveStoreBookRelease(uuid: String!): StoreBookRelease
+		retrieveCategory(uuid: String!): Category!
 		listCategories(
 			languages: [String!]
 			limit: Int
