@@ -14,6 +14,7 @@ export const typeDefs = `#graphql
 			offset: Int
 		): AuthorList!
 		retrieveStoreBookCollection(uuid: String!): StoreBookCollection
+		retrieveStoreBookCollectionName(uuid: String!): StoreBookCollectionName
 		retrieveStoreBookSeries(uuid: String!): StoreBookSeries
 		listStoreBookSeries(
 			languages: [String!]

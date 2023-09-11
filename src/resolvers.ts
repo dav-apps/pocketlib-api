@@ -17,6 +17,8 @@ export const resolvers = {
 		listAuthors: authorResolvers.listAuthors,
 		retrieveStoreBookCollection:
 			storeBookCollectionResolvers.retrieveStoreBookCollection,
+		retrieveStoreBookCollectionName:
+			storeBookCollectionNameResolvers.retrieveStoreBookCollectionName,
 		retrieveStoreBookSeries: storeBookSeriesResolvers.retrieveStoreBookSeries,
 		listStoreBookSeries: storeBookSeriesResolvers.listStoreBookSeries,
 		retrieveStoreBook: storeBookResolvers.retrieveStoreBook,

@@ -8,6 +8,19 @@ import {
 	validateLanguage
 } from "../services/validationService.js"
 
+export async function retrieveStoreBookCollectionName(
+	parent: any,
+	args: { uuid: string },
+	context: ResolverContext
+): Promise<StoreBookCollectionName> {
+	const uuid = args.uuid
+	if (uuid == null) return null
+
+	return await context.prisma.storeBookCollectionName.findFirst({
+		where: { uuid }
+	})
+}
+
 export async function setStoreBookCollectionName(
 	parent: any,
 	args: { uuid: string; name: string; language: string },
