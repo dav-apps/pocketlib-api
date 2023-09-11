@@ -21,6 +21,8 @@ export const resolvers = {
 		listStoreBookSeries: storeBookSeriesResolvers.listStoreBookSeries,
 		retrieveStoreBook: storeBookResolvers.retrieveStoreBook,
 		listStoreBooks: storeBookResolvers.listStoreBooks,
+		retrieveStoreBookRelease:
+			storeBookReleaseResolvers.retrieveStoreBookRelease,
 		listCategories: categoryResolvers.listCategories
 	},
 	Mutation: {

@@ -12,6 +12,19 @@ import {
 	validateReleaseNotesLength
 } from "../services/validationService.js"
 
+export async function retrieveStoreBookRelease(
+	parent: any,
+	args: { uuid: string },
+	context: ResolverContext
+): Promise<StoreBookRelease> {
+	const uuid = args.uuid
+	if (uuid == null) return null
+
+	return await context.prisma.storeBookRelease.findFirst({
+		where: { uuid }
+	})
+}
+
 export async function publishStoreBookRelease(
 	parent: any,
 	args: {
