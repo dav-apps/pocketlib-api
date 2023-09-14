@@ -718,7 +718,10 @@ export async function releases(
 
 	let [total, items] = await context.prisma.$transaction([
 		context.prisma.storeBookRelease.count({ where }),
-		context.prisma.storeBookRelease.findMany({ where })
+		context.prisma.storeBookRelease.findMany({
+			where,
+			orderBy: { publishedAt: "desc" }
+		})
 	])
 
 	return {
