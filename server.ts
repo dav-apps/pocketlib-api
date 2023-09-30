@@ -6,6 +6,7 @@ import express from "express"
 import http from "http"
 import cors from "cors"
 import { PrismaClient } from "@prisma/client"
+import { createClient } from "redis"
 import { isSuccessStatusCode } from "dav-js"
 import { User } from "./src/types.js"
 import { throwApiError } from "./src/utils.js"
@@ -22,7 +23,18 @@ import { setup as storeBookFileSetup } from "./src/endpoints/storeBookFile.js"
 const port = process.env.PORT || 4001
 const app = express()
 const httpServer = http.createServer(app)
+
 export const prisma = new PrismaClient()
+
+//#region Redis config
+export const redis = createClient({
+	url: process.env.REDIS_URL,
+	database: process.env.ENVIRONMENT == "production" ? 5 : 4 // production: 5, staging: 4
+})
+
+redis.on("error", err => console.log("Redis Client Error", err))
+await redis.connect()
+//#endregion
 
 let schema = makeExecutableSchema({
 	typeDefs,
@@ -69,6 +81,7 @@ app.use(
 
 			return {
 				prisma,
+				redis,
 				accessToken,
 				user
 			}

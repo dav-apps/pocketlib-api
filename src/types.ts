@@ -5,9 +5,11 @@ import {
 	StoreBook as StoreBookModel,
 	StoreBookCover as StoreBookCoverModel
 } from "@prisma/client"
+import { RedisClientType } from "redis"
 
 export interface ResolverContext {
 	prisma: PrismaClient
+	redis: RedisClientType
 	accessToken?: string
 	user?: User
 }
