@@ -1,3 +1,5 @@
+import { ResolverContext } from "./types.js"
+import { cachingResolver } from "./services/cachingService.js"
 import * as publisherResolvers from "./resolvers/publisher.js"
 import * as authorResolvers from "./resolvers/author.js"
 import * as authorBioResolvers from "./resolvers/authorBio.js"
@@ -11,22 +13,175 @@ import * as bookResolvers from "./resolvers/book.js"
 
 export const resolvers = {
 	Query: {
-		retrievePublisher: publisherResolvers.retrievePublisher,
-		listPublishers: publisherResolvers.listPublishers,
-		retrieveAuthor: authorResolvers.retrieveAuthor,
-		listAuthors: authorResolvers.listAuthors,
-		retrieveStoreBookCollection:
-			storeBookCollectionResolvers.retrieveStoreBookCollection,
-		retrieveStoreBookCollectionName:
-			storeBookCollectionNameResolvers.retrieveStoreBookCollectionName,
-		retrieveStoreBookSeries: storeBookSeriesResolvers.retrieveStoreBookSeries,
-		listStoreBookSeries: storeBookSeriesResolvers.listStoreBookSeries,
-		retrieveStoreBook: storeBookResolvers.retrieveStoreBook,
-		listStoreBooks: storeBookResolvers.listStoreBooks,
-		retrieveStoreBookRelease:
-			storeBookReleaseResolvers.retrieveStoreBookRelease,
-		retrieveCategory: categoryResolvers.retrieveCategory,
-		listCategories: categoryResolvers.listCategories
+		retrievePublisher: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				publisherResolvers.retrievePublisher
+			),
+		listPublishers: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				publisherResolvers.listPublishers
+			),
+		retrieveAuthor: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				authorResolvers.retrieveAuthor
+			),
+		listAuthors: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				authorResolvers.listAuthors
+			),
+		retrieveStoreBookCollection: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				storeBookCollectionResolvers.retrieveStoreBookCollection
+			),
+		retrieveStoreBookCollectionName: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				storeBookCollectionNameResolvers.retrieveStoreBookCollectionName
+			),
+		retrieveStoreBookSeries: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				storeBookSeriesResolvers.retrieveStoreBookSeries
+			),
+		listStoreBookSeries: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				storeBookSeriesResolvers.listStoreBookSeries
+			),
+		retrieveStoreBook: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				storeBookResolvers.retrieveStoreBook
+			),
+		listStoreBooks: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				storeBookResolvers.listStoreBooks
+			),
+		retrieveStoreBookRelease: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				storeBookReleaseResolvers.retrieveStoreBookRelease
+			),
+		retrieveCategory: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				categoryResolvers.retrieveCategory
+			),
+		listCategories: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				categoryResolvers.listCategories
+			)
 	},
 	Mutation: {
 		createPublisher: publisherResolvers.createPublisher,
@@ -45,43 +200,203 @@ export const resolvers = {
 		createBook: bookResolvers.createBook
 	},
 	Publisher: {
-		logo: publisherResolvers.logo,
-		authors: publisherResolvers.authors
+		logo: (parent: any, args: any, context: ResolverContext, info: any) =>
+			cachingResolver(parent, args, context, info, publisherResolvers.logo),
+		authors: (parent: any, args: any, context: ResolverContext, info: any) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				publisherResolvers.authors
+			)
 	},
 	Author: {
-		publisher: authorResolvers.publisher,
-		bio: authorResolvers.bio,
-		profileImage: authorResolvers.profileImage,
-		bios: authorResolvers.bios,
-		collections: authorResolvers.collections,
-		series: authorResolvers.series
+		publisher: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				authorResolvers.publisher
+			),
+		bio: (parent: any, args: any, context: ResolverContext, info: any) =>
+			cachingResolver(parent, args, context, info, authorResolvers.bio),
+		profileImage: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				authorResolvers.profileImage
+			),
+		bios: (parent: any, args: any, context: ResolverContext, info: any) =>
+			cachingResolver(parent, args, context, info, authorResolvers.bios),
+		collections: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				authorResolvers.collections
+			),
+		series: (parent: any, args: any, context: ResolverContext, info: any) =>
+			cachingResolver(parent, args, context, info, authorResolvers.series)
 	},
 	StoreBookCollection: {
-		author: storeBookCollectionResolvers.author,
-		name: storeBookCollectionResolvers.name,
-		names: storeBookCollectionResolvers.names,
-		storeBooks: storeBookCollectionResolvers.storeBooks
+		author: (parent: any, args: any, context: ResolverContext, info: any) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				storeBookCollectionResolvers.author
+			),
+		name: (parent: any, args: any, context: ResolverContext, info: any) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				storeBookCollectionResolvers.name
+			),
+		names: (parent: any, args: any, context: ResolverContext, info: any) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				storeBookCollectionResolvers.names
+			),
+		storeBooks: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				storeBookCollectionResolvers.storeBooks
+			)
 	},
 	StoreBookSeries: {
-		storeBooks: storeBookSeriesResolvers.storeBooks
+		storeBooks: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				storeBookSeriesResolvers.storeBooks
+			)
 	},
 	StoreBook: {
-		collection: storeBookResolvers.collection,
-		cover: storeBookResolvers.cover,
-		file: storeBookResolvers.file,
-		categories: storeBookResolvers.categories,
-		series: storeBookResolvers.series,
-		releases: storeBookResolvers.releases,
+		collection: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				storeBookResolvers.collection
+			),
+		cover: (parent: any, args: any, context: ResolverContext, info: any) =>
+			cachingResolver(parent, args, context, info, storeBookResolvers.cover),
+		file: (parent: any, args: any, context: ResolverContext, info: any) =>
+			cachingResolver(parent, args, context, info, storeBookResolvers.file),
+		categories: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				storeBookResolvers.categories
+			),
+		series: (parent: any, args: any, context: ResolverContext, info: any) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				storeBookResolvers.series
+			),
+		releases: (parent: any, args: any, context: ResolverContext, info: any) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				storeBookResolvers.releases
+			),
 		inLibrary: storeBookResolvers.inLibrary,
 		purchased: storeBookResolvers.purchased
 	},
 	StoreBookRelease: {
-		cover: storeBookReleaseResolvers.cover,
-		file: storeBookReleaseResolvers.file,
-		categories: storeBookReleaseResolvers.categories
+		cover: (parent: any, args: any, context: ResolverContext, info: any) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				storeBookReleaseResolvers.cover
+			),
+		file: (parent: any, args: any, context: ResolverContext, info: any) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				storeBookReleaseResolvers.file
+			),
+		categories: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				storeBookReleaseResolvers.categories
+			)
 	},
 	Category: {
-		name: categoryResolvers.name,
-		names: categoryResolvers.names
+		name: (parent: any, args: any, context: ResolverContext, info: any) =>
+			cachingResolver(parent, args, context, info, categoryResolvers.name),
+		names: (parent: any, args: any, context: ResolverContext, info: any) =>
+			cachingResolver(parent, args, context, info, categoryResolvers.names)
 	}
 }
