@@ -140,10 +140,10 @@ export async function listStoreBooks(
 	} else {
 		let total = await context.prisma.storeBook.count()
 
-		let items = await context.prisma.storeBook.findMany({
+		let items = (await context.prisma.storeBook.findMany({
 			take,
 			skip
-		}) as StoreBook[]
+		})) as StoreBook[]
 
 		for (let storeBook of items) {
 			await loadStoreBookData(context.prisma, storeBook)
@@ -300,7 +300,8 @@ export async function createStoreBook(
 					id: storeBookCollection.id
 				}
 			},
-			language: args.language
+			language: args.language,
+			status: "unpublished"
 		}
 	})
 
@@ -312,7 +313,9 @@ export async function createStoreBook(
 				id: storeBook.id
 			}
 		},
-		title: args.title
+		title: args.title,
+		price: 0,
+		status: "unpublished"
 	}
 
 	if (args.description != null) {
@@ -320,7 +323,7 @@ export async function createStoreBook(
 	}
 
 	if (args.price != null) {
-		storeBookReleaseProperties["price"] = args.price
+		storeBookReleaseProperties.price = args.price
 	}
 
 	if (args.isbn != null) {

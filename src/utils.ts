@@ -79,12 +79,16 @@ export async function getLastReleaseOfStoreBook(
 	published: boolean = false
 ): Promise<StoreBookRelease> {
 	if (published) {
-		return await prisma.storeBookRelease.findFirst({
+		let release = await prisma.storeBookRelease.findFirst({
 			where: { storeBookId: storeBook.id, status: "published" },
 			orderBy: {
 				publishedAt: "desc"
 			}
 		})
+
+		if (release != null) {
+			return release
+		}
 	}
 
 	return await prisma.storeBookRelease.findFirst({
