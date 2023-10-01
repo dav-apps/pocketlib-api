@@ -10,6 +10,7 @@ export const typeDefs = `#graphql
 		retrieveAuthor(uuid: String!): Author
 		listAuthors(
 			mine: Boolean
+			random: Boolean
 			limit: Int
 			offset: Int
 		): AuthorList!

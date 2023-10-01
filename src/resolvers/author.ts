@@ -13,7 +13,8 @@ import {
 	getFacebookUsername,
 	getInstagramUsername,
 	getTwitterUsername,
-	getTableObjectFileUrl
+	getTableObjectFileUrl,
+	randomNumber
 } from "../utils.js"
 import { apiErrors, validationErrors } from "../errors.js"
 import { admins } from "../constants.js"
@@ -56,6 +57,7 @@ export async function listAuthors(
 	parent: any,
 	args: {
 		mine?: boolean
+		random?: boolean
 		limit?: number
 		offset?: number
 	},
@@ -68,6 +70,7 @@ export async function listAuthors(
 	if (skip < 0) skip = 0
 
 	let mine = args.mine || false
+	let random = args.random || false
 	let where = {}
 
 	if (mine) {
@@ -82,6 +85,29 @@ export async function listAuthors(
 
 		// Get the authors of the user
 		where = { userId: user.id, publisher: null }
+	} else if (random) {
+		let total = await context.prisma.author.count()
+		if (take > total) take = total
+
+		let indices = []
+		let items = []
+
+		while (indices.length < take) {
+			let i = randomNumber(0, total)
+
+			if (!indices.includes(i)) {
+				indices.push(i)
+			}
+		}
+
+		for (let i of indices) {
+			items.push(await context.prisma.author.findFirst({ skip: i }))
+		}
+
+		return {
+			total,
+			items
+		}
 	}
 
 	const [total, items] = await context.prisma.$transaction([

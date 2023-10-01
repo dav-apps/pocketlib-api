@@ -220,3 +220,7 @@ export function getFilename(input: string) {
 export function getTableObjectFileUrl(uuid: string) {
 	return `https://dav-backend.fra1.cdn.digitaloceanspaces.com/${uuid}`
 }
+
+export function randomNumber(min: number, max: number) {
+	return Math.floor(Math.random() * (max - min + 1)) + min
+}
