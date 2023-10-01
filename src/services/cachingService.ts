@@ -26,6 +26,10 @@ export async function cachingResolver(
 	info: any,
 	resolver: Function
 ) {
+	if (process.env.CACHING == "false") {
+		return await resolver(parent, args, context)
+	}
+
 	// Check if the result is cached
 	let key = generateCacheKey(
 		`${info.path.typename}-${info.path.key}`,
