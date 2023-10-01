@@ -26,6 +26,7 @@ export const typeDefs = `#graphql
 		listStoreBooks(
 			categories: [String!]
 			inReview: Boolean
+			random: Boolean
 			languages: [String!]
 			limit: Int
 			offset: Int

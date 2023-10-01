@@ -15,7 +15,8 @@ import {
 	loadStoreBookData,
 	getLastReleaseOfStoreBook,
 	createNewStoreBookRelease,
-	getTableObjectFileUrl
+	getTableObjectFileUrl,
+	randomNumber
 } from "../utils.js"
 import { apiErrors, validationErrors } from "../errors.js"
 import { admins, storeBookTableId } from "../constants.js"
@@ -56,6 +57,7 @@ export async function listStoreBooks(
 	args: {
 		categories?: string[]
 		inReview?: boolean
+		random?: boolean
 		languages?: string[]
 		limit?: number
 		offset?: number
@@ -69,6 +71,7 @@ export async function listStoreBooks(
 	if (skip < 0) skip = 0
 
 	let inReview = args.inReview || false
+	let random = args.random || false
 
 	if (args.categories != null) {
 		let storeBookIds: bigint[] = []
@@ -131,6 +134,35 @@ export async function listStoreBooks(
 
 		for (let storeBook of items) {
 			await loadStoreBookData(context.prisma, storeBook, false)
+		}
+
+		return {
+			total,
+			items
+		}
+	} else if (random) {
+		let total = await context.prisma.storeBook.count()
+		if (take > total) take = total
+
+		let indices = []
+		let items = []
+
+		while (indices.length < take) {
+			let i = randomNumber(0, total)
+
+			if (!indices.includes(i)) {
+				indices.push(i)
+			}
+		}
+
+		for (let i of indices) {
+			let storeBook = (await context.prisma.storeBook.findFirst({
+				skip: i
+			})) as StoreBook
+
+			await loadStoreBookData(context.prisma, storeBook)
+
+			items.push(storeBook)
 		}
 
 		return {
