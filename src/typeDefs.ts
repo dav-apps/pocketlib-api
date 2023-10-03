@@ -18,6 +18,7 @@ export const typeDefs = `#graphql
 		retrieveStoreBookCollectionName(uuid: String!): StoreBookCollectionName
 		retrieveStoreBookSeries(uuid: String!): StoreBookSeries
 		listStoreBookSeries(
+			random: Boolean
 			languages: [String!]
 			limit: Int
 			offset: Int

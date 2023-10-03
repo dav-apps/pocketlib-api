@@ -4,7 +4,8 @@ import { ResolverContext, List, StoreBook } from "../types.js"
 import {
 	throwApiError,
 	throwValidationError,
-	loadStoreBookData
+	loadStoreBookData,
+	randomNumber
 } from "../utils.js"
 import { admins } from "../constants.js"
 import { apiErrors, validationErrors } from "../errors.js"
@@ -26,6 +27,7 @@ export async function retrieveStoreBookSeries(
 export async function listStoreBookSeries(
 	parent: any,
 	args: {
+		random?: boolean
 		languages?: string[]
 		limit?: number
 		offset?: number
@@ -39,7 +41,38 @@ export async function listStoreBookSeries(
 	if (skip < 0) skip = 0
 
 	let languages = args.languages || ["en"]
+	let random = args.random || false
 	let where = { language: { in: languages } }
+
+	if (random) {
+		let total = await context.prisma.storeBookSeries.count({ where })
+		if (take > total) take = total
+
+		let indices = []
+		let items = []
+
+		while (indices.length < take) {
+			let i = randomNumber(0, total - 1)
+
+			if (!indices.includes(i)) {
+				indices.push(i)
+			}
+		}
+
+		for (let i of indices) {
+			items.push(
+				await context.prisma.storeBookSeries.findFirst({
+					where,
+					skip: i
+				})
+			)
+		}
+
+		return {
+			total,
+			items
+		}
+	}
 
 	let [total, items] = await context.prisma.$transaction([
 		context.prisma.storeBookSeries.count({ where }),

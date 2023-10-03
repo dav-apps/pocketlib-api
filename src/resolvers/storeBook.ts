@@ -148,7 +148,7 @@ export async function listStoreBooks(
 		let items = []
 
 		while (indices.length < take) {
-			let i = randomNumber(0, total)
+			let i = randomNumber(0, total - 1)
 
 			if (!indices.includes(i)) {
 				indices.push(i)
