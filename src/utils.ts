@@ -5,7 +5,7 @@ import { createCanvas, loadImage, Image } from "canvas"
 import * as crypto from "crypto"
 import { PrismaClient, StoreBookRelease } from "@prisma/client"
 import { isSuccessStatusCode } from "dav-js"
-import { ApiError, User, StoreBook } from "./types.js"
+import { RegexResult, ApiError, User, StoreBook } from "./types.js"
 import {
 	facebookUsernameRegex,
 	instagramUsernameRegex,
@@ -193,22 +193,52 @@ export async function getUserForEndpoint(accessToken: string): Promise<User> {
 	return null
 }
 
-export function getFacebookUsername(input: string) {
-	if (input == null) return null
+export function getFacebookUsername(input: string): RegexResult {
+	if (input == null || input == "") {
+		return {
+			valid: true,
+			value: null
+		}
+	}
 
-	return facebookUsernameRegex.exec(input)?.groups?.username
+	let value = facebookUsernameRegex.exec(input)?.groups?.username
+
+	return {
+		valid: value != null,
+		value
+	}
 }
 
-export function getInstagramUsername(input: string) {
-	if (input == null) return null
+export function getInstagramUsername(input: string): RegexResult {
+	if (input == null || input == "") {
+		return {
+			valid: true,
+			value: null
+		}
+	}
 
-	return instagramUsernameRegex.exec(input)?.groups?.username
+	let value = instagramUsernameRegex.exec(input)?.groups?.username
+
+	return {
+		valid: value != null,
+		value
+	}
 }
 
-export function getTwitterUsername(input: string) {
-	if (input == null) return null
+export function getTwitterUsername(input: string): RegexResult {
+	if (input == null || input == "") {
+		return {
+			valid: true,
+			value: null
+		}
+	}
 
-	return twitterUsernameRegex.exec(input)?.groups?.username
+	let value = twitterUsernameRegex.exec(input)?.groups?.username
+
+	return {
+		valid: value != null,
+		value
+	}
 }
 
 export function getFilename(input: string) {

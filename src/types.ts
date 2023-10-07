@@ -14,6 +14,11 @@ export interface ResolverContext {
 	user?: User
 }
 
+export interface RegexResult {
+	valid: boolean
+	value: string
+}
+
 export interface List<T> {
 	total: number
 	items: T[]

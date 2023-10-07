@@ -85,7 +85,7 @@ export function validateReleaseNotesLength(releaseNotes: string) {
 }
 
 export function validateWebsiteUrl(websiteUrl: string) {
-	if (!urlRegex.test(websiteUrl)) {
+	if (websiteUrl.length > 0 && !urlRegex.test(websiteUrl)) {
 		return validationErrors.websiteUrlInvalid
 	}
 }

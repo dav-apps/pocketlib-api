@@ -125,9 +125,9 @@ export async function updatePublisher(
 	const uuid = args.uuid
 	if (uuid == null) return null
 
-	let facebookUsername = getFacebookUsername(args.facebookUsername)
-	let instagramUsername = getInstagramUsername(args.instagramUsername)
-	let twitterUsername = getTwitterUsername(args.twitterUsername)
+	let facebookUsernameResult = getFacebookUsername(args.facebookUsername)
+	let instagramUsernameResult = getInstagramUsername(args.instagramUsername)
+	let twitterUsernameResult = getTwitterUsername(args.twitterUsername)
 
 	let publisher: Publisher = null
 	const user = context.user
@@ -188,15 +188,15 @@ export async function updatePublisher(
 		errors.push(validateWebsiteUrl(args.websiteUrl))
 	}
 
-	if (args.facebookUsername != null && facebookUsername == null) {
+	if (!facebookUsernameResult.valid) {
 		errors.push(validationErrors.facebookUsernameInvalid)
 	}
 
-	if (args.instagramUsername != null && instagramUsername == null) {
+	if (!instagramUsernameResult.valid) {
 		errors.push(validationErrors.instagramUsernameInvalid)
 	}
 
-	if (args.twitterUsername != null && twitterUsername == null) {
+	if (!twitterUsernameResult.valid) {
 		errors.push(validationErrors.twitterUsernameInvalid)
 	}
 
@@ -217,16 +217,16 @@ export async function updatePublisher(
 		data["websiteUrl"] = args.websiteUrl
 	}
 
-	if (facebookUsername != null) {
-		data["facebookUsername"] = facebookUsername
+	if (args.facebookUsername != null) {
+		data["facebookUsername"] = facebookUsernameResult.value
 	}
 
-	if (instagramUsername != null) {
-		data["instagramUsername"] = instagramUsername
+	if (args.instagramUsername != null) {
+		data["instagramUsername"] = instagramUsernameResult.value
 	}
 
-	if (twitterUsername != null) {
-		data["twitterUsername"] = twitterUsername
+	if (args.twitterUsername != null) {
+		data["twitterUsername"] = twitterUsernameResult.value
 	}
 
 	return await context.prisma.publisher.update({
