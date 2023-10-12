@@ -102,85 +102,6 @@ async function migrateCategories() {
 	}
 }
 
-async function migrateStoreBookFiles() {
-	let tableObjectsResponse = await listTableObjects({
-		tableName: "StoreBookFile",
-		limit
-	})
-
-	let storeBookReleasesResponse = await listTableObjects({
-		tableName: "StoreBookRelease",
-		limit
-	})
-
-	for (let tableObject of tableObjectsResponse.items) {
-		console.log(tableObject.uuid)
-
-		// Find the StoreBookRelease of the file
-		let storeBookRelease = null
-
-		for (let storeBookReleaseTableObject of storeBookReleasesResponse.items) {
-			if (storeBookReleaseTableObject.properties.file == tableObject.uuid) {
-				storeBookRelease = await prisma.storeBookRelease.findFirst({
-					where: { uuid: storeBookReleaseTableObject.uuid }
-				})
-
-				break
-			}
-		}
-
-		if (storeBookRelease != null) {
-			await prisma.storeBookFile.create({
-				data: {
-					uuid: tableObject.uuid,
-					userId: tableObject.userId,
-					fileName: tableObject.properties.file_name as string
-				}
-			})
-		}
-	}
-}
-
-async function migrateStoreBookCovers() {
-	let tableObjectsResponse = await listTableObjects({
-		tableName: "StoreBookCover",
-		limit
-	})
-
-	let storeBookReleasesResponse = await listTableObjects({
-		tableName: "StoreBookRelease",
-		limit
-	})
-
-	for (let tableObject of tableObjectsResponse.items) {
-		console.log(tableObject.uuid)
-
-		// Find the StoreBookRelease of the cover
-		let storeBookRelease = null
-
-		for (let storeBookReleaseTableObject of storeBookReleasesResponse.items) {
-			if (storeBookReleaseTableObject.properties.cover == tableObject.uuid) {
-				storeBookRelease = await prisma.storeBookRelease.findFirst({
-					where: { uuid: storeBookReleaseTableObject.uuid }
-				})
-
-				break
-			}
-		}
-
-		if (storeBookRelease != null) {
-			await prisma.storeBookCover.create({
-				data: {
-					uuid: tableObject.uuid,
-					userId: tableObject.userId,
-					aspectRatio: tableObject.properties.aspect_ratio as string,
-					blurhash: tableObject.properties.blurhash as string
-				}
-			})
-		}
-	}
-}
-
 async function migrateStoreBookReleases() {
 	let tableObjectsResponse = await listTableObjects({
 		tableName: "StoreBookRelease",
@@ -255,9 +176,11 @@ async function migrateStoreBookReleases() {
 				publishedAt,
 				title: tableObject.properties.title as string,
 				description: tableObject.properties.description as string,
-				price: +tableObject.properties.price,
+				price: tableObject.properties.price
+					? +tableObject.properties.price
+					: 0,
 				isbn: tableObject.properties.isbn as string,
-				status: tableObject.properties.status as string
+				status: (tableObject.properties.status as string) ?? "unpublished"
 			}
 
 			if (cover != null) {
@@ -278,6 +201,45 @@ async function migrateStoreBookReleases() {
 
 			await prisma.storeBookRelease.create({ data })
 		}
+	}
+}
+
+async function migrateStoreBookFiles() {
+	let tableObjectsResponse = await listTableObjects({
+		tableName: "StoreBookFile",
+		limit
+	})
+
+	for (let tableObject of tableObjectsResponse.items) {
+		console.log(tableObject.uuid)
+
+		await prisma.storeBookFile.create({
+			data: {
+				uuid: tableObject.uuid,
+				userId: tableObject.userId,
+				fileName: tableObject.properties.file_name as string
+			}
+		})
+	}
+}
+
+async function migrateStoreBookCovers() {
+	let tableObjectsResponse = await listTableObjects({
+		tableName: "StoreBookCover",
+		limit
+	})
+
+	for (let tableObject of tableObjectsResponse.items) {
+		console.log(tableObject.uuid)
+
+		await prisma.storeBookCover.create({
+			data: {
+				uuid: tableObject.uuid,
+				userId: tableObject.userId,
+				aspectRatio: tableObject.properties.aspect_ratio as string,
+				blurhash: tableObject.properties.blurhash as string
+			}
+		})
 	}
 }
 
