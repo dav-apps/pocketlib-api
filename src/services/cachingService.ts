@@ -5,7 +5,7 @@ function generateCacheKey(
 	uuid: string,
 	args: object
 ): string {
-	let environment = process.env.environment || "development"
+	let environment = process.env.ENVIRONMENT || "development"
 
 	if (uuid != null) {
 		return `${resolverName}-${environment}:${uuid}`
