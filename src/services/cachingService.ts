@@ -6,12 +6,11 @@ function generateCacheKey(
 	args: object
 ): string {
 	let environment = process.env.ENVIRONMENT || "development"
+	let result = `${resolverName}-${environment}`
 
 	if (uuid != null) {
-		return `${resolverName}-${environment}:${uuid}`
+		result += `:${uuid}`
 	}
-
-	let result = `${resolverName}-${environment}`
 
 	for (let key of Object.keys(args)) {
 		let value = args[key]
