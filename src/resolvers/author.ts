@@ -72,6 +72,7 @@ export async function listAuthors(
 	let mine = args.mine || false
 	let random = args.random || false
 	let where = {}
+	let orderBy = {}
 
 	if (mine) {
 		// Check if the user is an admin
@@ -108,12 +109,15 @@ export async function listAuthors(
 			total,
 			items
 		}
+	} else {
+		orderBy = { id: "desc" }
 	}
 
 	const [total, items] = await context.prisma.$transaction([
 		context.prisma.author.count({ where }),
 		context.prisma.author.findMany({
 			where,
+			orderBy,
 			take,
 			skip
 		})

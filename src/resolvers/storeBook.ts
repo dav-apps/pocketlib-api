@@ -173,6 +173,8 @@ export async function listStoreBooks(
 		let total = await context.prisma.storeBook.count()
 
 		let items = (await context.prisma.storeBook.findMany({
+			where: { status: { equals: "published" } },
+			orderBy: { id: "desc" },
 			take,
 			skip
 		})) as StoreBook[]
