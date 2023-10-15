@@ -7,7 +7,23 @@ import {
 	Collection,
 	Purchase
 } from "../types.js"
-import { apiBaseUrl, appId } from "../constants.js"
+import {
+	apiBaseUrlDevelopment,
+	apiBaseUrlStaging,
+	apiBaseUrlProduction,
+	appId
+} from "../constants.js"
+
+function getApiBaseUrl() {
+	switch (process.env.ENVIRONMENT) {
+		case "staging":
+			return apiBaseUrlStaging
+		case "production":
+			return apiBaseUrlProduction
+		default:
+			return apiBaseUrlDevelopment
+	}
+}
 
 export async function getUser(accessToken: string): Promise<UserApiResponse> {
 	if (accessToken == null) {
@@ -17,7 +33,7 @@ export async function getUser(accessToken: string): Promise<UserApiResponse> {
 	try {
 		let response = await axios({
 			method: "get",
-			url: `${apiBaseUrl}/v1/user`,
+			url: `${getApiBaseUrl()}/v1/user`,
 			headers: {
 				Authorization: accessToken
 			}
@@ -54,7 +70,7 @@ export async function getTableObject(
 	try {
 		let response = await axios({
 			method: "get",
-			url: `${apiBaseUrl}/v2/table_objects/${uuid}`,
+			url: `${getApiBaseUrl()}/v2/table_objects/${uuid}`,
 			headers: {
 				Authorization: process.env.DAV_AUTH
 			},
@@ -106,7 +122,7 @@ export async function listTableObjects(params: {
 
 		let response = await axios({
 			method: "get",
-			url: `${apiBaseUrl}/v2/table_objects`,
+			url: `${getApiBaseUrl()}/v2/table_objects`,
 			headers: {
 				Authorization: process.env.DAV_AUTH
 			},
@@ -145,7 +161,7 @@ export async function listPurchasesOfTableObject(params: {
 
 		let response = await axios({
 			method: "get",
-			url: `${apiBaseUrl}/v2/table_objects/${params.uuid}/purchases`,
+			url: `${getApiBaseUrl()}/v2/table_objects/${params.uuid}/purchases`,
 			headers: {
 				Authorization: process.env.DAV_AUTH
 			},
@@ -185,7 +201,7 @@ export async function setTableObjectPrice(params: {
 	try {
 		let response = await axios({
 			method: "put",
-			url: `${apiBaseUrl}/v2/table_objects/${params.uuid}/price`,
+			url: `${getApiBaseUrl()}/v2/table_objects/${params.uuid}/price`,
 			headers: {
 				Authorization: process.env.DAV_AUTH,
 				"Content-Type": "application/json"
@@ -215,7 +231,9 @@ export async function addTableObjectToCollection(params: {
 	try {
 		let response = await axios({
 			method: "post",
-			url: `${apiBaseUrl}/v2/collections/${params.name}/table_objects/${params.uuid}`,
+			url: `${getApiBaseUrl()}/v2/collections/${params.name}/table_objects/${
+				params.uuid
+			}`,
 			headers: {
 				Authorization: process.env.DAV_AUTH,
 				"Content-Type": "application/json"
@@ -244,7 +262,7 @@ export async function addTableObject(params: {
 	try {
 		let response = await axios({
 			method: "post",
-			url: `${apiBaseUrl}/v1/table_object/${params.uuid}/access`,
+			url: `${getApiBaseUrl()}/v1/table_object/${params.uuid}/access`,
 			headers: {
 				Authorization: params.accessToken,
 				"Content-Type": "application/json"
