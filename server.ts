@@ -53,7 +53,7 @@ await server.start()
 // Init dav
 let environment = Environment.Development
 
-switch (process.env.ENV) {
+switch (process.env.ENVIRONMENT) {
 	case "production":
 		environment = Environment.Production
 		break
