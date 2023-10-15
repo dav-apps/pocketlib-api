@@ -802,7 +802,7 @@ export async function purchased(
 		userId: context.user.id
 	})
 
-	return purchases.length >= 0
+	return purchases.length > 0
 }
 
 //#region Helper functions
