@@ -7,7 +7,7 @@ import http from "http"
 import cors from "cors"
 import { PrismaClient } from "@prisma/client"
 import { createClient } from "redis"
-import { isSuccessStatusCode } from "dav-js"
+import { Dav, Environment, isSuccessStatusCode } from "dav-js"
 import { User } from "./src/types.js"
 import { throwApiError } from "./src/utils.js"
 import { apiErrors } from "./src/errors.js"
@@ -49,6 +49,23 @@ const server = new ApolloServer({
 })
 
 await server.start()
+
+// Init dav
+let environment = Environment.Development
+
+switch (process.env.ENV) {
+	case "production":
+		environment = Environment.Production
+		break
+	case "staging":
+		environment = Environment.Staging
+		break
+}
+
+new Dav({
+	environment,
+	server: true
+})
 
 // Call setup function of each endpoint file
 publisherLogoSetup(app)
