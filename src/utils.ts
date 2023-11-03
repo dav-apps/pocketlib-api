@@ -22,7 +22,10 @@ BigInt.prototype["toJSON"] = function () {
 export function throwApiError(error: ApiError) {
 	throw new GraphQLError(error.message, {
 		extensions: {
-			code: error.code
+			code: error.code,
+			http: {
+				status: 200
+			}
 		}
 	})
 }
