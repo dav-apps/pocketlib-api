@@ -20,9 +20,15 @@ export async function retrieveStoreBookRelease(
 	const uuid = args.uuid
 	if (uuid == null) return null
 
-	return await context.prisma.storeBookRelease.findFirst({
+	let release = await context.prisma.storeBookRelease.findFirst({
 		where: { uuid }
 	})
+
+	if (release.status == null) {
+		release.status = "unpublished"
+	}
+
+	return release
 }
 
 export async function publishStoreBookRelease(
