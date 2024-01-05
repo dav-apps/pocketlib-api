@@ -15,10 +15,6 @@ import {
 import { apiErrors } from "./errors.js"
 import { getUser } from "./services/apiService.js"
 
-BigInt.prototype["toJSON"] = function () {
-	return this.toString()
-}
-
 export function throwApiError(error: ApiError) {
 	throw new GraphQLError(error.message, {
 		extensions: {
