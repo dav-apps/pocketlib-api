@@ -39,6 +39,10 @@ export async function uploadStoreBookFile(req: Request, res: Response) {
 			where: { uuid }
 		})) as StoreBook
 
+		if (storeBook == null) {
+			throwEndpointError(apiErrors.storeBookDoesNotExist)
+		}
+
 		// Check if the store book belongs to the user
 		if (storeBook.userId != BigInt(user.id)) {
 			throwEndpointError(apiErrors.actionNotAllowed)
