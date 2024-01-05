@@ -28,6 +28,7 @@ export const typeDefs = `#graphql
 			categories: [String!]
 			inReview: Boolean
 			random: Boolean
+			query: String
 			languages: [String!]
 			limit: Int
 			offset: Int

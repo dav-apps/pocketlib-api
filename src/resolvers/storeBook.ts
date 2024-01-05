@@ -1,4 +1,5 @@
 import {
+	Prisma,
 	Author,
 	StoreBookRelease,
 	StoreBookCollection,
@@ -58,6 +59,7 @@ export async function listStoreBooks(
 		categories?: string[]
 		inReview?: boolean
 		random?: boolean
+		query?: string
 		languages?: string[]
 		limit?: number
 		offset?: number
@@ -72,6 +74,7 @@ export async function listStoreBooks(
 
 	let inReview = args.inReview || false
 	let random = args.random || false
+	let query = args.query?.toLowerCase() || ""
 
 	if (args.categories != null) {
 		let storeBookIds: bigint[] = []
@@ -169,11 +172,85 @@ export async function listStoreBooks(
 			total,
 			items
 		}
-	} else {
-		let total = await context.prisma.storeBook.count()
+	} else if (args.query.length > 0) {
+		let where = {
+			AND: [
+				{ status: { equals: "published" } },
+				{
+					OR: [
+						{
+							releases: {
+								some: {
+									OR: [
+										{
+											title: {
+												contains: query,
+												mode: Prisma.QueryMode.insensitive
+											}
+										},
+										{
+											description: {
+												contains: query,
+												mode: Prisma.QueryMode.insensitive
+											}
+										},
+										{
+											isbn: {
+												contains: query,
+												mode: Prisma.QueryMode.insensitive
+											}
+										}
+									]
+								}
+							}
+						},
+						{
+							collection: {
+								author: {
+									OR: [
+										{
+											firstName: {
+												contains: query,
+												mode: Prisma.QueryMode.insensitive
+											}
+										},
+										{
+											lastName: {
+												contains: query,
+												mode: Prisma.QueryMode.insensitive
+											}
+										}
+									]
+								}
+							}
+						}
+					]
+				}
+			]
+		}
+
+		let total = await context.prisma.storeBook.count({ where })
 
 		let items = (await context.prisma.storeBook.findMany({
-			where: { status: { equals: "published" } },
+			where,
+			take,
+			skip
+		})) as StoreBook[]
+
+		for (let storeBook of items) {
+			await loadStoreBookData(context.prisma, storeBook)
+		}
+
+		return {
+			total,
+			items
+		}
+	} else {
+		let where = { status: { equals: "published" } }
+		let total = await context.prisma.storeBook.count({ where })
+
+		let items = (await context.prisma.storeBook.findMany({
+			where,
 			orderBy: { id: "desc" },
 			take,
 			skip
