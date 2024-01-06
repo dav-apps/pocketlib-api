@@ -210,13 +210,13 @@ export async function listStoreBooks(
 									OR: [
 										{
 											firstName: {
-												contains: query,
+												in: query.split(" "),
 												mode: Prisma.QueryMode.insensitive
 											}
 										},
 										{
 											lastName: {
-												contains: query,
+												in: query.split(" "),
 												mode: Prisma.QueryMode.insensitive
 											}
 										}
