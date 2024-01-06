@@ -32,21 +32,22 @@ model PublisherLogo {
 }
 
 model Author {
-  id                   BigInt                @id @default(autoincrement())
-  uuid                 String                @unique @db.VarChar
-  userId               BigInt                @default(0)
-  publisher            Publisher?            @relation(fields: [publisherId], references: [id])
-  publisherId          BigInt?
-  firstName            String?               @db.VarChar
-  lastName             String?               @db.VarChar
-  websiteUrl           String?               @db.VarChar
-  facebookUsername     String?               @db.VarChar
-  instagramUsername    String?               @db.VarChar
-  twitterUsername      String?               @db.VarChar
-  profileImage         AuthorProfileImage?
-  bios                 AuthorBio[]
-  storeBookCollections StoreBookCollection[]
-  storeBookSeries      StoreBookSeries[]
+  id                          BigInt                       @id @default(autoincrement())
+  uuid                        String                       @unique @db.VarChar
+  userId                      BigInt                       @default(0)
+  publisher                   Publisher?                   @relation(fields: [publisherId], references: [id])
+  publisherId                 BigInt?
+  firstName                   String?                      @db.VarChar
+  lastName                    String?                      @db.VarChar
+  websiteUrl                  String?                      @db.VarChar
+  facebookUsername            String?                      @db.VarChar
+  instagramUsername           String?                      @db.VarChar
+  twitterUsername             String?                      @db.VarChar
+  profileImage                AuthorProfileImage?
+  bios                        AuthorBio[]
+  storeBookCollections        StoreBookCollection[]
+  storeBookSeries             StoreBookSeries[]
+  standardEbooksAuthorMapping StandardEbooksAuthorMapping?
 }
 
 model AuthorProfileImage {
@@ -100,15 +101,16 @@ model StoreBookSeries {
 }
 
 model StoreBook {
-  id           BigInt              @id @default(autoincrement())
-  uuid         String              @unique @db.VarChar
-  userId       BigInt              @default(0)
-  collection   StoreBookCollection @relation(fields: [collectionId], references: [id])
-  collectionId BigInt
-  language     String              @db.VarChar
-  status       String?             @db.VarChar
-  releases     StoreBookRelease[]
-  series       StoreBookSeries[]
+  id                             BigInt                          @id @default(autoincrement())
+  uuid                           String                          @unique @db.VarChar
+  userId                         BigInt                          @default(0)
+  collection                     StoreBookCollection             @relation(fields: [collectionId], references: [id])
+  collectionId                   BigInt
+  language                       String                          @db.VarChar
+  status                         String?                         @db.VarChar
+  releases                       StoreBookRelease[]
+  series                         StoreBookSeries[]
+  standardEbooksStoreBookMapping StandardEbooksStoreBookMapping?
 }
 
 model StoreBookRelease {
@@ -166,4 +168,18 @@ model CategoryName {
   categoryId BigInt
   name       String   @db.VarChar
   language   String   @db.VarChar
+}
+
+model StandardEbooksAuthorMapping {
+  id       BigInt @id @default(autoincrement())
+  url      String
+  author   Author @relation(fields: [authorId], references: [id])
+  authorId BigInt @unique
+}
+
+model StandardEbooksStoreBookMapping {
+  id          BigInt    @id @default(autoincrement())
+  url         String
+  storeBook   StoreBook @relation(fields: [storeBookId], references: [id])
+  storeBookId BigInt    @unique
 }
