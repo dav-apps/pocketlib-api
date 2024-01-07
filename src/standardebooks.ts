@@ -1,16 +1,79 @@
 import { PrismaClient } from "@prisma/client"
-import * as crypto from "crypto"
+import { createClient } from "redis"
+import readline from "readline"
 import axios from "axios"
 import { parse } from "node-html-parser"
 import {
-	createTableObject,
-	setTableObjectPrice
-} from "./services/apiService.js"
-import { storeBookTableId } from "./constants.js"
+	SessionsController,
+	Auth,
+	isSuccessStatusCode,
+	ApiResponse
+} from "dav-js"
+import { getUser } from "./services/apiService.js"
+import { createStoreBook } from "./resolvers/storeBook.js"
+import { User } from "./types.js"
+import { appId } from "./constants.js"
 
+//#region Constants
 const prisma = new PrismaClient()
 const perPage = 12
+const apiBaseUrl = "http://localhost:4001"
 const baseUrl = "https://standardebooks.org"
+//#endregion
+
+//#region Redis client
+const redis = createClient<any, any, any>({
+	url: process.env.REDIS_URL,
+	database: process.env.ENVIRONMENT == "production" ? 5 : 4 // production: 5, staging: 4
+})
+
+redis.on("error", err => console.log("Redis Client Error", err))
+await redis.connect()
+//#endregion
+
+// Get the email and password from the user
+const rl = readline.createInterface({
+	input: process.stdin,
+	output: process.stdout
+})
+
+const email = await new Promise<string>(resolve => {
+	rl.question("Please enter your email address\n", email => resolve(email))
+})
+
+const password = await new Promise<string>(resolve => {
+	rl.question("\nPlease enter your password\n", password => resolve(password))
+})
+
+// Create the session
+let createSessionResponse = await SessionsController.CreateSession({
+	auth: new Auth({
+		apiKey: process.env.DAV_API_KEY,
+		secretKey: process.env.DAV_SECRET_KEY,
+		uuid: process.env.DAV_UUID
+	}),
+	email,
+	password,
+	appId,
+	apiKey: process.env.DAV_API_KEY
+})
+
+let accessToken = ""
+
+if (isSuccessStatusCode(createSessionResponse.status)) {
+	let createSessionResponseData = (
+		createSessionResponse as ApiResponse<SessionsController.SessionResponseData>
+	).data
+
+	accessToken = createSessionResponseData.accessToken
+}
+
+let userResponse = await getUser(accessToken)
+let user: User
+
+if (isSuccessStatusCode(userResponse.status)) {
+	user = userResponse.data
+}
 
 let initialResponse = await axios({
 	method: "get",
@@ -51,11 +114,10 @@ for (let i = startPage; i <= pages; i++) {
 		let jpgs = jpgSrcSet.split(",")
 
 		if (jpgs.length <= 1) {
-			console.log(`${title} (on page ${i}) has only one cover!`)
+			console.log(`${title} (${baseUrl}${bookUrl}) has only one cover!`)
 			continue
 		}
 
-		let largeCoverUrl = baseUrl + jpgs[0].trim().split(" ")[0]
 		let smallCoverUrl = baseUrl + jpgs[1].trim().split(" ")[0]
 
 		console.log(`${authorName}: ${title}`)
@@ -65,8 +127,7 @@ for (let i = startPage; i <= pages; i++) {
 			bookUrl,
 			authorName,
 			authorUrl,
-			smallCoverUrl,
-			largeCoverUrl
+			smallCoverUrl
 		)
 
 		if (!saveResult) break
@@ -80,8 +141,7 @@ async function saveBook(
 	bookUrl: string,
 	authorName: string,
 	authorUrl: string,
-	smallCoverUrl: string,
-	largeCoverUrl: string
+	coverUrl: string
 ): Promise<boolean> {
 	// Check if the author mapping is already in the database
 	const authorMapping = await prisma.standardEbooksAuthorMapping.findFirst({
@@ -93,11 +153,24 @@ async function saveBook(
 
 	if (author == null) {
 		// Find the author in the database
+		let authorNameParts = authorName.split(" ")
+		let firstNamePart = authorNameParts[0]
+		let lastNamePart = authorNameParts[authorNameParts.length - 1]
+
+		let authorWhere = {
+			firstName: { contains: firstNamePart },
+			lastName: { contains: lastNamePart }
+		}
+
+		let authorWhere2 = {
+			OR: [
+				{ firstName: { equals: authorName } },
+				{ lastName: { equals: authorName } }
+			]
+		}
+
 		let authors = await prisma.author.findMany({
-			where: {
-				firstName: { in: authorName.split(" ") },
-				lastName: { in: authorName.split(" ") }
-			}
+			where: authorName.includes(" ") ? authorWhere : authorWhere2
 		})
 
 		if (authors.length == 0) {
@@ -167,7 +240,7 @@ async function saveBook(
 				.join("\n\n")
 
 			const tagListItems = root.querySelectorAll("ul.tags > li")
-			let categoryIds = []
+			let categoryKeys = []
 
 			for (let item of tagListItems) {
 				let tag = item.querySelector("a").textContent.toLowerCase()
@@ -181,7 +254,7 @@ async function saveBook(
 					console.log(`Category ${tag} doesn't exist!`)
 					return false
 				} else {
-					categoryIds.push(category.id)
+					categoryKeys.push(category.key)
 				}
 			}
 
@@ -204,98 +277,61 @@ async function saveBook(
 				}
 			}
 
-			// Create the StoreBookCollection
-			const storeBookCollection = await prisma.storeBookCollection.create({
-				data: {
-					uuid: crypto.randomUUID(),
-					author: {
-						connect: {
-							id: author.id
-						}
-					}
-				}
+			// Download the cover file
+			let coverResponse = await axios({
+				method: "get",
+				url: coverUrl,
+				responseType: "arraybuffer"
 			})
 
-			// Create the StoreBookCollectionName
-			await prisma.storeBookCollectionName.create({
-				data: {
-					uuid: crypto.randomUUID(),
-					collection: {
-						connect: {
-							id: storeBookCollection.id
-						}
-					},
-					name: title,
-					language: "en"
-				}
-			})
+			let coverBuffer = Buffer.from(coverResponse.data, "binary")
 
 			// Create the StoreBook
-			storeBook = await prisma.storeBook.create({
-				data: {
-					uuid: crypto.randomUUID(),
-					collection: {
-						connect: {
-							id: storeBookCollection.id
-						}
+			let storeBookUuid = ""
+
+			try {
+				let createStoreBookResponse = await createStoreBook(
+					null,
+					{
+						author: author.uuid,
+						title,
+						description,
+						language: "en",
+						categories: categoryKeys
 					},
-					language: "en",
-					status: "review"
-				}
-			})
-
-			// Create the store book release
-			let storeBookReleaseProperties = {
-				data: {
-					uuid: crypto.randomUUID(),
-					storeBook: {
-						connect: {
-							id: storeBook.id
-						}
-					},
-					title: title,
-					description,
-					price: 0,
-					status: "unpublished"
-				}
-			}
-
-			if (categoryIds.length > 0) {
-				storeBookReleaseProperties.data["categories"] = { connect: [] }
-
-				for (let id of categoryIds) {
-					storeBookReleaseProperties.data["categories"]["connect"].push({
-						id
-					})
-				}
-			}
-
-			await prisma.storeBookRelease.create(storeBookReleaseProperties)
-
-			// Create the store book table object
-			let createTableObjectResponse = await createTableObject(
-				storeBook.uuid,
-				storeBookTableId
-			)
-
-			if (createTableObjectResponse == null) {
-				console.log(
-					`There was an issue with creating the table object for StoreBook ${title} (${storeBook.uuid})`
+					{ user, accessToken, prisma, redis }
 				)
+
+				storeBookUuid = createStoreBookResponse.uuid
+			} catch (error) {
+				console.log(
+					`There was an issue with creating the StoreBook ${title} (${bookUrl})`
+				)
+				console.log(error)
 				return false
 			}
 
-			// Set the price of the table object
-			let storeBookPrice = await setTableObjectPrice({
-				uuid: storeBook.uuid,
-				price: 0,
-				currency: "eur"
+			// Find the new StoreBook in the database
+			storeBook = await prisma.storeBook.findFirst({
+				where: { uuid: storeBookUuid }
 			})
 
-			if (storeBookPrice == null) {
+			// Upload the cover file
+			try {
+				let uploadCoverResponse = await axios({
+					method: "put",
+					url: `${apiBaseUrl}/storeBooks/${storeBookUuid}/cover`,
+					headers: {
+						"Content-Type": "image/jpeg",
+						Authorization: accessToken
+					},
+					data: coverBuffer
+				})
+			} catch (error) {
 				console.log(
-					`There was an issue with creating the table object price for StoreBook ${title} (${storeBook.uuid})`
+					`There was an issue with uploading the cover of ${title} (${coverUrl})`
 				)
+				console.log(error.response.data)
 				return false
 			}
 		} else {
