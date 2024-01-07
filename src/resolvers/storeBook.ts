@@ -1,5 +1,6 @@
 import {
 	Prisma,
+	PrismaClient,
 	Author,
 	StoreBookRelease,
 	StoreBookCollection,
@@ -346,6 +347,7 @@ export async function createStoreBook(
 		storeBookCollection = await context.prisma.storeBookCollection.create({
 			data: {
 				uuid: crypto.randomUUID(),
+				userId: user.id,
 				author: {
 					connect: {
 						id: author.id
@@ -358,6 +360,7 @@ export async function createStoreBook(
 		await context.prisma.storeBookCollectionName.create({
 			data: {
 				uuid: crypto.randomUUID(),
+				userId: user.id,
 				collection: {
 					connect: {
 						id: storeBookCollection.id
@@ -390,6 +393,7 @@ export async function createStoreBook(
 			await context.prisma.storeBookCollectionName.create({
 				data: {
 					uuid: crypto.randomUUID(),
+					userId: user.id,
 					collection: {
 						connect: {
 							id: storeBookCollection.id
@@ -406,6 +410,7 @@ export async function createStoreBook(
 	let storeBook = await context.prisma.storeBook.create({
 		data: {
 			uuid: crypto.randomUUID(),
+			userId: user.id,
 			collection: {
 				connect: {
 					id: storeBookCollection.id
@@ -419,6 +424,7 @@ export async function createStoreBook(
 	// Create the store book release
 	let storeBookReleaseProperties = {
 		uuid: crypto.randomUUID(),
+		userId: user.id,
 		storeBook: {
 			connect: {
 				id: storeBook.id
@@ -442,11 +448,13 @@ export async function createStoreBook(
 	}
 
 	if (args.categories != null) {
-		// Get the category uuids
-		let categoryUuids = await getCategoryUuids(args.categories)
+		storeBookReleaseProperties["categories"] = { connect: [] }
 
-		if (categoryUuids.length > 0) {
-			storeBookReleaseProperties["categories"] = categoryUuids.join(",")
+		// Get the category ids
+		let categoryIds = await getCategoryIds(context.prisma, args.categories)
+
+		for (let id of categoryIds) {
+			storeBookReleaseProperties["categories"]["connect"].push({ id })
 		}
 	}
 
@@ -593,7 +601,8 @@ export async function updateStoreBook(
 		storeBookRelease = await createNewStoreBookRelease(
 			context.prisma,
 			storeBook,
-			storeBookRelease
+			storeBookRelease,
+			user.id
 		)
 	}
 
@@ -694,13 +703,13 @@ export async function updateStoreBook(
 	}
 
 	if (args.categories != null) {
-		// Get the category uuids
-		let categoryUuids = await getCategoryUuids(args.categories)
+		newReleaseProperties["categories"] = { connect: [] }
 
-		if (categoryUuids.length > 0) {
-			newReleaseProperties["categories"] = categoryUuids.join(",")
-		} else {
-			newReleaseProperties["categories"] = null
+		// Get the category ids
+		let categoryIds = await getCategoryIds(context.prisma, args.categories)
+
+		for (let id of categoryIds) {
+			newReleaseProperties["categories"]["connect"].push({ id })
 		}
 	}
 
@@ -901,23 +910,22 @@ function checkPropertiesForPublishing(storeBookRelease: StoreBookRelease) {
 	throwValidationError(...errors)
 }
 
-async function getCategoryUuids(categoryKeys: string[]): Promise<string[]> {
-	let categoryUuids: string[] = []
+async function getCategoryIds(
+	prisma: PrismaClient,
+	categoryKeys: string[]
+): Promise<bigint[]> {
+	let ids: bigint[] = []
 
-	for (let categoryKey of categoryKeys) {
-		let categoryResponse = await listTableObjects({
-			limit: 1,
-			tableName: "Collection",
-			propertyName: "key",
-			propertyValue: categoryKey,
-			exact: true
+	for (let key of categoryKeys) {
+		let category = await prisma.category.findFirst({
+			where: { key }
 		})
 
-		if (categoryResponse.items.length > 0) {
-			categoryUuids.push(categoryResponse.items[0].uuid)
+		if (category != null) {
+			ids.push(category.id)
 		}
 	}
 
-	return categoryUuids
+	return ids
 }
 //#endregion

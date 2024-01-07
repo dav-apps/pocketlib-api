@@ -9,7 +9,7 @@ import { RedisClientType } from "redis"
 
 export interface ResolverContext {
 	prisma: PrismaClient
-	redis: RedisClientType
+	redis: RedisClientType<any, any, any>
 	accessToken?: string
 	user?: User
 }

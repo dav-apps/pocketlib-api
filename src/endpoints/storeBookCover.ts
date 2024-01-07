@@ -6,7 +6,7 @@ import {
 	ApiResponse,
 	TableObjectsController
 } from "dav-js"
-import { StoreBook, StoreBookCover } from "../types.js"
+import { StoreBook } from "../types.js"
 import {
 	handleEndpointError,
 	throwEndpointError,
@@ -71,7 +71,8 @@ export async function uploadStoreBookCover(req: Request, res: Response) {
 			let newRelease = await createNewStoreBookRelease(
 				prisma,
 				storeBook,
-				release
+				release,
+				user.id
 			)
 
 			// Create a new StoreBookCover & update the release

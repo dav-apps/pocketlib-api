@@ -103,10 +103,12 @@ export async function getLastReleaseOfStoreBook(
 export async function createNewStoreBookRelease(
 	prisma: PrismaClient,
 	storeBook: StoreBook,
-	oldRelease: StoreBookRelease
+	oldRelease: StoreBookRelease,
+	userId: number
 ): Promise<StoreBookRelease> {
 	let data = {
 		uuid: crypto.randomUUID(),
+		userId,
 		storeBook: {
 			connect: {
 				id: storeBook.id

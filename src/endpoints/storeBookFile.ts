@@ -66,7 +66,8 @@ export async function uploadStoreBookFile(req: Request, res: Response) {
 			let newRelease = await createNewStoreBookRelease(
 				prisma,
 				storeBook,
-				release
+				release,
+				user.id
 			)
 
 			// Create a new StoreBookFile & update the release
