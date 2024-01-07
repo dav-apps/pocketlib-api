@@ -1,6 +1,12 @@
 import { PrismaClient } from "@prisma/client"
+import * as crypto from "crypto"
 import axios from "axios"
 import { parse } from "node-html-parser"
+import {
+	createTableObject,
+	setTableObjectPrice
+} from "./services/apiService.js"
+import { storeBookTableId } from "./constants.js"
 
 const prisma = new PrismaClient()
 const perPage = 12
@@ -146,15 +152,157 @@ async function saveBook(
 			)
 
 			// Get the data from the book page
-			// TODO
+			let bookPageResponse = await axios({
+				method: "get",
+				url: `${baseUrl}${bookUrl}`
+			})
+
+			const root = parse(bookPageResponse.data)
+
+			const descriptionSectionParagraphs = root.querySelectorAll(
+				"section#description > p"
+			)
+			const description = descriptionSectionParagraphs
+				.map(p => p.textContent)
+				.join("\n\n")
+
+			const tagListItems = root.querySelectorAll("ul.tags > li")
+			let categoryIds = []
+
+			for (let item of tagListItems) {
+				let tag = item.querySelector("a").textContent.toLowerCase()
+
+				// Try to find the tag in the database
+				let category = await prisma.category.findFirst({
+					where: { key: tag }
+				})
+
+				if (category == null) {
+					console.log(`Category ${tag} doesn't exist!`)
+					return false
+				} else {
+					categoryIds.push(category.id)
+				}
+			}
+
+			// Check for a series
+			const isPartOfLink = root.querySelector(
+				`a[property="schema:isPartOf"]`
+			)
+
+			if (isPartOfLink != null) {
+				const seriesName = isPartOfLink.textContent
+				const seriesUrl = isPartOfLink.getAttribute("href")
+
+				// Check if the series already exists in the database
+				const series = await prisma.storeBookSeries.findFirst({
+					where: { name: seriesName }
+				})
+
+				if (series == null) {
+					console.log(`New Series detected: ${seriesName} (${seriesUrl})`)
+				}
+			}
+
+			// Create the StoreBookCollection
+			const storeBookCollection = await prisma.storeBookCollection.create({
+				data: {
+					uuid: crypto.randomUUID(),
+					author: {
+						connect: {
+							id: author.id
+						}
+					}
+				}
+			})
+
+			// Create the StoreBookCollectionName
+			await prisma.storeBookCollectionName.create({
+				data: {
+					uuid: crypto.randomUUID(),
+					collection: {
+						connect: {
+							id: storeBookCollection.id
+						}
+					},
+					name: title,
+					language: "en"
+				}
+			})
 
 			// Create the StoreBook
-			// TODO
+			storeBook = await prisma.storeBook.create({
+				data: {
+					uuid: crypto.randomUUID(),
+					collection: {
+						connect: {
+							id: storeBookCollection.id
+						}
+					},
+					language: "en",
+					status: "review"
+				}
+			})
+
+			// Create the store book release
+			let storeBookReleaseProperties = {
+				data: {
+					uuid: crypto.randomUUID(),
+					storeBook: {
+						connect: {
+							id: storeBook.id
+						}
+					},
+					title: title,
+					description,
+					price: 0,
+					status: "unpublished"
+				}
+			}
+
+			if (categoryIds.length > 0) {
+				storeBookReleaseProperties.data["categories"] = { connect: [] }
+
+				for (let id of categoryIds) {
+					storeBookReleaseProperties.data["categories"]["connect"].push({
+						id
+					})
+				}
+			}
+
+			await prisma.storeBookRelease.create(storeBookReleaseProperties)
+
+			// Create the store book table object
+			let createTableObjectResponse = await createTableObject(
+				storeBook.uuid,
+				storeBookTableId
+			)
+
+			if (createTableObjectResponse == null) {
+				console.log(
+					`There was an issue with creating the table object for StoreBook ${title} (${storeBook.uuid})`
+				)
+				return false
+			}
+
+			// Set the price of the table object
+			let storeBookPrice = await setTableObjectPrice({
+				uuid: storeBook.uuid,
+				price: 0,
+				currency: "eur"
+			})
+
+			if (storeBookPrice == null) {
+				console.log(
+					`There was an issue with creating the table object price for StoreBook ${title} (${storeBook.uuid})`
+				)
+				return false
+			}
+		} else {
+			storeBook = storeBooks[0]
 		}
 
 		// Create a new StoreBook mapping
-		storeBook = storeBooks[0]
-
 		await prisma.standardEbooksStoreBookMapping.create({
 			data: {
 				storeBook: { connect: { id: storeBook.id } },
