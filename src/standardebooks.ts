@@ -10,7 +10,7 @@ import {
 	ApiResponse
 } from "dav-js"
 import { getUser } from "./services/apiService.js"
-import { createStoreBook } from "./resolvers/storeBook.js"
+import { createStoreBook, updateStoreBook } from "./resolvers/storeBook.js"
 import { User } from "./types.js"
 import { appId } from "./constants.js"
 
@@ -366,6 +366,24 @@ async function saveBook(
 					`There was an issue with uploading the epub file of ${title} (${epubUrl})`
 				)
 				console.log(error.response.data)
+				return false
+			}
+
+			// Set the status of the StoreBook to review
+			try {
+				await updateStoreBook(
+					null,
+					{
+						uuid: storeBookUuid,
+						status: "review"
+					},
+					{ user, accessToken, prisma, redis }
+				)
+			} catch (error) {
+				console.log(
+					`There was an issue with setting the status of the StoreBook ${title} (${bookUrl})`
+				)
+				console.log(error)
 				return false
 			}
 		} else {
