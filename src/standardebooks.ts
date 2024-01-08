@@ -232,6 +232,7 @@ async function saveBook(
 
 			const root = parse(bookPageResponse.data)
 
+			// Get the description
 			const descriptionSectionParagraphs = root.querySelectorAll(
 				"section#description > p"
 			)
@@ -239,6 +240,7 @@ async function saveBook(
 				.map(p => p.textContent)
 				.join("\n\n")
 
+			// Get the tags
 			const tagListItems = root.querySelectorAll("ul.tags > li")
 			let categoryKeys = []
 
@@ -276,6 +278,19 @@ async function saveBook(
 					console.log(`New Series detected: ${seriesName} (${seriesUrl})`)
 				}
 			}
+
+			// Get the epub file url
+			const epubAnchor = root.querySelector("a.epub")
+			const epubUrl = baseUrl + epubAnchor.getAttribute("href")
+
+			// Download the epub file
+			let epubResponse = await axios({
+				method: "get",
+				url: epubUrl,
+				responseType: "arraybuffer"
+			})
+
+			let epubBuffer = Buffer.from(epubResponse.data, "binary")
 
 			// Download the cover file
 			let coverResponse = await axios({
@@ -318,7 +333,7 @@ async function saveBook(
 
 			// Upload the cover file
 			try {
-				let uploadCoverResponse = await axios({
+				await axios({
 					method: "put",
 					url: `${apiBaseUrl}/storeBooks/${storeBookUuid}/cover`,
 					headers: {
@@ -330,6 +345,25 @@ async function saveBook(
 			} catch (error) {
 				console.log(
 					`There was an issue with uploading the cover of ${title} (${coverUrl})`
+				)
+				console.log(error.response.data)
+				return false
+			}
+
+			// Upload the epub file
+			try {
+				await axios({
+					method: "put",
+					url: `${apiBaseUrl}/storeBooks/${storeBookUuid}/file`,
+					headers: {
+						"Content-Type": "application/epub+zip",
+						Authorization: accessToken
+					},
+					data: epubBuffer
+				})
+			} catch (error) {
+				console.log(
+					`There was an issue with uploading the epub file of ${title} (${epubUrl})`
 				)
 				console.log(error.response.data)
 				return false
