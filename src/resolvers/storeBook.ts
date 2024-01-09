@@ -533,7 +533,7 @@ export async function updateStoreBook(
 	// Get the latest release
 	let storeBookRelease = await getLastReleaseOfStoreBook(
 		context.prisma,
-		storeBook,
+		storeBook.id,
 		false
 	)
 
@@ -751,7 +751,7 @@ export async function cover(
 	args: any,
 	context: ResolverContext
 ): Promise<StoreBookCover> {
-	let release = await getLastReleaseOfStoreBook(context.prisma, storeBook)
+	let release = await getLastReleaseOfStoreBook(context.prisma, storeBook.id)
 	if (release.coverId == null) return null
 
 	let cover = await context.prisma.storeBookCover.findFirst({
@@ -769,7 +769,7 @@ export async function file(
 	args: any,
 	context: ResolverContext
 ): Promise<StoreBookFile> {
-	let release = await getLastReleaseOfStoreBook(context.prisma, storeBook)
+	let release = await getLastReleaseOfStoreBook(context.prisma, storeBook.id)
 	if (release.fileId == null) return null
 
 	return await context.prisma.storeBookFile.findFirst({
@@ -788,7 +788,7 @@ export async function categories(
 	let skip = args.offset || 0
 	if (skip < 0) skip = 0
 
-	let release = await getLastReleaseOfStoreBook(context.prisma, storeBook)
+	let release = await getLastReleaseOfStoreBook(context.prisma, storeBook.id)
 	let where = { releases: { some: { id: release.id } } }
 
 	let [total, items] = await context.prisma.$transaction([

@@ -67,7 +67,11 @@ export async function loadStoreBookData(
 	published: boolean = true
 ) {
 	// Get the latest release of the StoreBook
-	const release = await getLastReleaseOfStoreBook(prisma, storeBook, published)
+	const release = await getLastReleaseOfStoreBook(
+		prisma,
+		storeBook.id,
+		published
+	)
 	if (release == null) return
 
 	storeBook.title = release.title
@@ -78,12 +82,12 @@ export async function loadStoreBookData(
 
 export async function getLastReleaseOfStoreBook(
 	prisma: PrismaClient,
-	storeBook: StoreBook,
+	storeBookId: bigint,
 	published: boolean = false
 ): Promise<StoreBookRelease> {
 	if (published) {
 		let release = await prisma.storeBookRelease.findFirst({
-			where: { storeBookId: storeBook.id, status: "published" },
+			where: { storeBookId: storeBookId, status: "published" },
 			orderBy: {
 				publishedAt: "desc"
 			}
@@ -95,7 +99,7 @@ export async function getLastReleaseOfStoreBook(
 	}
 
 	return await prisma.storeBookRelease.findFirst({
-		where: { storeBookId: storeBook.id },
+		where: { storeBookId: storeBookId },
 		orderBy: { id: "desc" }
 	})
 }

@@ -42,7 +42,7 @@ export async function createBook(
 	// Get the latest store book release
 	let storeBookRelease = await getLastReleaseOfStoreBook(
 		context.prisma,
-		storeBook,
+		storeBook.id,
 		true
 	)
 

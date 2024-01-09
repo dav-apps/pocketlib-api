@@ -49,7 +49,7 @@ export async function uploadStoreBookFile(req: Request, res: Response) {
 		}
 
 		// Get the latest release of the store book
-		let release = await getLastReleaseOfStoreBook(prisma, storeBook, false)
+		let release = await getLastReleaseOfStoreBook(prisma, storeBook.id, false)
 
 		if (release == null) {
 			throwEndpointError(apiErrors.unexpectedError)
