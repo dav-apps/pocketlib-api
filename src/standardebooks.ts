@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client"
 import { createClient } from "redis"
 import readline from "readline"
 import axios from "axios"
-import { parse } from "node-html-parser"
+import { parse, HTMLElement } from "node-html-parser"
 import {
 	SessionsController,
 	Auth,
@@ -11,6 +11,8 @@ import {
 } from "dav-js"
 import { getUser } from "./services/apiService.js"
 import { createStoreBook, updateStoreBook } from "./resolvers/storeBook.js"
+import { publishStoreBookRelease } from "./resolvers/storeBookRelease.js"
+import { getLastReleaseOfStoreBook, getTableObjectFileUrl } from "./utils.js"
 import { User } from "./types.js"
 import { appId } from "./constants.js"
 
@@ -100,7 +102,10 @@ for (let i = startPage; i <= pages; i++) {
 		const title = titleSpan.textContent
 
 		// Get the name of the author
-		const authorAnchor = child.querySelector("p.author > a")
+		const authorAnchors = child.querySelectorAll("p.author > a")
+		if (authorAnchors.length > 1) continue
+
+		const authorAnchor = authorAnchors[0]
 		const authorName = authorAnchor.textContent
 		const authorUrl = authorAnchor.getAttribute("href")
 
@@ -233,32 +238,10 @@ async function saveBook(
 			const root = parse(bookPageResponse.data)
 
 			// Get the description
-			const descriptionSectionParagraphs = root.querySelectorAll(
-				"section#description > p"
-			)
-			const description = descriptionSectionParagraphs
-				.map(p => p.textContent)
-				.join("\n\n")
+			const description = getDescriptionOfBookPage(root)
 
 			// Get the tags
-			const tagListItems = root.querySelectorAll("ul.tags > li")
-			let categoryKeys = []
-
-			for (let item of tagListItems) {
-				let tag = item.querySelector("a").textContent.toLowerCase()
-
-				// Try to find the tag in the database
-				let category = await prisma.category.findFirst({
-					where: { key: tag }
-				})
-
-				if (category == null) {
-					console.log(`Category ${tag} doesn't exist!`)
-					return false
-				} else {
-					categoryKeys.push(category.key)
-				}
-			}
+			const categoryKeys = await getTagsOfBookPage(root)
 
 			// Check for a series
 			const isPartOfLink = root.querySelector(
@@ -284,22 +267,10 @@ async function saveBook(
 			const epubUrl = baseUrl + epubAnchor.getAttribute("href")
 
 			// Download the epub file
-			let epubResponse = await axios({
-				method: "get",
-				url: epubUrl,
-				responseType: "arraybuffer"
-			})
-
-			let epubBuffer = Buffer.from(epubResponse.data, "binary")
+			let epubBuffer = await downloadFile(epubUrl)
 
 			// Download the cover file
-			let coverResponse = await axios({
-				method: "get",
-				url: coverUrl,
-				responseType: "arraybuffer"
-			})
-
-			let coverBuffer = Buffer.from(coverResponse.data, "binary")
+			let coverBuffer = await downloadFile(coverUrl)
 
 			// Create the StoreBook
 			let storeBookUuid = ""
@@ -322,7 +293,7 @@ async function saveBook(
 				console.log(
 					`There was an issue with creating the StoreBook ${title} (${bookUrl})`
 				)
-				console.log(error)
+				console.error(error)
 				return false
 			}
 
@@ -346,7 +317,7 @@ async function saveBook(
 				console.log(
 					`There was an issue with uploading the cover of ${title} (${coverUrl})`
 				)
-				console.log(error.response.data)
+				console.error(error)
 				return false
 			}
 
@@ -357,6 +328,9 @@ async function saveBook(
 					url: `${apiBaseUrl}/storeBooks/${storeBookUuid}/file`,
 					headers: {
 						"Content-Type": "application/epub+zip",
+						"Content-Disposition": `attachment; filename="${encodeURI(
+							title
+						)}.epub"`,
 						Authorization: accessToken
 					},
 					data: epubBuffer
@@ -365,7 +339,7 @@ async function saveBook(
 				console.log(
 					`There was an issue with uploading the epub file of ${title} (${epubUrl})`
 				)
-				console.log(error.response.data)
+				console.error(error)
 				return false
 			}
 
@@ -388,6 +362,169 @@ async function saveBook(
 			}
 		} else {
 			storeBook = storeBooks[0]
+			let storeBookUpdated = false
+
+			// Get the last release of the StoreBook
+			const storeBookRelease = await getLastReleaseOfStoreBook(
+				prisma,
+				storeBook.id
+			)
+			let storeBookRelease2 = await prisma.storeBookRelease.findFirst({
+				where: { uuid: storeBookRelease.uuid },
+				include: { categories: true, cover: true, file: true }
+			})
+
+			// Check if the book details have changed
+			// Get the data from the book page
+			let bookPageResponse = await axios({
+				method: "get",
+				url: `${baseUrl}${bookUrl}`
+			})
+
+			const root = parse(bookPageResponse.data)
+
+			// Get the description
+			const description = getDescriptionOfBookPage(root)
+
+			// Get the tags
+			const categoryKeys = await getTagsOfBookPage(root)
+
+			// Check if the categories or tags have changed
+			let bookChanged =
+				categoryKeys.length != storeBookRelease2.categories.length
+
+			if (!bookChanged) {
+				for (let key of categoryKeys) {
+					if (
+						storeBookRelease2.categories.findIndex(c => c.key == key) ==
+						-1
+					) {
+						bookChanged = true
+						break
+					}
+				}
+			}
+
+			if (!bookChanged) {
+				bookChanged = storeBookRelease.description != description
+			}
+
+			if (bookChanged) {
+				// Update the StoreBook with the new values
+				await updateStoreBook(
+					null,
+					{
+						uuid: storeBook.uuid,
+						description,
+						categories: categoryKeys
+					},
+					{ user, accessToken, prisma, redis }
+				)
+
+				storeBookUpdated = true
+			}
+
+			// Check if the cover file has changed
+			const storeBookCoverSize = await getFileSize(
+				getTableObjectFileUrl(storeBookRelease2.cover.uuid)
+			)
+
+			const bookCoverSize = await getFileSize(coverUrl)
+
+			if (storeBookCoverSize != bookCoverSize) {
+				// Download the new cover
+				let coverBuffer = await downloadFile(coverUrl)
+
+				// Upload the cover
+				try {
+					await axios({
+						method: "put",
+						url: `${apiBaseUrl}/storeBooks/${storeBook.uuid}/cover`,
+						headers: {
+							"Content-Type": "image/jpeg",
+							Authorization: accessToken
+						},
+						data: coverBuffer
+					})
+				} catch (error) {
+					console.log(
+						`There was an issue with uploading the new cover of ${title} (${coverUrl})`
+					)
+					console.error(error)
+					return false
+				}
+
+				storeBookUpdated = true
+			}
+
+			// Check if the epub file has changed
+			const epubAnchor = root.querySelector("a.epub")
+			const epubUrl = baseUrl + epubAnchor.getAttribute("href")
+
+			const storeBookEpubFileSize = await getFileSize(
+				getTableObjectFileUrl(storeBookRelease2.file.uuid)
+			)
+
+			const bookEpubFileSize = await getFileSize(epubUrl)
+
+			if (storeBookEpubFileSize != bookEpubFileSize) {
+				// Download the new epub file
+				let epubBuffer = await downloadFile(epubUrl)
+
+				// Upload the epub file
+				try {
+					await axios({
+						method: "put",
+						url: `${apiBaseUrl}/storeBooks/${storeBook.uuid}/file`,
+						headers: {
+							"Content-Type": "application/epub+zip",
+							"Content-Disposition": `attachment; filename="${encodeURI(
+								title
+							)}.epub"`,
+							Authorization: accessToken
+						},
+						data: epubBuffer
+					})
+				} catch (error) {
+					console.log(
+						`There was an issue with uploading the new epub file of ${title} (${epubUrl})`
+					)
+					console.error(error)
+					return false
+				}
+
+				storeBookUpdated = true
+			}
+
+			if (storeBookUpdated && storeBook.status == "published") {
+				// Publish the new release
+				let latestStoreBookRelease =
+					await prisma.storeBookRelease.findFirst({
+						where: { storeBookId: storeBook.id, status: "unpublished" }
+					})
+
+				if (latestStoreBookRelease != null) {
+					// Get the link to the last commit
+					const lastChangeListItem = root.querySelector(
+						"section#history > ol > li"
+					)
+					const commitDate =
+						lastChangeListItem.querySelector("time").textContent
+					const commitUrl = lastChangeListItem
+						.querySelector("p > a")
+						.getAttribute("href")
+
+					await publishStoreBookRelease(
+						null,
+						{
+							uuid: latestStoreBookRelease.uuid,
+							releaseName: "Automatic update",
+							releaseNotes: `Automatic update based on commit ${commitUrl} from ${commitDate}`
+						},
+						{ user, accessToken, prisma, redis }
+					)
+				}
+			}
 		}
 
 		// Create a new StoreBook mapping
@@ -401,3 +538,73 @@ async function saveBook(
 
 	return true
 }
+
+//#region Util functions
+function getDescriptionOfBookPage(root: HTMLElement): string {
+	const descriptionSectionParagraphs = root.querySelectorAll(
+		"section#description > p"
+	)
+
+	return descriptionSectionParagraphs.map(p => p.textContent).join("\n\n")
+}
+
+async function getTagsOfBookPage(root: HTMLElement): Promise<string[]> {
+	const tagListItems = root.querySelectorAll("ul.tags > li")
+	let categoryKeys = []
+
+	for (let item of tagListItems) {
+		let tag = item.querySelector("a").textContent.toLowerCase().replace(" ", "-").replace("’", "")
+
+		// Try to find the tag in the database
+		let category = await prisma.category.findFirst({
+			where: { key: tag }
+		})
+
+		if (category == null) {
+			console.log(`Category ${tag} doesn't exist!`)
+		} else {
+			categoryKeys.push(category.key)
+		}
+	}
+
+	return categoryKeys
+}
+
+async function getFileSize(url: string): Promise<number> {
+	try {
+		let response = await axios({
+			method: "head",
+			url
+		})
+
+		if (response.headers["Content-Length"] != null) {
+			return Number(response.headers["Content-Length"])
+		}
+
+		// Download the entire file
+		let response2 = await axios({
+			method: "get",
+			url,
+			responseType: "arraybuffer"
+		})
+
+		return Buffer.from(response2.data, "binary").length
+	} catch (error) {}
+
+	return 0
+}
+
+async function downloadFile(url: string): Promise<Buffer> {
+	try {
+		let response = await axios({
+			method: "get",
+			url,
+			responseType: "arraybuffer"
+		})
+
+		return Buffer.from(response.data, "binary")
+	} catch (error) {
+		return null
+	}
+}
+//#endregion
