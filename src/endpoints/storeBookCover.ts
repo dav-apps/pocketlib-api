@@ -79,6 +79,7 @@ export async function uploadStoreBookCover(req: Request, res: Response) {
 			coverUuid = await createCover(
 				prisma,
 				accessToken,
+				BigInt(user.id),
 				newRelease.id,
 				req.body,
 				contentType,
@@ -93,6 +94,7 @@ export async function uploadStoreBookCover(req: Request, res: Response) {
 				coverUuid = await createCover(
 					prisma,
 					accessToken,
+					BigInt(user.id),
 					release.id,
 					req.body,
 					contentType,
@@ -169,6 +171,7 @@ export function setup(app: Express) {
 async function createCover(
 	prisma: PrismaClient,
 	accessToken: string,
+	userId: bigint,
 	releaseId: bigint,
 	data: any,
 	contentType: string,
@@ -202,6 +205,7 @@ async function createCover(
 	await prisma.storeBookCover.create({
 		data: {
 			uuid: coverUuid,
+			userId,
 			releases: {
 				connect: [{ id: releaseId }]
 			},

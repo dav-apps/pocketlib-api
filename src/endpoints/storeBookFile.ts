@@ -75,6 +75,7 @@ export async function uploadStoreBookFile(req: Request, res: Response) {
 			fileUuid = await createFile(
 				prisma,
 				accessToken,
+				BigInt(user.id),
 				newRelease.id,
 				req.body,
 				contentType,
@@ -88,6 +89,7 @@ export async function uploadStoreBookFile(req: Request, res: Response) {
 				fileUuid = await createFile(
 					prisma,
 					accessToken,
+					BigInt(user.id),
 					release.id,
 					req.body,
 					contentType,
@@ -159,6 +161,7 @@ export function setup(app: Express) {
 async function createFile(
 	prisma: PrismaClient,
 	accessToken: string,
+	userId: bigint,
 	releaseId: bigint,
 	data: any,
 	contentType: string,
@@ -190,6 +193,7 @@ async function createFile(
 	await prisma.storeBookFile.create({
 		data: {
 			uuid: fileUuid,
+			userId,
 			releases: {
 				connect: [{ id: releaseId }]
 			},
