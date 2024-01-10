@@ -88,8 +88,18 @@ export async function uploadStoreBookCover(req: Request, res: Response) {
 				aspectRatio
 			)
 		} else {
-			// Check if the release already has a cover
-			if (release.coverId == null) {
+			// Get the previous published release
+			let previousRelease = await getLastReleaseOfStoreBook(
+				prisma,
+				storeBook.id,
+				true
+			)
+
+			// Check if the cover of the current release was already changed
+			if (
+				release.coverId == null ||
+				release.coverId == previousRelease.coverId
+			) {
 				// Create a new StoreBookCover & update the release
 				coverUuid = await createCover(
 					prisma,

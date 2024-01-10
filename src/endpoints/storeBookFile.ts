@@ -83,8 +83,18 @@ export async function uploadStoreBookFile(req: Request, res: Response) {
 				fileName
 			)
 		} else {
-			// Check if the release already has a file
-			if (release.fileId == null) {
+			// Get the previous published release
+			let previousRelease = await getLastReleaseOfStoreBook(
+				prisma,
+				storeBook.id,
+				true
+			)
+
+			// Check if the file of the current release was already changed
+			if (
+				release.fileId == null ||
+				release.fileId == previousRelease.fileId
+			) {
 				// Create a new StoreBookFile & update the release
 				fileUuid = await createFile(
 					prisma,
