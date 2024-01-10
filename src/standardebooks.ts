@@ -4,8 +4,10 @@ import readline from "readline"
 import axios from "axios"
 import { parse, HTMLElement } from "node-html-parser"
 import {
+	Dav,
 	SessionsController,
 	Auth,
+	Environment,
 	isSuccessStatusCode,
 	ApiResponse
 } from "dav-js"
@@ -32,6 +34,23 @@ const redis = createClient<any, any, any>({
 redis.on("error", err => console.log("Redis Client Error", err))
 await redis.connect()
 //#endregion
+
+// Init dav
+let environment = Environment.Development
+
+switch (process.env.ENVIRONMENT) {
+	case "production":
+		environment = Environment.Production
+		break
+	case "staging":
+		environment = Environment.Staging
+		break
+}
+
+new Dav({
+	environment,
+	server: true
+})
 
 // Get the email and password from the user
 const rl = readline.createInterface({
@@ -496,7 +515,10 @@ async function saveBook(
 				storeBookUpdated = true
 			}
 
-			if (storeBookUpdated && storeBook.status == "published") {
+			if (
+				storeBook.status == "published" &&
+				(storeBookUpdated || storeBookRelease2.status != "published")
+			) {
 				// Publish the new release
 				let latestStoreBookRelease =
 					await prisma.storeBookRelease.findFirst({
@@ -513,12 +535,16 @@ async function saveBook(
 					const commitUrl = lastChangeListItem
 						.querySelector("p > a")
 						.getAttribute("href")
+					let commitUrlParts = commitUrl.split("/")
+					const revision = commitUrlParts[
+						commitUrlParts.length - 1
+					].substring(0, 7)
 
 					await publishStoreBookRelease(
 						null,
 						{
 							uuid: latestStoreBookRelease.uuid,
-							releaseName: "Automatic update",
+							releaseName: `Update to revision ${revision}`,
 							releaseNotes: `Automatic update based on commit ${commitUrl} from ${commitDate}`
 						},
 						{ user, accessToken, prisma, redis }
@@ -553,7 +579,11 @@ async function getTagsOfBookPage(root: HTMLElement): Promise<string[]> {
 	let categoryKeys = []
 
 	for (let item of tagListItems) {
-		let tag = item.querySelector("a").textContent.toLowerCase().replace(" ", "-").replace("’", "")
+		let tag = item
+			.querySelector("a")
+			.textContent.toLowerCase()
+			.replace(" ", "-")
+			.replace("’", "")
 
 		// Try to find the tag in the database
 		let category = await prisma.category.findFirst({
@@ -608,3 +638,5 @@ async function downloadFile(url: string): Promise<Buffer> {
 	}
 }
 //#endregion
+
+process.exit()

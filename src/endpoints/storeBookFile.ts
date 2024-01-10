@@ -60,6 +60,7 @@ export async function uploadStoreBookFile(req: Request, res: Response) {
 		let ext = contentType == "application/pdf" ? "pdf" : "epub"
 		let contentDisposition = req.headers["content-disposition"]
 		let fileName = getFilename(contentDisposition)
+		if (fileName != null) fileName = decodeURI(fileName)
 
 		if (release.status == "published") {
 			// Create a new release
