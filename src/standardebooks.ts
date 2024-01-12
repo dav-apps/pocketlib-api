@@ -105,9 +105,10 @@ const root = parse(initialResponse.data)
 
 let pagesOl = root.querySelector("nav > ol")
 let pages = pagesOl.querySelectorAll("li").length
-const startPage = 1
 
-for (let i = startPage; i <= pages; i++) {
+for (let i = pages; i >= 1; i--) {
+	console.log(`\n\nPage ${i}\n`)
+
 	let response = await axios({
 		method: "get",
 		url: `https://standardebooks.org/ebooks?page=${i}&view=list&per-page=${perPage}`
@@ -115,7 +116,9 @@ for (let i = startPage; i <= pages; i++) {
 
 	let ebooksList = parse(response.data).querySelector("ol.ebooks-list")
 
-	for (let child of ebooksList.querySelectorAll(`li[typeof="schema:Book"]`)) {
+	for (let child of ebooksList
+		.querySelectorAll(`li[typeof="schema:Book"]`)
+		.reverse()) {
 		// Get the title
 		const titleSpan = child.querySelector(`span[property="schema:name"]`)
 		const title = titleSpan.textContent
@@ -125,6 +128,8 @@ for (let i = startPage; i <= pages; i++) {
 		if (authorAnchors.length > 1) continue
 
 		const authorAnchor = authorAnchors[0]
+		if (authorAnchor == null) continue
+
 		const authorName = authorAnchor.textContent
 		const authorUrl = authorAnchor.getAttribute("href")
 
@@ -156,8 +161,6 @@ for (let i = startPage; i <= pages; i++) {
 
 		if (!saveResult) break
 	}
-
-	if (i == startPage) break
 }
 
 async function saveBook(
@@ -201,7 +204,7 @@ async function saveBook(
 			console.log(
 				`The author ${authorName} (${baseUrl}${authorUrl}) does not exist!`
 			)
-			return false
+			return true
 		} else if (authors.length > 1) {
 			console.log(
 				`There are multiple authors for ${authorName} (${baseUrl}${authorUrl})`
@@ -271,14 +274,7 @@ async function saveBook(
 				const seriesName = isPartOfLink.textContent
 				const seriesUrl = isPartOfLink.getAttribute("href")
 
-				// Check if the series already exists in the database
-				const series = await prisma.storeBookSeries.findFirst({
-					where: { name: seriesName }
-				})
-
-				if (series == null) {
-					console.log(`New Series detected: ${seriesName} (${seriesUrl})`)
-				}
+				console.log(`Series detected: ${seriesName} (${seriesUrl})`)
 			}
 
 			// Get the epub file url
@@ -444,9 +440,13 @@ async function saveBook(
 			}
 
 			// Check if the cover file has changed
-			const storeBookCoverSize = await getFileSize(
-				getTableObjectFileUrl(storeBookRelease2.cover.uuid)
-			)
+			let storeBookCoverSize = 0
+
+			if (storeBookRelease2.cover != null) {
+				storeBookCoverSize = await getFileSize(
+					getTableObjectFileUrl(storeBookRelease2.cover.uuid)
+				)
+			}
 
 			const bookCoverSize = await getFileSize(coverUrl)
 
@@ -479,10 +479,13 @@ async function saveBook(
 			// Check if the epub file has changed
 			const epubAnchor = root.querySelector("a.epub")
 			const epubUrl = baseUrl + epubAnchor.getAttribute("href")
+			let storeBookEpubFileSize = 0
 
-			const storeBookEpubFileSize = await getFileSize(
-				getTableObjectFileUrl(storeBookRelease2.file.uuid)
-			)
+			if (storeBookRelease2.file != null) {
+				storeBookEpubFileSize = await getFileSize(
+					getTableObjectFileUrl(storeBookRelease2.file.uuid)
+				)
+			}
 
 			const bookEpubFileSize = await getFileSize(epubUrl)
 
@@ -595,6 +598,8 @@ async function getTagsOfBookPage(root: HTMLElement): Promise<string[]> {
 		} else {
 			categoryKeys.push(category.key)
 		}
+
+		if (categoryKeys.length >= 3) break
 	}
 
 	return categoryKeys
