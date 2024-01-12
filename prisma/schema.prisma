@@ -132,25 +132,30 @@ model StoreBook {
 }
 
 model StoreBookRelease {
-  id           BigInt          @id @default(autoincrement())
-  uuid         String          @unique @db.VarChar
+  id           BigInt               @id @default(autoincrement())
+  uuid         String               @unique @db.VarChar
   userId       BigInt
-  storeBook    StoreBook       @relation(fields: [storeBookId], references: [id])
+  storeBook    StoreBook            @relation(fields: [storeBookId], references: [id])
   storeBookId  BigInt
-  releaseName  String?         @db.VarChar
-  releaseNotes String?         @db.VarChar
-  publishedAt  DateTime?       @db.Timestamp(6)
-  title        String?         @db.VarChar
-  description  String?         @db.VarChar
-  price        Int?            @default(0)
-  isbn         String?         @db.VarChar
-  status       String?         @default("unpublished") @db.VarChar
-  cover        StoreBookCover? @relation(fields: [coverId], references: [id])
+  releaseName  String?              @db.VarChar
+  releaseNotes String?              @db.VarChar
+  publishedAt  DateTime?            @db.Timestamp(6)
+  title        String?              @db.VarChar
+  description  String?              @db.VarChar
+  price        Int?                 @default(0)
+  isbn         String?              @db.VarChar
+  status       String?              @default("unpublished") @db.VarChar
+  offerPrint   Boolean              @default(false)
+  cover        StoreBookCover?      @relation(fields: [coverId], references: [id])
   coverId      BigInt?
-  file         StoreBookFile?  @relation(fields: [fileId], references: [id])
+  file         StoreBookFile?       @relation(fields: [fileId], references: [id])
   fileId       BigInt?
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @default(now()) @updatedAt
+  printCover   StoreBookPrintCover? @relation(fields: [printCoverId], references: [id])
+  printCoverId BigInt?
+  printFile    StoreBookPrintFile?  @relation(fields: [printFileId], references: [id])
+  printFileId  BigInt?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @default(now()) @updatedAt
   categories   Category[]
 }
 
@@ -171,6 +176,23 @@ model StoreBookFile {
   releases  StoreBookRelease[]
   fileName  String?            @db.VarChar
   createdAt DateTime           @default(now())
+}
+
+model StoreBookPrintCover {
+  id        BigInt             @id @default(autoincrement())
+  uuid      String             @unique @db.VarChar
+  userId    BigInt
+  createdAt DateTime           @default(now())
+  releases  StoreBookRelease[]
+}
+
+model StoreBookPrintFile {
+  id        BigInt             @id @default(autoincrement())
+  uuid      String             @unique @db.VarChar
+  userId    BigInt
+  fileName  String?            @db.VarChar
+  createdAt DateTime           @default(now())
+  releases  StoreBookRelease[]
 }
 
 model Category {
