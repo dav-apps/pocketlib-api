@@ -19,6 +19,7 @@ import { setup as publisherLogoSetup } from "./src/endpoints/publisherLogo.js"
 import { setup as authorProfileImageSetup } from "./src/endpoints/authorProfileImage.js"
 import { setup as storeBookCoverSetup } from "./src/endpoints/storeBookCover.js"
 import { setup as storeBookFileSetup } from "./src/endpoints/storeBookFile.js"
+import { setup as storeBookPrintCoverSetup } from "./src/endpoints/storeBookPrintCover.js"
 
 const port = process.env.PORT || 4001
 const app = express()
@@ -72,6 +73,7 @@ publisherLogoSetup(app)
 authorProfileImageSetup(app)
 storeBookCoverSetup(app)
 storeBookFileSetup(app)
+storeBookPrintCoverSetup(app)
 
 app.use(
 	"/",
