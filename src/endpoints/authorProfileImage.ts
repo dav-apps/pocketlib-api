@@ -100,6 +100,7 @@ async function uploadAuthorProfileImage(req: Request, res: Response) {
 			await prisma.authorProfileImage.create({
 				data: {
 					uuid: profileImageUuid,
+					userId: user.id,
 					author: {
 						connect: {
 							id: author.id

@@ -100,6 +100,7 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 			await prisma.publisherLogo.create({
 				data: {
 					uuid: logoUuid,
+					userId: user.id,
 					publisher: {
 						connect: {
 							id: publisher.id

@@ -104,6 +104,7 @@ export async function createPublisher(
 	return await context.prisma.publisher.create({
 		data: {
 			uuid: crypto.randomUUID(),
+			userId: user.id,
 			name: args.name
 		}
 	})

@@ -68,6 +68,7 @@ export async function setAuthorBio(
 		return await context.prisma.authorBio.create({
 			data: {
 				uuid: crypto.randomUUID(),
+				userId: user.id,
 				author: {
 					connect: {
 						id: author.id

@@ -61,6 +61,7 @@ export async function setStoreBookCollectionName(
 		name = await context.prisma.storeBookCollectionName.create({
 			data: {
 				uuid: crypto.randomUUID(),
+				userId: user.id,
 				collection: {
 					connect: {
 						id: collection.id

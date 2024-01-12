@@ -147,6 +147,7 @@ export async function createStoreBookSeries(
 	// Create the store book series
 	let seriesData = {
 		uuid: crypto.randomUUID(),
+		userId: user.id,
 		author: {
 			connect: {
 				id: author.id

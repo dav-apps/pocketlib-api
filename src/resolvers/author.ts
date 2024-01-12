@@ -173,6 +173,7 @@ export async function createAuthor(
 	// Create the author
 	let data = {
 		uuid: crypto.randomUUID(),
+		userId: user.id,
 		firstName: args.firstName,
 		lastName: args.lastName
 	}
