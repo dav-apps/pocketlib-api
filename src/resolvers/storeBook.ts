@@ -907,6 +907,16 @@ function checkPropertiesForPublishing(storeBookRelease: StoreBookRelease) {
 		errors.push(validationErrors.cannotPublishStoreBookWithoutFile)
 	}
 
+	if (
+		storeBookRelease.offerPrint &&
+		(storeBookRelease.printCoverId == null ||
+			storeBookRelease.printFileId == null)
+	) {
+		errors.push(
+			validationErrors.cannotPublishStoreBookWithIncompletePrintFiles
+		)
+	}
+
 	throwValidationError(...errors)
 }
 

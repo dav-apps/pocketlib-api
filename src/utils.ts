@@ -143,6 +143,22 @@ export async function createNewStoreBookRelease(
 		}
 	}
 
+	if (oldRelease.printCoverId != null) {
+		data["printCover"] = {
+			connect: {
+				id: oldRelease.printCoverId
+			}
+		}
+	}
+
+	if (oldRelease.printFileId != null) {
+		data["printFile"] = {
+			connect: {
+				id: oldRelease.printFileId
+			}
+		}
+	}
+
 	let categories = await prisma.category.findMany({
 		where: { releases: { some: { id: oldRelease.id } } }
 	})

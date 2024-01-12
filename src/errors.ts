@@ -124,5 +124,7 @@ export const validationErrors = {
 		"CANNOT_PUBLISH_STORE_BOOK_WITHOUT_DESCRIPTION",
 	cannotPublishStoreBookWithoutCover:
 		"CANNOT_PUBLISH_STORE_BOOK_WITHOUT_COVER",
-	cannotPublishStoreBookWithoutFile: "CANNOT_PUBLISH_STORE_BOOK_WITHOUT_FILE"
+	cannotPublishStoreBookWithoutFile: "CANNOT_PUBLISH_STORE_BOOK_WITHOUT_FILE",
+	cannotPublishStoreBookWithIncompletePrintFiles:
+		"CANNOT_PUBLISH_STORE_BOOK_WITH_INCOMPLETE_PRINT_FILES"
 }
