@@ -11,7 +11,7 @@ datasource db {
 model Publisher {
   id                BigInt         @id @default(autoincrement())
   uuid              String         @unique @db.VarChar
-  userId            BigInt         @default(0)
+  userId            BigInt
   name              String         @db.VarChar
   description       String?        @db.VarChar
   websiteUrl        String?        @db.VarChar
@@ -27,7 +27,7 @@ model Publisher {
 model PublisherLogo {
   id          BigInt    @id @default(autoincrement())
   uuid        String    @unique @db.VarChar
-  userId      BigInt    @default(0)
+  userId      BigInt
   publisher   Publisher @relation(fields: [publisherId], references: [id])
   publisherId BigInt    @unique
   blurhash    String?   @db.VarChar
@@ -38,7 +38,7 @@ model PublisherLogo {
 model Author {
   id                          BigInt                       @id @default(autoincrement())
   uuid                        String                       @unique @db.VarChar
-  userId                      BigInt                       @default(0)
+  userId                      BigInt
   publisher                   Publisher?                   @relation(fields: [publisherId], references: [id])
   publisherId                 BigInt?
   firstName                   String?                      @db.VarChar
@@ -59,7 +59,7 @@ model Author {
 model AuthorProfileImage {
   id        BigInt   @id @default(autoincrement())
   uuid      String   @unique @db.VarChar
-  userId    BigInt   @default(0)
+  userId    BigInt
   author    Author   @relation(fields: [authorId], references: [id])
   authorId  BigInt   @unique
   blurhash  String?  @db.VarChar
@@ -70,7 +70,7 @@ model AuthorProfileImage {
 model AuthorBio {
   id        BigInt   @id @default(autoincrement())
   uuid      String   @unique @db.VarChar
-  userId    BigInt   @default(0)
+  userId    BigInt
   author    Author   @relation(fields: [authorId], references: [id])
   authorId  BigInt
   bio       String   @db.VarChar
@@ -82,7 +82,7 @@ model AuthorBio {
 model StoreBookCollection {
   id         BigInt                    @id @default(autoincrement())
   uuid       String                    @unique @db.VarChar
-  userId     BigInt                    @default(0)
+  userId     BigInt
   author     Author                    @relation(fields: [authorId], references: [id])
   authorId   BigInt
   createdAt  DateTime                  @default(now())
@@ -94,7 +94,7 @@ model StoreBookCollection {
 model StoreBookCollectionName {
   id           BigInt              @id @default(autoincrement())
   uuid         String              @unique @db.VarChar
-  userId       BigInt              @default(0)
+  userId       BigInt
   collection   StoreBookCollection @relation(fields: [collectionId], references: [id])
   collectionId BigInt
   name         String              @db.VarChar
@@ -106,7 +106,7 @@ model StoreBookCollectionName {
 model StoreBookSeries {
   id         BigInt      @id @default(autoincrement())
   uuid       String      @unique @db.VarChar
-  userId     BigInt      @default(0)
+  userId     BigInt
   author     Author      @relation(fields: [authorId], references: [id])
   authorId   BigInt
   name       String      @db.VarChar
@@ -119,7 +119,7 @@ model StoreBookSeries {
 model StoreBook {
   id                             BigInt                          @id @default(autoincrement())
   uuid                           String                          @unique @db.VarChar
-  userId                         BigInt                          @default(0)
+  userId                         BigInt
   collection                     StoreBookCollection             @relation(fields: [collectionId], references: [id])
   collectionId                   BigInt
   language                       String                          @db.VarChar
@@ -134,7 +134,7 @@ model StoreBook {
 model StoreBookRelease {
   id           BigInt          @id @default(autoincrement())
   uuid         String          @unique @db.VarChar
-  userId       BigInt          @default(0)
+  userId       BigInt
   storeBook    StoreBook       @relation(fields: [storeBookId], references: [id])
   storeBookId  BigInt
   releaseName  String?         @db.VarChar
@@ -157,7 +157,7 @@ model StoreBookRelease {
 model StoreBookCover {
   id          BigInt             @id @default(autoincrement())
   uuid        String             @unique @db.VarChar
-  userId      BigInt             @default(0)
+  userId      BigInt
   releases    StoreBookRelease[]
   aspectRatio String?            @db.VarChar
   blurhash    String?            @db.VarChar
@@ -167,7 +167,7 @@ model StoreBookCover {
 model StoreBookFile {
   id        BigInt             @id @default(autoincrement())
   uuid      String             @unique @db.VarChar
-  userId    BigInt             @default(0)
+  userId    BigInt
   releases  StoreBookRelease[]
   fileName  String?            @db.VarChar
   createdAt DateTime           @default(now())
@@ -176,7 +176,7 @@ model StoreBookFile {
 model Category {
   id        BigInt             @id @default(autoincrement())
   uuid      String             @unique @db.VarChar
-  userId    BigInt             @default(0)
+  userId    BigInt
   key       String             @db.VarChar
   createdAt DateTime           @default(now())
   updatedAt DateTime           @default(now()) @updatedAt
@@ -187,7 +187,7 @@ model Category {
 model CategoryName {
   id         BigInt   @id @default(autoincrement())
   uuid       String   @unique @db.VarChar
-  userId     BigInt   @default(0)
+  userId     BigInt
   category   Category @relation(fields: [categoryId], references: [id])
   categoryId BigInt
   name       String   @db.VarChar
