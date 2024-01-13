@@ -17,6 +17,12 @@ export async function validateEbookContentType(contentType: string) {
 		throwEndpointError(apiErrors.contentTypeNotSupported)
 	}
 }
+
+export async function validatePdfContentType(contentType: string) {
+	if (contentType != "application/pdf") {
+		throwEndpointError(apiErrors.contentTypeNotSupported)
+	}
+}
 //#endregion
 
 //#region Field validations

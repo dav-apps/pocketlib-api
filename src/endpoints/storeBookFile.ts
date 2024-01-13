@@ -55,7 +55,7 @@ export async function uploadStoreBookFile(req: Request, res: Response) {
 			throwEndpointError(apiErrors.unexpectedError)
 		}
 
-		// Get the new file name
+		// Get the file name
 		let fileUuid = null
 		let ext = contentType == "application/pdf" ? "pdf" : "epub"
 		let contentDisposition = req.headers["content-disposition"]
