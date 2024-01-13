@@ -106,6 +106,8 @@ export async function uploadStoreBookPrintCover(req: Request, res: Response) {
 					}
 				})
 
+				printCoverUuid = printCover.uuid
+
 				// Update the existing printCover table object
 				let updateFileResponse =
 					await TableObjectsController.UpdateTableObject({
