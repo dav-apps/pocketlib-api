@@ -20,26 +20,25 @@ model Publisher {
   twitterUsername   String?        @db.VarChar
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @default(now()) @updatedAt
-  logo              PublisherLogo?
   authors           Author[]
+  logo              PublisherLogo?
 }
 
 model PublisherLogo {
   id          BigInt    @id @default(autoincrement())
   uuid        String    @unique @db.VarChar
   userId      BigInt
-  publisher   Publisher @relation(fields: [publisherId], references: [id])
   publisherId BigInt    @unique
   blurhash    String?   @db.VarChar
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
+  publisher   Publisher @relation(fields: [publisherId], references: [id])
 }
 
 model Author {
   id                          BigInt                       @id @default(autoincrement())
   uuid                        String                       @unique @db.VarChar
   userId                      BigInt
-  publisher                   Publisher?                   @relation(fields: [publisherId], references: [id])
   publisherId                 BigInt?
   firstName                   String?                      @db.VarChar
   lastName                    String?                      @db.VarChar
@@ -49,141 +48,151 @@ model Author {
   twitterUsername             String?                      @db.VarChar
   createdAt                   DateTime                     @default(now())
   updatedAt                   DateTime                     @default(now()) @updatedAt
-  profileImage                AuthorProfileImage?
+  publisher                   Publisher?                   @relation(fields: [publisherId], references: [id])
   bios                        AuthorBio[]
+  profileImage                AuthorProfileImage?
+  standardEbooksAuthorMapping StandardEbooksAuthorMapping?
   storeBookCollections        StoreBookCollection[]
   storeBookSeries             StoreBookSeries[]
-  standardEbooksAuthorMapping StandardEbooksAuthorMapping?
 }
 
 model AuthorProfileImage {
   id        BigInt   @id @default(autoincrement())
   uuid      String   @unique @db.VarChar
   userId    BigInt
-  author    Author   @relation(fields: [authorId], references: [id])
   authorId  BigInt   @unique
   blurhash  String?  @db.VarChar
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
+  author    Author   @relation(fields: [authorId], references: [id])
 }
 
 model AuthorBio {
   id        BigInt   @id @default(autoincrement())
   uuid      String   @unique @db.VarChar
   userId    BigInt
-  author    Author   @relation(fields: [authorId], references: [id])
   authorId  BigInt
   bio       String   @db.VarChar
   language  String   @db.VarChar
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
+  author    Author   @relation(fields: [authorId], references: [id])
 }
 
 model StoreBookCollection {
   id         BigInt                    @id @default(autoincrement())
   uuid       String                    @unique @db.VarChar
   userId     BigInt
-  author     Author                    @relation(fields: [authorId], references: [id])
   authorId   BigInt
   createdAt  DateTime                  @default(now())
   updatedAt  DateTime                  @default(now()) @updatedAt
-  names      StoreBookCollectionName[]
   storeBooks StoreBook[]
+  author     Author                    @relation(fields: [authorId], references: [id])
+  names      StoreBookCollectionName[]
 }
 
 model StoreBookCollectionName {
   id           BigInt              @id @default(autoincrement())
   uuid         String              @unique @db.VarChar
   userId       BigInt
-  collection   StoreBookCollection @relation(fields: [collectionId], references: [id])
   collectionId BigInt
   name         String              @db.VarChar
   language     String              @db.VarChar
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @default(now()) @updatedAt
+  collection   StoreBookCollection @relation(fields: [collectionId], references: [id])
 }
 
 model StoreBookSeries {
   id         BigInt      @id @default(autoincrement())
   uuid       String      @unique @db.VarChar
   userId     BigInt
-  author     Author      @relation(fields: [authorId], references: [id])
   authorId   BigInt
   name       String      @db.VarChar
   language   String      @db.VarChar
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @default(now()) @updatedAt
-  storeBooks StoreBook[]
+  author     Author      @relation(fields: [authorId], references: [id])
+  storeBooks StoreBook[] @relation("StoreBookToStoreBookSeries")
 }
 
 model StoreBook {
   id                             BigInt                          @id @default(autoincrement())
   uuid                           String                          @unique @db.VarChar
   userId                         BigInt
-  collection                     StoreBookCollection             @relation(fields: [collectionId], references: [id])
   collectionId                   BigInt
   language                       String                          @db.VarChar
   status                         String?                         @db.VarChar
   createdAt                      DateTime                        @default(now())
   updatedAt                      DateTime                        @default(now()) @updatedAt
-  releases                       StoreBookRelease[]
-  series                         StoreBookSeries[]
   standardEbooksStoreBookMapping StandardEbooksStoreBookMapping?
+  collection                     StoreBookCollection             @relation(fields: [collectionId], references: [id])
+  releases                       StoreBookRelease[]
+  series                         StoreBookSeries[]               @relation("StoreBookToStoreBookSeries")
 }
 
 model StoreBookRelease {
-  id           BigInt               @id @default(autoincrement())
-  uuid         String               @unique @db.VarChar
-  userId       BigInt
-  storeBook    StoreBook            @relation(fields: [storeBookId], references: [id])
-  storeBookId  BigInt
-  releaseName  String?              @db.VarChar
-  releaseNotes String?              @db.VarChar
-  publishedAt  DateTime?            @db.Timestamp(6)
-  title        String?              @db.VarChar
-  description  String?              @db.VarChar
-  price        Int?                 @default(0)
-  isbn         String?              @db.VarChar
-  status       String?              @default("unpublished") @db.VarChar
-  offerPrint   Boolean              @default(false)
-  cover        StoreBookCover?      @relation(fields: [coverId], references: [id])
-  coverId      BigInt?
-  file         StoreBookFile?       @relation(fields: [fileId], references: [id])
-  fileId       BigInt?
-  printCover   StoreBookPrintCover? @relation(fields: [printCoverId], references: [id])
-  printCoverId BigInt?
-  printFile    StoreBookPrintFile?  @relation(fields: [printFileId], references: [id])
-  printFileId  BigInt?
-  createdAt    DateTime             @default(now())
-  updatedAt    DateTime             @default(now()) @updatedAt
-  categories   Category[]
+  id                 BigInt               @id @default(autoincrement())
+  uuid               String               @unique @db.VarChar
+  userId             BigInt
+  storeBookId        BigInt
+  releaseName        String?              @db.VarChar
+  releaseNotes       String?              @db.VarChar
+  publishedAt        DateTime?            @db.Timestamp(6)
+  title              String?              @db.VarChar
+  description        String?              @db.VarChar
+  price              Int?                 @default(0)
+  isbn               String?              @db.VarChar
+  status             String?              @default("unpublished") @db.VarChar
+  coverId            BigInt?
+  fileId             BigInt?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @default(now()) @updatedAt
+  printCoverId       BigInt?
+  printFileId        BigInt?
+  offerPrint         Boolean              @default(false)
+  printBookPurchases PrintOrder[]
+  cover              StoreBookCover?      @relation(fields: [coverId], references: [id])
+  file               StoreBookFile?       @relation(fields: [fileId], references: [id])
+  printCover         StoreBookPrintCover? @relation(fields: [printCoverId], references: [id])
+  printFile          StoreBookPrintFile?  @relation(fields: [printFileId], references: [id])
+  storeBook          StoreBook            @relation(fields: [storeBookId], references: [id])
+  categories         Category[]           @relation("CategoryToStoreBookRelease")
+}
+
+model PrintOrder {
+  id                 BigInt           @id @default(autoincrement())
+  uuid               String           @unique @db.VarChar
+  userId             BigInt
+  storeBookReleaseId BigInt
+  storeBookRelease   StoreBookRelease @relation(fields: [storeBookReleaseId], references: [id])
 }
 
 model StoreBookCover {
   id          BigInt             @id @default(autoincrement())
   uuid        String             @unique @db.VarChar
   userId      BigInt
-  releases    StoreBookRelease[]
   aspectRatio String?            @db.VarChar
   blurhash    String?            @db.VarChar
   createdAt   DateTime           @default(now())
+  releases    StoreBookRelease[]
 }
 
 model StoreBookFile {
   id        BigInt             @id @default(autoincrement())
   uuid      String             @unique @db.VarChar
   userId    BigInt
-  releases  StoreBookRelease[]
   fileName  String?            @db.VarChar
   createdAt DateTime           @default(now())
+  releases  StoreBookRelease[]
 }
 
 model StoreBookPrintCover {
   id        BigInt             @id @default(autoincrement())
   uuid      String             @unique @db.VarChar
   userId    BigInt
-  fileName  String?            @db.VarChar
   createdAt DateTime           @default(now())
+  fileName  String?            @db.VarChar
   releases  StoreBookRelease[]
 }
 
@@ -204,33 +213,33 @@ model Category {
   createdAt DateTime           @default(now())
   updatedAt DateTime           @default(now()) @updatedAt
   names     CategoryName[]
-  releases  StoreBookRelease[]
+  releases  StoreBookRelease[] @relation("CategoryToStoreBookRelease")
 }
 
 model CategoryName {
   id         BigInt   @id @default(autoincrement())
   uuid       String   @unique @db.VarChar
   userId     BigInt
-  category   Category @relation(fields: [categoryId], references: [id])
   categoryId BigInt
   name       String   @db.VarChar
   language   String   @db.VarChar
   createdAt  DateTime @default(now())
   updatedAt  DateTime @default(now()) @updatedAt
+  category   Category @relation(fields: [categoryId], references: [id])
 }
 
 model StandardEbooksAuthorMapping {
   id        BigInt   @id @default(autoincrement())
   url       String
-  author    Author   @relation(fields: [authorId], references: [id])
   authorId  BigInt   @unique
   createdAt DateTime @default(now())
+  author    Author   @relation(fields: [authorId], references: [id])
 }
 
 model StandardEbooksStoreBookMapping {
   id          BigInt    @id @default(autoincrement())
   url         String
-  storeBook   StoreBook @relation(fields: [storeBookId], references: [id])
   storeBookId BigInt    @unique
   createdAt   DateTime  @default(now())
+  storeBook   StoreBook @relation(fields: [storeBookId], references: [id])
 }
