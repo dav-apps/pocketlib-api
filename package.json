@@ -16,7 +16,7 @@
 		"@apollo/server": "^4.7.5",
 		"@graphql-tools/schema": "^10.0.0",
 		"@graphql-tools/utils": "^10.0.3",
-		"@prisma/client": "^5.1.1",
+		"@prisma/client": "^5.8.1",
 		"axios": "^1.4.0",
 		"blurhash": "^2.0.5",
 		"canvas": "^2.11.2",
@@ -30,7 +30,7 @@
 	},
 	"devDependencies": {
 		"concurrently": "^8.2.0",
-		"prisma": "^5.7.1",
+		"prisma": "^5.8.1",
 		"typescript": "^5.3.3"
 	}
 }
