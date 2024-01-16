@@ -117,6 +117,7 @@ export const validationErrors = {
 	twitterUsernameInvalid: "TWITTER_USERNAME_INVALID",
 	languageInvalid: "LANGUAGE_INVALID",
 	priceInvalid: "PRICE_INVALID",
+	printPriceInvalid: "PRINT_PRICE_INVALID",
 	isbnInvalid: "ISBN_INVALID",
 	statusInvalid: "STATUS_INVALID",
 	storeBookMaxCategories: "TOO_MANY_CATEGORIES_FOR_STORE_BOOK",
@@ -126,5 +127,7 @@ export const validationErrors = {
 		"CANNOT_PUBLISH_STORE_BOOK_WITHOUT_COVER",
 	cannotPublishStoreBookWithoutFile: "CANNOT_PUBLISH_STORE_BOOK_WITHOUT_FILE",
 	cannotPublishStoreBookWithIncompletePrintFiles:
-		"CANNOT_PUBLISH_STORE_BOOK_WITH_INCOMPLETE_PRINT_FILES"
+		"CANNOT_PUBLISH_STORE_BOOK_WITH_INCOMPLETE_PRINT_FILES",
+	cannotPublishStoreBookWithFreePrintBook:
+		"CANNOT_PUBLISH_STORE_BOOK_WITH_FREE_PRINT_BOOK"
 }

@@ -98,6 +98,7 @@ export interface StoreBook extends StoreBookModel {
 	title: string
 	description: string
 	price: number
+	printPrice: number
 	isbn: string
 }
 

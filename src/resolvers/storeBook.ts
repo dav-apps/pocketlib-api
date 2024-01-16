@@ -33,6 +33,7 @@ import {
 	validateCategoriesLength,
 	validateLanguage,
 	validatePrice,
+	validatePrintPrice,
 	validateIsbn,
 	validateStatus
 } from "../services/validationService.js"
@@ -277,6 +278,7 @@ export async function createStoreBook(
 		description?: string
 		language: string
 		price?: number
+		printPrice?: number
 		isbn?: string
 		categories?: string[]
 	},
@@ -328,6 +330,10 @@ export async function createStoreBook(
 
 	if (args.price != null) {
 		errors.push(validatePrice(args.price))
+	}
+
+	if (args.printPrice != null) {
+		errors.push(validatePrintPrice(args.printPrice))
 	}
 
 	if (args.isbn != null) {
@@ -432,6 +438,7 @@ export async function createStoreBook(
 		},
 		title: args.title,
 		price: 0,
+		printPrice: 0,
 		status: "unpublished"
 	}
 
@@ -441,6 +448,10 @@ export async function createStoreBook(
 
 	if (args.price != null) {
 		storeBookReleaseProperties.price = args.price
+	}
+
+	if (args.printPrice != null) {
+		storeBookReleaseProperties.printPrice = args.printPrice
 	}
 
 	if (args.isbn != null) {
@@ -458,7 +469,7 @@ export async function createStoreBook(
 		}
 	}
 
-	await context.prisma.storeBookRelease.create({
+	const storeBookRelease = await context.prisma.storeBookRelease.create({
 		data: storeBookReleaseProperties
 	})
 
@@ -486,11 +497,25 @@ export async function createStoreBook(
 		throwApiError(apiErrors.unexpectedError)
 	}
 
+	if (args.printPrice != null) {
+		// Set the price of the store book release
+		let storeBookReleasePrice = await setTableObjectPrice({
+			uuid: storeBookRelease.uuid,
+			price: args.printPrice,
+			currency: "eur"
+		})
+
+		if (storeBookReleasePrice == null) {
+			throwApiError(apiErrors.unexpectedError)
+		}
+	}
+
 	return {
 		...storeBook,
 		title: args.title,
 		description: args.description,
 		price: args.price || 0,
+		printPrice: args.printPrice || 0,
 		isbn: args.isbn
 	}
 }
@@ -503,6 +528,7 @@ export async function updateStoreBook(
 		description?: string
 		language?: string
 		price?: number
+		printPrice?: number
 		isbn?: string
 		status?: string
 		categories?: string[]
@@ -547,6 +573,7 @@ export async function updateStoreBook(
 		args.description == null &&
 		args.language == null &&
 		args.price == null &&
+		args.printPrice == null &&
 		args.isbn == null &&
 		args.status == null &&
 		args.categories == null
@@ -571,6 +598,10 @@ export async function updateStoreBook(
 
 	if (args.price != null) {
 		errors.push(validatePrice(args.price))
+	}
+
+	if (args.printPrice != null) {
+		errors.push(validatePrintPrice(args.printPrice))
 	}
 
 	if (args.isbn != null) {
@@ -629,6 +660,10 @@ export async function updateStoreBook(
 
 	if (args.price != null) {
 		newReleaseProperties["price"] = args.price
+	}
+
+	if (args.printPrice != null) {
+		newReleaseProperties["printPrice"] = args.printPrice
 	}
 
 	if (args.isbn != null) {
@@ -721,18 +756,31 @@ export async function updateStoreBook(
 
 	if (args.price != null) {
 		// Set the store book price
-		let updatedStoreBookPrice = await setTableObjectPrice({
+		let updateStoreBookPrice = await setTableObjectPrice({
 			uuid: storeBook.uuid,
 			price: args.price,
 			currency: "eur"
 		})
 
-		if (updatedStoreBookPrice == null) {
+		if (updateStoreBookPrice == null) {
 			throwApiError(apiErrors.unexpectedError)
 		}
 	}
 
-	await loadStoreBookData(context.prisma, storeBook)
+	if (args.printPrice != null) {
+		// Set the store book release print price
+		let updateStoreBookReleasePrice = await setTableObjectPrice({
+			uuid: storeBookRelease.uuid,
+			price: args.printPrice,
+			currency: "eur"
+		})
+
+		if (updateStoreBookReleasePrice == null) {
+			throwApiError(apiErrors.unexpectedError)
+		}
+	}
+
+	await loadStoreBookData(context.prisma, storeBook, false)
 	return storeBook
 }
 
@@ -908,13 +956,14 @@ function checkPropertiesForPublishing(storeBookRelease: StoreBookRelease) {
 	}
 
 	if (
-		storeBookRelease.offerPrint &&
-		(storeBookRelease.printCoverId == null ||
-			storeBookRelease.printFileId == null)
+		storeBookRelease.printCoverId == null ||
+		storeBookRelease.printFileId == null
 	) {
 		errors.push(
 			validationErrors.cannotPublishStoreBookWithIncompletePrintFiles
 		)
+	} else if (storeBookRelease.printPrice == 0) {
+		errors.push(validationErrors.cannotPublishStoreBookWithFreePrintBook)
 	}
 
 	throwValidationError(...errors)

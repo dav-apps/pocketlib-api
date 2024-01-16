@@ -77,6 +77,7 @@ export async function loadStoreBookData(
 	storeBook.title = release.title
 	storeBook.description = release.description
 	storeBook.price = release.price
+	storeBook.printPrice = release.printPrice
 	storeBook.isbn = release.isbn
 }
 
@@ -121,6 +122,7 @@ export async function createNewStoreBookRelease(
 		title: oldRelease.title,
 		description: oldRelease.description,
 		price: oldRelease.price,
+		printPrice: oldRelease.printPrice,
 		isbn: oldRelease.isbn,
 		categories: {
 			connect: []

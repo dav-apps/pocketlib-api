@@ -95,6 +95,7 @@ export const typeDefs = `#graphql
 			description: String
 			language: String!
 			price: Int
+			printPrice: Int
 			isbn: String
 			categories: [String!]
 		): StoreBook
@@ -104,6 +105,7 @@ export const typeDefs = `#graphql
 			description: String
 			language: String
 			price: Int
+			printPrice: Int
 			isbn: String
 			status: String
 			categories: [String!]
@@ -221,6 +223,7 @@ export const typeDefs = `#graphql
 		description: String
 		language: String!
 		price: Int!
+		printPrice: Int!
 		isbn: String
 		status: String!
 		cover: StoreBookCover
@@ -246,6 +249,7 @@ export const typeDefs = `#graphql
 		title: String!
 		description: String
 		price: Int!
+		printPrice: Int!
 		isbn: String
 		status: String
 		cover: StoreBookCover

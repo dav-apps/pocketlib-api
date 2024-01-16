@@ -108,6 +108,12 @@ export function validatePrice(price: number) {
 	}
 }
 
+export function validatePrintPrice(price: number) {
+	if (price < 0 || price > 100000) {
+		return validationErrors.printPriceInvalid
+	}
+}
+
 export function validateIsbn(isbn: string) {
 	// Must be of length 0, 10 or 13 and only contain numbers
 	let isbnValid = isbn.length == 0 || isbnRegex.test(isbn)
