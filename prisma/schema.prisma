@@ -141,7 +141,8 @@ model StoreBookRelease {
   publishedAt        DateTime?            @db.Timestamp(6)
   title              String?              @db.VarChar
   description        String?              @db.VarChar
-  price              Int?                 @default(0)
+  price              Int                  @default(0)
+  printPrice         Int                  @default(0)
   isbn               String?              @db.VarChar
   status             String?              @default("unpublished") @db.VarChar
   coverId            BigInt?
@@ -150,7 +151,6 @@ model StoreBookRelease {
   updatedAt          DateTime             @default(now()) @updatedAt
   printCoverId       BigInt?
   printFileId        BigInt?
-  offerPrint         Boolean              @default(false)
   printBookPurchases PrintOrder[]
   cover              StoreBookCover?      @relation(fields: [coverId], references: [id])
   file               StoreBookFile?       @relation(fields: [fileId], references: [id])
