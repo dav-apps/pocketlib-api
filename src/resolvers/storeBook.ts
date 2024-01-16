@@ -50,7 +50,11 @@ export async function retrieveStoreBook(
 		where: { uuid }
 	})) as StoreBook
 
-	await loadStoreBookData(context.prisma, storeBook)
+	await loadStoreBookData(
+		context.prisma,
+		storeBook,
+		context.user == null && BigInt(context.user.id) != storeBook.userId
+	)
 
 	return storeBook
 }
