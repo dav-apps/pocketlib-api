@@ -4,9 +4,10 @@ import { encode } from "blurhash"
 import { createCanvas, loadImage, Image } from "canvas"
 import * as crypto from "crypto"
 import { PrismaClient, StoreBookRelease } from "@prisma/client"
-import { isSuccessStatusCode } from "dav-js"
+import { TableObjectsController, isSuccessStatusCode } from "dav-js"
 import { RegexResult, ApiError, User, StoreBook } from "./types.js"
 import {
+	storeBookReleaseTableId,
 	facebookUsernameRegex,
 	instagramUsernameRegex,
 	twitterUsernameRegex,
@@ -107,12 +108,15 @@ export async function getLastReleaseOfStoreBook(
 
 export async function createNewStoreBookRelease(
 	prisma: PrismaClient,
+	accessToken: string,
 	storeBook: StoreBook,
 	oldRelease: StoreBookRelease,
 	userId: number
 ): Promise<StoreBookRelease> {
+	const uuid = crypto.randomUUID()
+
 	let data = {
-		uuid: crypto.randomUUID(),
+		uuid,
 		userId,
 		storeBook: {
 			connect: {
@@ -169,9 +173,18 @@ export async function createNewStoreBookRelease(
 		data.categories.connect.push({ id: category.id })
 	}
 
-	return await prisma.storeBookRelease.create({
+	const storeBookRelease = await prisma.storeBookRelease.create({
 		data
 	})
+
+	// Create the StoreBookRelease table object
+	await TableObjectsController.CreateTableObject({
+		accessToken,
+		uuid,
+		tableId: storeBookReleaseTableId
+	})
+
+	return storeBookRelease
 }
 
 export async function blurhashEncode(data: Buffer): Promise<{

@@ -61,6 +61,7 @@ export async function uploadStoreBookPrintCover(req: Request, res: Response) {
 			// Create a new release
 			let newRelease = await createNewStoreBookRelease(
 				prisma,
+				accessToken,
 				storeBook,
 				release,
 				user.id

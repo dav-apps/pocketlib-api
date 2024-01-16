@@ -635,6 +635,7 @@ export async function updateStoreBook(
 		// Create a new release
 		storeBookRelease = await createNewStoreBookRelease(
 			context.prisma,
+			context.accessToken,
 			storeBook,
 			storeBookRelease,
 			user.id
