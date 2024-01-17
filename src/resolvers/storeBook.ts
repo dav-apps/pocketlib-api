@@ -5,6 +5,8 @@ import {
 	StoreBookRelease,
 	StoreBookCollection,
 	StoreBookFile,
+	StoreBookPrintCover,
+	StoreBookPrintFile,
 	StoreBookSeries,
 	Category
 } from "@prisma/client"
@@ -804,7 +806,11 @@ export async function cover(
 	args: any,
 	context: ResolverContext
 ): Promise<StoreBookCover> {
-	let release = await getLastReleaseOfStoreBook(context.prisma, storeBook.id)
+	let release = await getLastReleaseOfStoreBook(
+		context.prisma,
+		storeBook.id,
+		context.user == null && BigInt(context.user.id) != storeBook.userId
+	)
 	if (release.coverId == null) return null
 
 	let cover = await context.prisma.storeBookCover.findFirst({
@@ -822,11 +828,49 @@ export async function file(
 	args: any,
 	context: ResolverContext
 ): Promise<StoreBookFile> {
-	let release = await getLastReleaseOfStoreBook(context.prisma, storeBook.id)
+	let release = await getLastReleaseOfStoreBook(
+		context.prisma,
+		storeBook.id,
+		context.user == null && BigInt(context.user.id) != storeBook.userId
+	)
 	if (release.fileId == null) return null
 
 	return await context.prisma.storeBookFile.findFirst({
 		where: { id: release.fileId }
+	})
+}
+
+export async function printCover(
+	storeBook: StoreBook,
+	args: any,
+	context: ResolverContext
+): Promise<StoreBookPrintCover> {
+	let release = await getLastReleaseOfStoreBook(
+		context.prisma,
+		storeBook.id,
+		context.user == null && BigInt(context.user.id) != storeBook.userId
+	)
+	if (release.printCoverId == null) return null
+
+	return await context.prisma.storeBookPrintCover.findFirst({
+		where: { id: release.printCoverId }
+	})
+}
+
+export async function printFile(
+	storeBook: StoreBook,
+	args: any,
+	context: ResolverContext
+): Promise<StoreBookPrintFile> {
+	let release = await getLastReleaseOfStoreBook(
+		context.prisma,
+		storeBook.id,
+		context.user == null && BigInt(context.user.id) != storeBook.userId
+	)
+	if (release.printFileId == null) return null
+
+	return await context.prisma.storeBookPrintFile.findFirst({
+		where: { id: release.printFileId }
 	})
 }
 

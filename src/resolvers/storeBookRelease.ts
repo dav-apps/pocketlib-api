@@ -1,4 +1,10 @@
-import { StoreBookRelease, StoreBookFile, Category } from "@prisma/client"
+import {
+	StoreBookRelease,
+	StoreBookFile,
+	StoreBookPrintCover,
+	StoreBookPrintFile,
+	Category
+} from "@prisma/client"
 import { ResolverContext, List, StoreBookCover } from "../types.js"
 import {
 	throwApiError,
@@ -135,6 +141,34 @@ export async function file(
 
 	return await context.prisma.storeBookFile.findFirst({
 		where: { id: storeBookRelease.fileId }
+	})
+}
+
+export async function printCover(
+	storeBookRelease: StoreBookRelease,
+	args: any,
+	context: ResolverContext
+): Promise<StoreBookPrintCover> {
+	if (storeBookRelease.printCoverId == null) {
+		return null
+	}
+
+	return await context.prisma.storeBookPrintCover.findFirst({
+		where: { id: storeBookRelease.printCoverId }
+	})
+}
+
+export async function printFile(
+	storeBookRelease: StoreBookRelease,
+	args: any,
+	context: ResolverContext
+): Promise<StoreBookPrintFile> {
+	if (storeBookRelease.printFileId == null) {
+		return null
+	}
+
+	return await context.prisma.storeBookPrintFile.findFirst({
+		where: { id: storeBookRelease.printFileId }
 	})
 }
 

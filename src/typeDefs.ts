@@ -228,6 +228,8 @@ export const typeDefs = `#graphql
 		status: String!
 		cover: StoreBookCover
 		file: StoreBookFile
+		printCover: StoreBookPrintCover
+		printFile: StoreBookPrintFile
 		categories(limit: Int, offset: Int): CategoryList!
 		series(limit: Int, offset: Int): StoreBookSeriesList!
 		releases(limit: Int, offset: Int): StoreBookReleaseList! @auth(role: "AUTHOR")
@@ -254,6 +256,8 @@ export const typeDefs = `#graphql
 		status: String
 		cover: StoreBookCover
 		file: StoreBookFile
+		printCover: StoreBookPrintCover
+		printFile: StoreBookPrintFile
 		categories(limit: Int, offset: Int): CategoryList!
 	}
 
@@ -270,6 +274,16 @@ export const typeDefs = `#graphql
 	}
 
 	type StoreBookFile {
+		uuid: String!
+		fileName: String
+	}
+
+	type StoreBookPrintCover {
+		uuid: String!
+		fileName: String
+	}
+
+	type StoreBookPrintFile {
 		uuid: String!
 		fileName: String
 	}

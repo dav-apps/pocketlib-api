@@ -330,6 +330,32 @@ export const resolvers = {
 			cachingResolver(parent, args, context, info, storeBookResolvers.cover),
 		file: (parent: any, args: any, context: ResolverContext, info: any) =>
 			cachingResolver(parent, args, context, info, storeBookResolvers.file),
+		printCover: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				storeBookResolvers.printCover
+			),
+		printFile: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				storeBookResolvers.printFile
+			),
 		categories: (
 			parent: any,
 			args: any,
@@ -378,6 +404,32 @@ export const resolvers = {
 				context,
 				info,
 				storeBookReleaseResolvers.file
+			),
+		printCover: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				storeBookReleaseResolvers.printCover
+			),
+		printFile: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				storeBookReleaseResolvers.printFile
 			),
 		categories: (
 			parent: any,
