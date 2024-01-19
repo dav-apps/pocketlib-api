@@ -3,6 +3,7 @@ export const apiBaseUrlStaging =
 	"https://dav-backend-tfpik.ondigitalocean.app/staging"
 export const apiBaseUrlProduction =
 	"https://dav-backend-tfpik.ondigitalocean.app/"
+export const newApiBaseUrl = "http://localhost:4000"
 export const admins = [1]
 export const languages = ["en", "de"]
 

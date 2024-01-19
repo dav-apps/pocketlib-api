@@ -59,9 +59,11 @@ export interface TableObject {
 }
 
 export interface TableObjectPrice {
+	id: BigInt
 	tableObjectUuid: string
 	price: number
-	currency: string
+	currency: Currency
+	type: TableObjectPriceType
 }
 
 export interface Collection {
@@ -83,6 +85,9 @@ export interface Purchase {
 	currency: string
 	completed: boolean
 }
+
+export type Currency = "EUR"
+export type TableObjectPriceType = "PURCHASE" | "ORDER"
 //#endregion
 
 //#region PocketLib models

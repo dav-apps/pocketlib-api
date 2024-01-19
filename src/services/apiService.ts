@@ -1,16 +1,20 @@
 import axios, { AxiosRequestConfig } from "axios"
+import { request, gql } from "graphql-request"
 import {
 	List,
 	UserApiResponse,
 	TableObject,
 	TableObjectPrice,
 	Collection,
-	Purchase
+	Purchase,
+	Currency,
+	TableObjectPriceType
 } from "../types.js"
 import {
 	apiBaseUrlDevelopment,
 	apiBaseUrlStaging,
 	apiBaseUrlProduction,
+	newApiBaseUrl,
 	appId
 } from "../constants.js"
 
@@ -224,33 +228,43 @@ export async function listPurchasesOfTableObject(params: {
 }
 
 export async function setTableObjectPrice(params: {
-	uuid: string
+	accessToken: string
+	tableObjectUuid: string
 	price: number
-	currency: string
+	currency: Currency
+	type: TableObjectPriceType
 }): Promise<TableObjectPrice> {
-	try {
-		let response = await axios({
-			method: "put",
-			url: `${getApiBaseUrl()}/v2/table_objects/${params.uuid}/price`,
-			headers: {
-				Authorization: process.env.DAV_AUTH,
-				"Content-Type": "application/json"
-			},
-			data: {
-				price: params.price,
-				currency: params.currency
+	let response = await request<{ setTableObjectPrice: TableObjectPrice }>(
+		newApiBaseUrl,
+		gql`
+			mutation SetTableObjectPrice(
+				$tableObjectUuid: String!
+				$price: Int!
+				$currency: Currency!
+				$type: TableObjectPriceType!
+			) {
+				setTableObjectPrice(
+					tableObjectUuid: $tableObjectUuid
+					price: $price
+					currency: $currency
+					type: $type
+				) {
+					id
+				}
 			}
-		})
-
-		return {
-			tableObjectUuid: response.data.table_object_uuid,
-			price: response.data.price,
-			currency: response.data.currency
+		`,
+		{
+			tableObjectUuid: params.tableObjectUuid,
+			price: params.price,
+			currency: params.currency,
+			type: params.type
+		},
+		{
+			Authorization: params.accessToken
 		}
-	} catch (error) {
-		console.error(error.response?.data || error)
-		return null
-	}
+	)
+
+	return response.setTableObjectPrice
 }
 
 export async function addTableObjectToCollection(params: {
@@ -312,4 +326,48 @@ export async function addTableObject(params: {
 		console.error(error.response?.data || error)
 		return null
 	}
+}
+
+export async function createCheckoutSession(params: {
+	accessToken: string
+	tableObjectUuid: string
+	productName: string
+	productImage: string
+	successUrl: string
+	cancelUrl: string
+}): Promise<string> {
+	let response = await request<{ createCheckoutSession: { url: string } }>(
+		newApiBaseUrl,
+		gql`
+			mutation CreateCheckoutSession(
+				$tableObjectUuid: String!
+				$productName: String!
+				$productImage: String!
+				$successUrl: String!
+				$cancelUrl: String!
+			) {
+				createCheckoutSession(
+					tableObjectUuid: $tableObjectUuid
+					productName: $productName
+					productImage: $productImage
+					successUrl: $successUrl
+					cancelUrl: $cancelUrl
+				) {
+					url
+				}
+			}
+		`,
+		{
+			tableObjectUuid: params.tableObjectUuid,
+			productName: params.productName,
+			productImage: params.productImage,
+			successUrl: params.successUrl,
+			cancelUrl: params.cancelUrl
+		},
+		{
+			Authorization: params.accessToken
+		}
+	)
+
+	return response.createCheckoutSession.url
 }
