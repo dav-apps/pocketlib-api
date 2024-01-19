@@ -475,7 +475,7 @@ export async function createStoreBook(
 		}
 	}
 
-	const storeBookRelease = await context.prisma.storeBookRelease.create({
+	await context.prisma.storeBookRelease.create({
 		data: storeBookReleaseProperties
 	})
 
@@ -494,9 +494,11 @@ export async function createStoreBook(
 
 	// Set the price of the table object
 	let storeBookPrice = await setTableObjectPrice({
-		uuid: storeBook.uuid,
+		accessToken,
+		tableObjectUuid: storeBook.uuid,
 		price: args.price || 0,
-		currency: "eur"
+		currency: "EUR",
+		type: "PURCHASE"
 	})
 
 	if (storeBookPrice == null) {
@@ -506,9 +508,11 @@ export async function createStoreBook(
 	if (args.printPrice != null) {
 		// Set the price of the store book release
 		let storeBookReleasePrice = await setTableObjectPrice({
-			uuid: storeBookRelease.uuid,
+			accessToken,
+			tableObjectUuid: storeBook.uuid,
 			price: args.printPrice,
-			currency: "eur"
+			currency: "EUR",
+			type: "ORDER"
 		})
 
 		if (storeBookReleasePrice == null) {
@@ -541,11 +545,10 @@ export async function updateStoreBook(
 	},
 	context: ResolverContext
 ): Promise<StoreBook> {
-	const uuid = args.uuid
-	if (uuid == null) return null
-
+	const accessToken = context.accessToken
 	const user = context.user
 
+	// Check if the user is logged in
 	if (user == null) {
 		throwApiError(apiErrors.notAuthenticated)
 	}
@@ -554,7 +557,7 @@ export async function updateStoreBook(
 
 	// Get the store book
 	let storeBook = (await context.prisma.storeBook.findFirst({
-		where: { uuid }
+		where: { uuid: args.uuid }
 	})) as StoreBook
 
 	// Check if the store book belongs to the user
@@ -764,9 +767,11 @@ export async function updateStoreBook(
 	if (args.price != null) {
 		// Set the store book price
 		let updateStoreBookPrice = await setTableObjectPrice({
-			uuid: storeBook.uuid,
+			accessToken,
+			tableObjectUuid: storeBook.uuid,
 			price: args.price,
-			currency: "eur"
+			currency: "EUR",
+			type: "PURCHASE"
 		})
 
 		if (updateStoreBookPrice == null) {
@@ -777,9 +782,11 @@ export async function updateStoreBook(
 	if (args.printPrice != null) {
 		// Set the store book release print price
 		let updateStoreBookReleasePrice = await setTableObjectPrice({
-			uuid: storeBookRelease.uuid,
+			accessToken,
+			tableObjectUuid: storeBookRelease.uuid,
 			price: args.printPrice,
-			currency: "eur"
+			currency: "EUR",
+			type: "ORDER"
 		})
 
 		if (updateStoreBookReleasePrice == null) {

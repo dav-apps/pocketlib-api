@@ -20,7 +20,7 @@ import { apiErrors } from "../errors.js"
 import { validatePdfContentType } from "../services/validationService.js"
 import { prisma } from "../../server.js"
 
-export async function uploadStoreBookPrintFile(req: Request, res: Response) {
+async function uploadStoreBookPrintFile(req: Request, res: Response) {
 	try {
 		const uuid = req.params.uuid
 		const accessToken = req.headers.authorization
