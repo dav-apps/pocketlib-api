@@ -494,7 +494,6 @@ export async function createStoreBook(
 
 	// Set the price of the table object
 	let storeBookPrice = await setTableObjectPrice({
-		accessToken,
 		tableObjectUuid: storeBook.uuid,
 		price: args.price || 0,
 		currency: "EUR",
@@ -507,15 +506,14 @@ export async function createStoreBook(
 
 	if (args.printPrice != null) {
 		// Set the price of the store book release
-		let storeBookReleasePrice = await setTableObjectPrice({
-			accessToken,
+		let storeBookPrice = await setTableObjectPrice({
 			tableObjectUuid: storeBook.uuid,
 			price: args.printPrice,
 			currency: "EUR",
 			type: "ORDER"
 		})
 
-		if (storeBookReleasePrice == null) {
+		if (storeBookPrice == null) {
 			throwApiError(apiErrors.unexpectedError)
 		}
 	}
@@ -767,7 +765,6 @@ export async function updateStoreBook(
 	if (args.price != null) {
 		// Set the store book price
 		let updateStoreBookPrice = await setTableObjectPrice({
-			accessToken,
 			tableObjectUuid: storeBook.uuid,
 			price: args.price,
 			currency: "EUR",
@@ -781,15 +778,14 @@ export async function updateStoreBook(
 
 	if (args.printPrice != null) {
 		// Set the store book release print price
-		let updateStoreBookReleasePrice = await setTableObjectPrice({
-			accessToken,
-			tableObjectUuid: storeBookRelease.uuid,
+		let updateStoreBookPrice = await setTableObjectPrice({
+			tableObjectUuid: storeBook.uuid,
 			price: args.printPrice,
 			currency: "EUR",
 			type: "ORDER"
 		})
 
-		if (updateStoreBookReleasePrice == null) {
+		if (updateStoreBookPrice == null) {
 			throwApiError(apiErrors.unexpectedError)
 		}
 	}

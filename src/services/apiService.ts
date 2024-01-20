@@ -228,7 +228,6 @@ export async function listPurchasesOfTableObject(params: {
 }
 
 export async function setTableObjectPrice(params: {
-	accessToken: string
 	tableObjectUuid: string
 	price: number
 	currency: Currency
@@ -249,7 +248,7 @@ export async function setTableObjectPrice(params: {
 					currency: $currency
 					type: $type
 				) {
-					id
+					price
 				}
 			}
 		`,
@@ -260,7 +259,7 @@ export async function setTableObjectPrice(params: {
 			type: params.type
 		},
 		{
-			Authorization: params.accessToken
+			Authorization: process.env.DAV_AUTH
 		}
 	)
 
@@ -331,6 +330,7 @@ export async function addTableObject(params: {
 export async function createCheckoutSession(params: {
 	accessToken: string
 	tableObjectUuid: string
+	type: TableObjectPriceType
 	productName: string
 	productImage: string
 	successUrl: string
@@ -341,6 +341,7 @@ export async function createCheckoutSession(params: {
 		gql`
 			mutation CreateCheckoutSession(
 				$tableObjectUuid: String!
+				$type: TableObjectPriceType!
 				$productName: String!
 				$productImage: String!
 				$successUrl: String!
@@ -348,6 +349,7 @@ export async function createCheckoutSession(params: {
 			) {
 				createCheckoutSession(
 					tableObjectUuid: $tableObjectUuid
+					type: $type
 					productName: $productName
 					productImage: $productImage
 					successUrl: $successUrl
@@ -359,6 +361,7 @@ export async function createCheckoutSession(params: {
 		`,
 		{
 			tableObjectUuid: params.tableObjectUuid,
+			type: params.type,
 			productName: params.productName,
 			productImage: params.productImage,
 			successUrl: params.successUrl,
