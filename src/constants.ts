@@ -4,6 +4,8 @@ export const apiBaseUrlStaging =
 export const apiBaseUrlProduction =
 	"https://dav-backend-tfpik.ondigitalocean.app/"
 export const newApiBaseUrl = "http://localhost:4000"
+export const luluApiBaseUrlStaging = "https://api.sandbox.lulu.com"
+export const luluApiBaseUrlProduction = "https://api.lulu.com"
 export const admins = [1]
 export const languages = ["en", "de"]
 

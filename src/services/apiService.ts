@@ -7,6 +7,7 @@ import {
 	TableObjectPrice,
 	Collection,
 	Purchase,
+	Order,
 	Currency,
 	TableObjectPriceType
 } from "../types.js"
@@ -325,6 +326,28 @@ export async function addTableObject(params: {
 		console.error(error.response?.data || error)
 		return null
 	}
+}
+
+export async function retrieveOrder(
+	queryData: string,
+	variables: { uuid: string }
+): Promise<Order> {
+	let result = await request<{ retrieveOrder: Order }>(
+		newApiBaseUrl,
+		gql`
+			query RetrieveOrder($uuid: String!) {
+				retrieveOrder(uuid: $uuid) {
+					${queryData}
+				}
+			}
+		`,
+		variables,
+		{
+			Authorization: process.env.DAV_AUTH
+		}
+	)
+
+	return result.retrieveOrder
 }
 
 export async function createCheckoutSession(params: {
