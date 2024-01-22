@@ -120,6 +120,10 @@ export const validationErrors = {
 	printPriceInvalid: "PRINT_PRICE_INVALID",
 	isbnInvalid: "ISBN_INVALID",
 	statusInvalid: "STATUS_INVALID",
+	storeBookPrintCoverPagesInvalid: "PRINT_COVER_PAGES_INVALID",
+	storeBookPrintFilePagesInvalid: "PRINT_FILE_PAGES_INVALID",
+	storeBookPrintCoverPageSizeInvalid: "PRINT_COVER_PAGE_SIZE_INVALID",
+	storeBookPrintFilePageSizeInvalid: "PRINT_FILE_PAGE_SIZE_INVALID",
 	storeBookMaxCategories: "TOO_MANY_CATEGORIES_FOR_STORE_BOOK",
 	cannotPublishStoreBookWithoutDescription:
 		"CANNOT_PUBLISH_STORE_BOOK_WITHOUT_DESCRIPTION",

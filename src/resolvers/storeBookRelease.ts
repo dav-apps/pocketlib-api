@@ -5,6 +5,7 @@ import {
 	StoreBookPrintFile,
 	Category
 } from "@prisma/client"
+import { getDocument } from "pdfjs-dist"
 import { ResolverContext, List, StoreBookCover } from "../types.js"
 import {
 	throwApiError,
@@ -15,7 +16,11 @@ import { admins } from "../constants.js"
 import { apiErrors } from "../errors.js"
 import {
 	validateReleaseNameLength,
-	validateReleaseNotesLength
+	validateReleaseNotesLength,
+	validateStoreBookPrintCoverPages,
+	validateStoreBookPrintFilePages,
+	validateStoreBookPrintCoverPageSize,
+	validateStoreBookPrintFilePageSize
 } from "../services/validationService.js"
 
 export async function retrieveStoreBookRelease(
@@ -59,7 +64,8 @@ export async function publishStoreBookRelease(
 
 	// Get the store book release
 	let storeBookRelease = await context.prisma.storeBookRelease.findFirst({
-		where: { uuid }
+		where: { uuid },
+		include: { printCover: true, printFile: true }
 	})
 
 	if (storeBookRelease == null) {
@@ -94,6 +100,47 @@ export async function publishStoreBookRelease(
 	}
 
 	throwValidationError(...errors)
+
+	if (
+		storeBookRelease.printCover != null &&
+		storeBookRelease.printFile != null
+	) {
+		// Validate the printCover and printFile
+		const printCoverUrl = getTableObjectFileUrl(
+			storeBookRelease.printCover.uuid
+		)
+		const printFileUrl = getTableObjectFileUrl(
+			storeBookRelease.printFile.uuid
+		)
+
+		// Validate printFile pdf
+		let printFilePdf = await getDocument(printFileUrl).promise
+		const printFilePages = printFilePdf.numPages
+
+		throwValidationError(validateStoreBookPrintFilePages(printFilePages))
+
+		for (let i = 1; i <= printFilePages; i++) {
+			let page = await printFilePdf.getPage(i)
+
+			// Validate the page size
+			const [x, y, w, h] = page._pageInfo.view
+			throwValidationError(validateStoreBookPrintFilePageSize(w, h))
+		}
+
+		// Validate printCover pdf
+		let printCoverPdf = await getDocument(printCoverUrl).promise
+		const printCoverPages = printCoverPdf.numPages
+
+		throwValidationError(validateStoreBookPrintCoverPages(printCoverPages))
+
+		let printCoverFirstPage = await printCoverPdf.getPage(1)
+
+		// Validate the page size
+		const [x, y, w, h] = printCoverFirstPage._pageInfo.view
+		throwValidationError(
+			validateStoreBookPrintCoverPageSize(w, h, printFilePdf.numPages)
+		)
+	}
 
 	// Publish the release
 	return await context.prisma.storeBookRelease.update({

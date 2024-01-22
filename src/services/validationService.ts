@@ -1,4 +1,4 @@
-import { throwEndpointError } from "../utils.js"
+import { throwEndpointError, convertPtToInch } from "../utils.js"
 import { languages, urlRegex, isbnRegex } from "../constants.js"
 import { apiErrors, validationErrors } from "../errors.js"
 
@@ -129,6 +129,52 @@ export function validateIsbn(isbn: string) {
 export function validateStatus(status: string) {
 	if (!["unpublished", "review", "published", "hidden"].includes(status)) {
 		return validationErrors.statusInvalid
+	}
+}
+
+export function validateStoreBookPrintCoverPages(pages: number) {
+	if (pages != 1) {
+		return validationErrors.storeBookPrintCoverPagesInvalid
+	}
+}
+
+export function validateStoreBookPrintFilePages(pages: number) {
+	if (pages < 32 || pages > 999) {
+		return validationErrors.storeBookPrintFilePagesInvalid
+	}
+}
+
+export function validateStoreBookPrintCoverPageSize(
+	width: number,
+	height: number,
+	pages: number
+) {
+	const widthInch = Number(convertPtToInch(width).toFixed(1))
+	const heightInch = Number(convertPtToInch(height).toFixed(1))
+
+	// Calculate spine width
+	const spineWidth = pages / 444 + 0.06
+
+	// target width = (page width * 2) + (bleed margin * 2) + spine width
+	const targetWidth = Number((5.5 * 2 + 0.125 * 2 + spineWidth).toFixed(1))
+
+	// target height = page height + (bleed margin * 2)
+	const targetHeight = Number((8.5 + 0.125 * 2).toFixed(1))
+
+	if (widthInch != targetWidth || heightInch != targetHeight) {
+		return validationErrors.storeBookPrintCoverPageSizeInvalid
+	}
+}
+
+export function validateStoreBookPrintFilePageSize(
+	width: number,
+	height: number
+) {
+	const widthInch = Number(convertPtToInch(width).toFixed(1))
+	const heightInch = Number(convertPtToInch(height).toFixed(1))
+
+	if (widthInch != 5.5 || heightInch != 8.5) {
+		return validationErrors.storeBookPrintFilePageSizeInvalid
 	}
 }
 //#endregion
