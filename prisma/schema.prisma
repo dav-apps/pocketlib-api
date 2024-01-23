@@ -144,6 +144,7 @@ model StoreBookRelease {
   price              Int                  @default(0)
   printPrice         Int                  @default(0)
   isbn               String?              @db.VarChar
+  luluPrintableId    String?              @db.VarChar
   status             String?              @default("unpublished") @db.VarChar
   coverId            BigInt?
   fileId             BigInt?

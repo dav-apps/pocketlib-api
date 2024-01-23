@@ -9,7 +9,8 @@ import {
 	Purchase,
 	Order,
 	Currency,
-	TableObjectPriceType
+	TableObjectPriceType,
+	OrderStatus
 } from "../types.js"
 import {
 	apiBaseUrlDevelopment,
@@ -348,6 +349,34 @@ export async function retrieveOrder(
 	)
 
 	return result.retrieveOrder
+}
+
+export async function updateOrder(
+	queryData: string,
+	variables: { uuid: string; status?: OrderStatus }
+): Promise<Order> {
+	let result = await request<{ updateOrder: Order }>(
+		newApiBaseUrl,
+		gql`
+			mutation UpdateOrder(
+				$uuid: String!
+				$status: OrderStatus
+			) {
+				updateOrder(
+					uuid: $uuid
+					status: $status
+				) {
+					${queryData}
+				}
+			}
+		`,
+		variables,
+		{
+			Authorization: process.env.DAV_AUTH
+		}
+	)
+
+	return result.updateOrder
 }
 
 export async function createCheckoutSession(params: {

@@ -81,7 +81,8 @@ async function davWebhook(req: Request, res: Response) {
 
 		let createPrintJobResponse = await createPrintJob(luluAccessToken, {
 			title: storeBookRelease.title,
-			externalId: orderUuid,
+			printJobExternalId: orderUuid,
+			lineItemExternalId: storeBookRelease.uuid,
 			coverSourceUrl: getTableObjectFileUrl(printCover.uuid),
 			interiorSourceUrl: getTableObjectFileUrl(printFile.uuid),
 			shippingAddress: order.shippingAddress

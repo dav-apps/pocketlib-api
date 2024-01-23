@@ -45,7 +45,8 @@ export async function createPrintJob(
 	accessToken: string,
 	params: {
 		title: string
-		externalId: string
+		printJobExternalId: string
+		lineItemExternalId: string
 		coverSourceUrl: string
 		interiorSourceUrl: string
 		shippingAddress: ShippingAddress
@@ -61,12 +62,12 @@ export async function createPrintJob(
 			},
 			data: {
 				contact_email: "support@dav-apps.tech",
-				external_id: params.externalId,
+				external_id: params.printJobExternalId,
 				line_items: [
 					{
 						title: params.title,
 						quantity: 1,
-						external_id: params.externalId,
+						external_id: params.lineItemExternalId,
 						printable_normalization: {
 							pod_package_id: "0550X0850BWSTDPB060UC444GXX",
 							cover: {

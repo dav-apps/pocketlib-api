@@ -94,7 +94,7 @@ export interface Order {
 	paymentIntentId: string
 	price: number
 	currency: Currency
-	completed: boolean
+	status: OrderStatus
 }
 
 export interface ShippingAddress {
@@ -112,6 +112,7 @@ export interface ShippingAddress {
 
 export type Currency = "EUR"
 export type TableObjectPriceType = "PURCHASE" | "ORDER"
+export type OrderStatus = "CREATED" | "PREPARATION" | "SHIPPED"
 //#endregion
 
 //#region PocketLib models
