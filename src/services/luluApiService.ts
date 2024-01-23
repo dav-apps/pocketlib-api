@@ -100,3 +100,54 @@ export async function createPrintJob(
 		return null
 	}
 }
+
+export async function createReprintJob(
+	accessToken: string,
+	params: {
+		title: string
+		printJobExternalId: string
+		lineItemExternalId: string
+		printableId: string
+		shippingAddress: ShippingAddress
+	}
+): Promise<{ id: number }> {
+	try {
+		let response = await axios({
+			method: "post",
+			url: `${getApiBaseUrl()}/print-jobs`,
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${accessToken}`
+			},
+			data: {
+				contact_email: "support@dav-apps.tech",
+				external_id: params.printJobExternalId,
+				line_items: [
+					{
+						title: params.title,
+						quantity: 1,
+						external_id: params.lineItemExternalId,
+						printable_id: params.printableId
+					}
+				],
+				shipping_address: {
+					name: params.shippingAddress.name,
+					email: params.shippingAddress.email,
+					phone_number: params.shippingAddress.phone,
+					city: params.shippingAddress.city,
+					country_code: params.shippingAddress.country,
+					postcode: params.shippingAddress.postalCode,
+					state_code: params.shippingAddress.state,
+					street1: params.shippingAddress.line1,
+					street2: params.shippingAddress.line2
+				},
+				shipping_level: "MAIL"
+			}
+		})
+
+		return response.data
+	} catch (error) {
+		console.error(error)
+		return null
+	}
+}

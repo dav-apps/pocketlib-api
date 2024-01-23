@@ -2,7 +2,11 @@ import { Express, Request, Response, json } from "express"
 import cors from "cors"
 import { getLastReleaseOfStoreBook, getTableObjectFileUrl } from "../utils.js"
 import { retrieveOrder } from "../services/apiService.js"
-import { authenticate, createPrintJob } from "../services/luluApiService.js"
+import {
+	authenticate,
+	createPrintJob,
+	createReprintJob
+} from "../services/luluApiService.js"
 import { prisma } from "../../server.js"
 
 const webhookKey = process.env.WEBHOOK_KEY
@@ -38,7 +42,6 @@ async function davWebhook(req: Request, res: Response) {
 			`,
 			{ uuid: orderUuid }
 		)
-		console.log(order)
 
 		if (order == null) {
 			return res.sendStatus(400)
@@ -53,10 +56,12 @@ async function davWebhook(req: Request, res: Response) {
 			return res.sendStatus(400)
 		}
 
+		const userIsAuthor = BigInt(order.userId) == storeBook.userId
+
 		const storeBookRelease = await getLastReleaseOfStoreBook(
 			prisma,
 			storeBook.id,
-			BigInt(order.userId) != storeBook.userId
+			!userIsAuthor
 		)
 
 		if (storeBookRelease == null) {
@@ -79,16 +84,25 @@ async function davWebhook(req: Request, res: Response) {
 
 		const luluAccessToken = luluAuthenticationResponse.access_token
 
-		let createPrintJobResponse = await createPrintJob(luluAccessToken, {
-			title: storeBookRelease.title,
-			printJobExternalId: orderUuid,
-			lineItemExternalId: storeBookRelease.uuid,
-			coverSourceUrl: getTableObjectFileUrl(printCover.uuid),
-			interiorSourceUrl: getTableObjectFileUrl(printFile.uuid),
-			shippingAddress: order.shippingAddress
-		})
-
-		console.log(createPrintJobResponse)
+		if (!userIsAuthor && storeBookRelease.luluPrintableId != null) {
+			// Print the book as a reprint
+			await createReprintJob(luluAccessToken, {
+				title: storeBookRelease.title,
+				printJobExternalId: orderUuid,
+				lineItemExternalId: storeBookRelease.uuid,
+				printableId: storeBookRelease.luluPrintableId,
+				shippingAddress: order.shippingAddress
+			})
+		} else {
+			await createPrintJob(luluAccessToken, {
+				title: storeBookRelease.title,
+				printJobExternalId: orderUuid,
+				lineItemExternalId: storeBookRelease.uuid,
+				coverSourceUrl: getTableObjectFileUrl(printCover.uuid),
+				interiorSourceUrl: getTableObjectFileUrl(printFile.uuid),
+				shippingAddress: order.shippingAddress
+			})
+		}
 	}
 
 	res.send()

@@ -22,6 +22,7 @@ import { setup as storeBookFileSetup } from "./src/endpoints/storeBookFile.js"
 import { setup as storeBookPrintCoverSetup } from "./src/endpoints/storeBookPrintCover.js"
 import { setup as storeBookPrintFileSetup } from "./src/endpoints/storeBookPrintFile.js"
 import { setup as davWebhookSetup } from "./src/endpoints/davWebhook.js"
+import { setup as luluWebhookSetup } from "./src/endpoints/luluWebhook.js"
 
 const port = process.env.PORT || 4001
 const app = express()
@@ -78,6 +79,7 @@ storeBookFileSetup(app)
 storeBookPrintCoverSetup(app)
 storeBookPrintFileSetup(app)
 davWebhookSetup(app)
+luluWebhookSetup(app)
 
 app.use(
 	"/",
