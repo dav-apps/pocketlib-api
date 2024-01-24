@@ -201,6 +201,7 @@ model StoreBookPrintFile {
   id        BigInt             @id @default(autoincrement())
   uuid      String             @unique @db.VarChar
   userId    BigInt
+  pages     Int
   fileName  String?            @db.VarChar
   createdAt DateTime           @default(now())
   releases  StoreBookRelease[]

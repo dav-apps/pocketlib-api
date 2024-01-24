@@ -1,6 +1,7 @@
 import { Express, Request, Response, raw } from "express"
 import cors from "cors"
 import { PrismaClient } from "@prisma/client"
+import { getDocument } from "pdfjs-dist"
 import {
 	isSuccessStatusCode,
 	ApiResponse,
@@ -51,11 +52,14 @@ async function uploadStoreBookPrintFile(req: Request, res: Response) {
 			throwEndpointError(apiErrors.unexpectedError)
 		}
 
-		// Get the file name
+		// Get the pages & file name
 		let printFileUuid = null
 		let contentDisposition = req.headers["content-disposition"]
 		let fileName = getFilename(contentDisposition)
 		if (fileName != null) fileName = decodeURI(fileName)
+
+		let pdf = await getDocument(new Uint8Array(req.body)).promise
+		const pages = pdf.numPages
 
 		if (release.status == "published") {
 			// Create a new release
@@ -74,6 +78,7 @@ async function uploadStoreBookPrintFile(req: Request, res: Response) {
 				BigInt(user.id),
 				newRelease.id,
 				req.body,
+				pages,
 				fileName
 			)
 		} else {
@@ -96,6 +101,7 @@ async function uploadStoreBookPrintFile(req: Request, res: Response) {
 					BigInt(user.id),
 					release.id,
 					req.body,
+					pages,
 					fileName
 				)
 			} else {
@@ -116,6 +122,7 @@ async function uploadStoreBookPrintFile(req: Request, res: Response) {
 						uuid: printFileUuid,
 						properties: {
 							ext: "pdf",
+							pages,
 							file_name: fileName
 						}
 					})
@@ -166,6 +173,7 @@ async function createPrintFile(
 	userId: bigint,
 	releaseId: bigint,
 	data: any,
+	pages: number,
 	fileName: string
 ) {
 	// Create the printFile table object
@@ -176,6 +184,7 @@ async function createPrintFile(
 			file: true,
 			properties: {
 				ext: "pdf",
+				pages,
 				file_name: fileName
 			}
 		}
@@ -199,6 +208,7 @@ async function createPrintFile(
 			releases: {
 				connect: [{ id: releaseId }]
 			},
+			pages,
 			fileName
 		}
 	})
