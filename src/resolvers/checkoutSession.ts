@@ -6,6 +6,10 @@ import {
 } from "../utils.js"
 import { apiErrors } from "../errors.js"
 import * as apiService from "../services/apiService.js"
+import {
+	authenticate,
+	createPrintJobCostCalculation
+} from "../services/luluApiService.js"
 
 export async function createCheckoutSession(
 	parent: any,
@@ -38,19 +42,77 @@ export async function createCheckoutSession(
 		!userIsAuthor
 	)
 
-	let printCover = await context.prisma.storeBookPrintCover.findFirst({
-		where: { id: storeBookRelease.printCoverId }
+	let cover = await context.prisma.storeBookCover.findFirst({
+		where: { id: storeBookRelease.coverId }
 	})
 
-	let createCheckoutSessionResponse = await apiService.createCheckoutSession({
+	let price = null
+
+	if (userIsAuthor) {
+		let printFile = await context.prisma.storeBookPrintFile.findFirst({
+			where: { id: storeBookRelease.printFileId }
+		})
+
+		const listShippingAddressesQueryData = `
+			total
+			items {
+				name
+				email
+				phone
+				city
+				country
+				line1
+				line2
+				postalCode
+				state
+			}
+		`
+
+		let shippingAddresses = await apiService.listShippingAddresses(
+			listShippingAddressesQueryData,
+			{ userId: user.id, limit: 1 }
+		)
+
+		if (shippingAddresses.total == 0) {
+			// Get the shipping address of the first user
+			shippingAddresses = await apiService.listShippingAddresses(
+				listShippingAddressesQueryData,
+				{ userId: 1, limit: 1 }
+			)
+		}
+
+		// Get the cost for printing the book & charge that instead of the given price
+		let luluAuthenticationResponse = await authenticate()
+
+		const costCalculationResponse = await createPrintJobCostCalculation(
+			luluAuthenticationResponse.access_token,
+			{
+				pageCount: printFile.pages,
+				shippingAddress: shippingAddresses.items[0]
+			}
+		)
+
+		if (costCalculationResponse == null) {
+			throwApiError(apiErrors.unexpectedError)
+		}
+
+		price = Number(costCalculationResponse.total_cost_incl_tax) * 100
+	}
+
+	let createCheckoutSessionResponse = await apiService.createCheckoutSession(
+		`url`,
 		accessToken,
-		tableObjectUuid: storeBook.uuid,
-		type: "ORDER",
-		productName: storeBookRelease.title,
-		productImage: getTableObjectFileUrl(printCover.uuid),
-		successUrl: args.successUrl,
-		cancelUrl: args.cancelUrl
-	})
+		{
+			tableObjectUuid: storeBook.uuid,
+			type: "ORDER",
+			price,
+			currency: "EUR",
+			productName: storeBookRelease.title,
+			productImage: getTableObjectFileUrl(cover.uuid),
+			successUrl: args.successUrl,
+			cancelUrl: args.cancelUrl
+		}
+	)
 
 	return { url: createCheckoutSessionResponse }
 }

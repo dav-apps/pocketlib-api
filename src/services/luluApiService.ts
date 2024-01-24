@@ -151,3 +151,48 @@ export async function createReprintJob(
 		return null
 	}
 }
+
+export async function createPrintJobCostCalculation(
+	accessToken: string,
+	params: {
+		pageCount: number
+		shippingAddress: ShippingAddress
+	}
+): Promise<{ total_cost_incl_tax: string }> {
+	try {
+		let response = await axios({
+			method: "post",
+			url: `${getApiBaseUrl()}/print-job-cost-calculations`,
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${accessToken}`
+			},
+			data: {
+				line_items: [
+					{
+						page_count: params.pageCount,
+						pod_package_id: "0600X0900BWSTDPB060UW444MXX",
+						quantity: 1
+					}
+				],
+				shipping_address: {
+					name: params.shippingAddress.name,
+					email: params.shippingAddress.email,
+					phone_number: params.shippingAddress.phone,
+					city: params.shippingAddress.city,
+					country_code: params.shippingAddress.country,
+					postcode: params.shippingAddress.postalCode,
+					state_code: params.shippingAddress.state,
+					street1: params.shippingAddress.line1,
+					street2: params.shippingAddress.line2
+				},
+				shipping_level: "MAIL"
+			}
+		})
+
+		return response.data
+	} catch (error) {
+		console.error(error)
+		return null
+	}
+}

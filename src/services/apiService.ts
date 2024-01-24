@@ -8,6 +8,7 @@ import {
 	Collection,
 	Purchase,
 	Order,
+	ShippingAddress,
 	Currency,
 	TableObjectPriceType,
 	OrderStatus
@@ -379,21 +380,60 @@ export async function updateOrder(
 	return result.updateOrder
 }
 
-export async function createCheckoutSession(params: {
-	accessToken: string
-	tableObjectUuid: string
-	type: TableObjectPriceType
-	productName: string
-	productImage: string
-	successUrl: string
-	cancelUrl: string
-}): Promise<string> {
+export async function listShippingAddresses(
+	queryData: string,
+	variables: { userId: number; limit?: number; offset?: number }
+): Promise<List<ShippingAddress>> {
+	let result = await request<{
+		listShippingAddresses: List<ShippingAddress>
+	}>(
+		newApiBaseUrl,
+		gql`
+			query ListShippingAddresses(
+				$userId: Int!
+				$limit: Int
+				$offset: Int
+			) {
+				listShippingAddresses(
+					userId: $userId
+					limit: $limit
+					offset: $offset
+				) {
+					${queryData}
+				}
+			}
+		`,
+		variables,
+		{
+			Authorization: process.env.DAV_AUTH
+		}
+	)
+
+	return result.listShippingAddresses
+}
+
+export async function createCheckoutSession(
+	queryData: string,
+	accessToken: string,
+	variables: {
+		tableObjectUuid: string
+		type: TableObjectPriceType
+		price?: number
+		currency?: Currency
+		productName: string
+		productImage: string
+		successUrl: string
+		cancelUrl: string
+	}
+): Promise<string> {
 	let response = await request<{ createCheckoutSession: { url: string } }>(
 		newApiBaseUrl,
 		gql`
 			mutation CreateCheckoutSession(
 				$tableObjectUuid: String!
 				$type: TableObjectPriceType!
+				$price: Int
+				$currency: Currency
 				$productName: String!
 				$productImage: String!
 				$successUrl: String!
@@ -402,25 +442,20 @@ export async function createCheckoutSession(params: {
 				createCheckoutSession(
 					tableObjectUuid: $tableObjectUuid
 					type: $type
+					price: $price
+					currency: $currency
 					productName: $productName
 					productImage: $productImage
 					successUrl: $successUrl
 					cancelUrl: $cancelUrl
 				) {
-					url
+					${queryData}
 				}
 			}
 		`,
+		variables,
 		{
-			tableObjectUuid: params.tableObjectUuid,
-			type: params.type,
-			productName: params.productName,
-			productImage: params.productImage,
-			successUrl: params.successUrl,
-			cancelUrl: params.cancelUrl
-		},
-		{
-			Authorization: params.accessToken
+			Authorization: accessToken
 		}
 	)
 
