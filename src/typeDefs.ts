@@ -115,6 +115,11 @@ export const typeDefs = `#graphql
 			releaseName: String!
 			releaseNotes: String
 		): StoreBookRelease
+		createCheckoutSession(
+			storeBookUuid: String!
+			successUrl: String!
+			cancelUrl: String!
+		): CheckoutSession
 		createBook(storeBook: String!): Book
 	}
 
@@ -264,6 +269,10 @@ export const typeDefs = `#graphql
 	type StoreBookReleaseList {
 		total: Int!
 		items: [StoreBookRelease!]!
+	}
+
+	type CheckoutSession {
+		url: String!
 	}
 
 	type StoreBookCover {

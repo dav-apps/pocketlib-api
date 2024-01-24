@@ -8,6 +8,7 @@ import * as storeBookCollectionNameResolvers from "./resolvers/storeBookCollecti
 import * as storeBookSeriesResolvers from "./resolvers/storeBookSeries.js"
 import * as storeBookResolvers from "./resolvers/storeBook.js"
 import * as storeBookReleaseResolvers from "./resolvers/storeBookRelease.js"
+import * as checkoutSessionResolvers from "./resolvers/checkoutSession.js"
 import * as categoryResolvers from "./resolvers/category.js"
 import * as bookResolvers from "./resolvers/book.js"
 
@@ -197,6 +198,7 @@ export const resolvers = {
 		updateStoreBook: storeBookResolvers.updateStoreBook,
 		publishStoreBookRelease:
 			storeBookReleaseResolvers.publishStoreBookRelease,
+		createCheckoutSession: checkoutSessionResolvers.createCheckoutSession,
 		createBook: bookResolvers.createBook
 	},
 	Publisher: {
