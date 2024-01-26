@@ -36,7 +36,7 @@ export const instagramUsernameRegex =
 export const twitterUsernameRegex =
 	/^((https?:\/\/)?(www.)?twitter.com\/)?@?(?<username>[a-zA-Z0-9\._\-]{3,})(\/)?$/
 export const urlRegex =
-	/^(https?:\/\/)?[\w.-]+(\.[\w.-]+)+[\w\-._~/?#@&\+,;=]+$/
+	/^(https?:\/\/)?(([\w.-]+(\.[\w.-]{2,4})+)|(localhost:[0-9]{3,4}))/
 export const isbnRegex = /^([0-9]{10}|[0-9]{13})$/
 export const filenameRegex = /filename=\"(?<filename>.*)\"/
 //#endregion

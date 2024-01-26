@@ -55,7 +55,7 @@ export async function retrieveStoreBook(
 	await loadStoreBookData(
 		context.prisma,
 		storeBook,
-		context.user == null && BigInt(context.user.id) != storeBook.userId
+		context.user == null || BigInt(context.user.id) != storeBook.userId
 	)
 
 	return storeBook
@@ -812,7 +812,7 @@ export async function cover(
 	let release = await getLastReleaseOfStoreBook(
 		context.prisma,
 		storeBook.id,
-		context.user == null && BigInt(context.user.id) != storeBook.userId
+		context.user == null || BigInt(context.user.id) != storeBook.userId
 	)
 	if (release.coverId == null) return null
 
@@ -834,7 +834,7 @@ export async function file(
 	let release = await getLastReleaseOfStoreBook(
 		context.prisma,
 		storeBook.id,
-		context.user == null && BigInt(context.user.id) != storeBook.userId
+		context.user == null || BigInt(context.user.id) != storeBook.userId
 	)
 	if (release.fileId == null) return null
 
@@ -851,7 +851,7 @@ export async function printCover(
 	let release = await getLastReleaseOfStoreBook(
 		context.prisma,
 		storeBook.id,
-		context.user == null && BigInt(context.user.id) != storeBook.userId
+		context.user == null || BigInt(context.user.id) != storeBook.userId
 	)
 	if (release.printCoverId == null) return null
 
@@ -868,7 +868,7 @@ export async function printFile(
 	let release = await getLastReleaseOfStoreBook(
 		context.prisma,
 		storeBook.id,
-		context.user == null && BigInt(context.user.id) != storeBook.userId
+		context.user == null || BigInt(context.user.id) != storeBook.userId
 	)
 	if (release.printFileId == null) return null
 
