@@ -80,6 +80,7 @@ export async function loadStoreBookData(
 	storeBook.price = release.price
 	storeBook.printPrice = release.printPrice
 	storeBook.isbn = release.isbn
+	storeBook.luluPrintableId = release.luluPrintableId
 }
 
 export async function getLastReleaseOfStoreBook(
@@ -132,6 +133,7 @@ export async function createNewStoreBookRelease(
 		price: oldRelease.price,
 		printPrice: oldRelease.printPrice,
 		isbn: oldRelease.isbn,
+		luluPrintableId: oldRelease.luluPrintableId,
 		categories: {
 			connect: []
 		}

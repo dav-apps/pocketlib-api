@@ -130,6 +130,7 @@ export interface StoreBook extends StoreBookModel {
 	price: number
 	printPrice: number
 	isbn: string
+	luluPrintableId: string
 }
 
 export interface StoreBookCover extends StoreBookCoverModel {

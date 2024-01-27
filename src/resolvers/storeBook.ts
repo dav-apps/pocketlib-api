@@ -524,7 +524,8 @@ export async function createStoreBook(
 		description: args.description,
 		price: args.price || 0,
 		printPrice: args.printPrice || 0,
-		isbn: args.isbn
+		isbn: args.isbn,
+		luluPrintableId: null
 	}
 }
 

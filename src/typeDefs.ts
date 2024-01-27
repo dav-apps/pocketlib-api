@@ -230,6 +230,7 @@ export const typeDefs = `#graphql
 		price: Int!
 		printPrice: Int!
 		isbn: String
+		luluPrintableId: String
 		status: String!
 		cover: StoreBookCover
 		file: StoreBookFile
