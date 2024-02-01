@@ -297,6 +297,11 @@ export function randomNumber(min: number, max: number) {
 	return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
+export function roundUp(num: number, precision: number = 1) {
+	precision = Math.pow(10, precision)
+	return Math.ceil(num * precision) / precision
+}
+
 // https://techoverflow.net/2018/04/13/convert-pt-postscript-pdf-unit-to-inch-or-mm-in-javascript/
 export function convertPtToInch(pt: number): number {
 	return pt / 72
