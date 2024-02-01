@@ -11,7 +11,7 @@ import {
 	throwEndpointError,
 	blurhashEncode,
 	getUserForEndpoint,
-	getTableObjectFileUrl
+	getTableObjectFileCdnUrl
 } from "../utils.js"
 import { admins, authorProfileImageTableId } from "../constants.js"
 import { apiErrors } from "../errors.js"
@@ -151,7 +151,7 @@ async function uploadAuthorProfileImage(req: Request, res: Response) {
 
 		let result = {
 			uuid: profileImageUuid,
-			url: getTableObjectFileUrl(profileImageUuid),
+			url: getTableObjectFileCdnUrl(profileImageUuid),
 			blurhash
 		}
 

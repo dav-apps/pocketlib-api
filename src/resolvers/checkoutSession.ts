@@ -2,7 +2,7 @@ import { ResolverContext, StoreBook } from "../types.js"
 import {
 	throwApiError,
 	getLastReleaseOfStoreBook,
-	getTableObjectFileUrl
+	getTableObjectFileCdnUrl
 } from "../utils.js"
 import { apiErrors } from "../errors.js"
 import * as apiService from "../services/apiService.js"
@@ -108,7 +108,7 @@ export async function createCheckoutSession(
 			price,
 			currency: "EUR",
 			productName: storeBookRelease.title,
-			productImage: getTableObjectFileUrl(cover.uuid),
+			productImage: getTableObjectFileCdnUrl(cover.uuid),
 			successUrl: args.successUrl,
 			cancelUrl: args.cancelUrl
 		}

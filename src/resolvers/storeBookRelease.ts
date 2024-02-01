@@ -10,7 +10,8 @@ import { ResolverContext, List, StoreBookCover } from "../types.js"
 import {
 	throwApiError,
 	throwValidationError,
-	getTableObjectFileUrl
+	getTableObjectFileUrl,
+	getTableObjectFileCdnUrl
 } from "../utils.js"
 import { admins } from "../constants.js"
 import { apiErrors } from "../errors.js"
@@ -173,7 +174,7 @@ export async function cover(
 
 	return {
 		...cover,
-		url: getTableObjectFileUrl(cover.uuid)
+		url: getTableObjectFileCdnUrl(cover.uuid)
 	}
 }
 

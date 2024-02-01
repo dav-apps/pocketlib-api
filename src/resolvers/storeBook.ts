@@ -19,7 +19,7 @@ import {
 	loadStoreBookData,
 	getLastReleaseOfStoreBook,
 	createNewStoreBookRelease,
-	getTableObjectFileUrl,
+	getTableObjectFileCdnUrl,
 	randomNumber
 } from "../utils.js"
 import { apiErrors, validationErrors } from "../errors.js"
@@ -823,7 +823,7 @@ export async function cover(
 
 	return {
 		...cover,
-		url: getTableObjectFileUrl(cover.uuid)
+		url: getTableObjectFileCdnUrl(cover.uuid)
 	}
 }
 

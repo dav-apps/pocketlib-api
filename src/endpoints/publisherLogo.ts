@@ -11,7 +11,7 @@ import {
 	throwEndpointError,
 	blurhashEncode,
 	getUserForEndpoint,
-	getTableObjectFileUrl
+	getTableObjectFileCdnUrl
 } from "../utils.js"
 import { apiErrors } from "../errors.js"
 import { admins, publisherLogoTableId } from "../constants.js"
@@ -151,7 +151,7 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 
 		let result = {
 			uuid: logoUuid,
-			url: getTableObjectFileUrl(logoUuid),
+			url: getTableObjectFileCdnUrl(logoUuid),
 			blurhash
 		}
 

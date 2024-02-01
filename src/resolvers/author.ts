@@ -13,7 +13,7 @@ import {
 	getFacebookUsername,
 	getInstagramUsername,
 	getTwitterUsername,
-	getTableObjectFileUrl,
+	getTableObjectFileCdnUrl,
 	randomNumber
 } from "../utils.js"
 import { apiErrors, validationErrors } from "../errors.js"
@@ -399,7 +399,7 @@ export async function profileImage(
 
 	return {
 		...profileImage,
-		url: getTableObjectFileUrl(profileImage.uuid)
+		url: getTableObjectFileCdnUrl(profileImage.uuid)
 	}
 }
 

@@ -1,6 +1,9 @@
 import { Express, Request, Response, json } from "express"
 import cors from "cors"
-import { getLastReleaseOfStoreBook, getTableObjectFileUrl } from "../utils.js"
+import {
+	getLastReleaseOfStoreBook,
+	getTableObjectFileCdnUrl
+} from "../utils.js"
 import { retrieveOrder } from "../services/apiService.js"
 import {
 	authenticate,
@@ -98,8 +101,8 @@ async function davWebhook(req: Request, res: Response) {
 				title: storeBookRelease.title,
 				printJobExternalId: orderUuid,
 				lineItemExternalId: storeBookRelease.uuid,
-				coverSourceUrl: getTableObjectFileUrl(printCover.uuid),
-				interiorSourceUrl: getTableObjectFileUrl(printFile.uuid),
+				coverSourceUrl: getTableObjectFileCdnUrl(printCover.uuid),
+				interiorSourceUrl: getTableObjectFileCdnUrl(printFile.uuid),
 				shippingAddress: order.shippingAddress
 			})
 		}

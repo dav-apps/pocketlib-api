@@ -14,7 +14,7 @@ import {
 import { getUser } from "./services/apiService.js"
 import { createStoreBook, updateStoreBook } from "./resolvers/storeBook.js"
 import { publishStoreBookRelease } from "./resolvers/storeBookRelease.js"
-import { getLastReleaseOfStoreBook, getTableObjectFileUrl } from "./utils.js"
+import { getLastReleaseOfStoreBook, getTableObjectFileCdnUrl } from "./utils.js"
 import { User } from "./types.js"
 import { appId } from "./constants.js"
 
@@ -444,7 +444,7 @@ async function saveBook(
 
 			if (storeBookRelease2.cover != null) {
 				storeBookCoverSize = await getFileSize(
-					getTableObjectFileUrl(storeBookRelease2.cover.uuid)
+					getTableObjectFileCdnUrl(storeBookRelease2.cover.uuid)
 				)
 			}
 
@@ -483,7 +483,7 @@ async function saveBook(
 
 			if (storeBookRelease2.file != null) {
 				storeBookEpubFileSize = await getFileSize(
-					getTableObjectFileUrl(storeBookRelease2.file.uuid)
+					getTableObjectFileCdnUrl(storeBookRelease2.file.uuid)
 				)
 			}
 

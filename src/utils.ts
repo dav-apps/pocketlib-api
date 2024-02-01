@@ -290,6 +290,10 @@ export function getFilename(input: string) {
 }
 
 export function getTableObjectFileUrl(uuid: string) {
+	return `https://dav-backend.fra1.digitaloceanspaces.com/${uuid}`
+}
+
+export function getTableObjectFileCdnUrl(uuid: string) {
 	return `https://dav-backend.fra1.cdn.digitaloceanspaces.com/${uuid}`
 }
 

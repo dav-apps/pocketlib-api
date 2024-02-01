@@ -7,7 +7,7 @@ import {
 	getFacebookUsername,
 	getInstagramUsername,
 	getTwitterUsername,
-	getTableObjectFileUrl
+	getTableObjectFileCdnUrl
 } from "../utils.js"
 import { admins } from "../constants.js"
 import { apiErrors, validationErrors } from "../errors.js"
@@ -251,7 +251,7 @@ export async function logo(
 
 	return {
 		...publisherLogo,
-		url: getTableObjectFileUrl(publisherLogo.uuid)
+		url: getTableObjectFileCdnUrl(publisherLogo.uuid)
 	}
 }
 

@@ -14,7 +14,7 @@ import {
 	createNewStoreBookRelease,
 	blurhashEncode,
 	getUserForEndpoint,
-	getTableObjectFileUrl
+	getTableObjectFileCdnUrl
 } from "../utils.js"
 import { storeBookCoverTableId } from "../constants.js"
 import { apiErrors } from "../errors.js"
@@ -158,7 +158,7 @@ export async function uploadStoreBookCover(req: Request, res: Response) {
 
 		let result = {
 			uuid: coverUuid,
-			url: getTableObjectFileUrl(coverUuid),
+			url: getTableObjectFileCdnUrl(coverUuid),
 			aspectRatio: aspectRatio,
 			blurhash: encodeResult.blurhash
 		}
