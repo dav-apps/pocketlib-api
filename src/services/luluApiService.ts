@@ -69,7 +69,7 @@ export async function createPrintJob(
 						quantity: 1,
 						external_id: params.lineItemExternalId,
 						printable_normalization: {
-							pod_package_id: "0550X0850BWSTDPB060UC444GXX",
+							pod_package_id: "0550X0850BWSTDPB060UC444MXX",
 							cover: {
 								source_url: params.coverSourceUrl
 							},
