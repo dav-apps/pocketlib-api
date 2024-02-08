@@ -28,7 +28,8 @@ export async function cachingResolver(
 	resolver: Function
 ) {
 	if (process.env.CACHING == "false") {
-		return await resolver(parent, args, context)
+		let result: QueryResult<any> = await resolver(parent, args, context)
+		return result.data
 	}
 
 	// Check if the result is cached
