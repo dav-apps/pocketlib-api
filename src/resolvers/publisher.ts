@@ -1,4 +1,4 @@
-import { Publisher, Author } from "@prisma/client"
+import { Prisma, Publisher, Author } from "@prisma/client"
 import * as crypto from "crypto"
 import { ResolverContext, QueryResult, List, PublisherLogo } from "../types.js"
 import {
@@ -16,6 +16,7 @@ import {
 	validateDescriptionLength,
 	validateWebsiteUrl
 } from "../services/validationService.js"
+import { query } from "express"
 
 export async function retrievePublisher(
 	parent: any,
@@ -271,7 +272,7 @@ export async function logo(
 
 export async function authors(
 	publisher: Publisher,
-	args: { limit?: number; offset?: number },
+	args: { limit?: number; offset?: number; query?: string },
 	context: ResolverContext
 ): Promise<QueryResult<List<Author>>> {
 	let take = args.limit || 10
@@ -280,7 +281,32 @@ export async function authors(
 	let skip = args.offset || 0
 	if (skip < 0) skip = 0
 
-	let where = { publisherId: publisher.id }
+	let query = args.query?.toLowerCase() ?? ""
+	let where: any = { publisherId: publisher.id }
+
+	if (args.query != null && args.query.length > 0) {
+		where = {
+			AND: [
+				{ publisherId: publisher.id },
+				{
+					OR: [
+						{
+							firstName: {
+								contains: query,
+								mode: Prisma.QueryMode.insensitive
+							}
+						},
+						{
+							lastName: {
+								contains: query,
+								mode: Prisma.QueryMode.insensitive
+							}
+						}
+					]
+				}
+			]
+		}
+	}
 
 	const [total, items] = await context.prisma.$transaction([
 		context.prisma.author.count({ where }),
