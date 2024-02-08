@@ -19,6 +19,11 @@ export interface RegexResult {
 	value: string
 }
 
+export interface QueryResult<T> {
+	caching: boolean
+	data: T
+}
+
 export interface List<T> {
 	total: number
 	items: T[]

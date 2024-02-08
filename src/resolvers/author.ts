@@ -6,7 +6,12 @@ import {
 	StoreBookSeries
 } from "@prisma/client"
 import * as crypto from "crypto"
-import { ResolverContext, List, AuthorProfileImage } from "../types.js"
+import {
+	ResolverContext,
+	QueryResult,
+	List,
+	AuthorProfileImage
+} from "../types.js"
 import {
 	throwApiError,
 	throwValidationError,
@@ -28,11 +33,8 @@ export async function retrieveAuthor(
 	parent: any,
 	args: { uuid: string },
 	context: ResolverContext
-): Promise<Author> {
+): Promise<QueryResult<Author>> {
 	const uuid = args.uuid
-	if (uuid == null) return null
-
-	let where = {}
 
 	if (uuid == "mine") {
 		// Check if the user is an author
@@ -45,12 +47,18 @@ export async function retrieveAuthor(
 		}
 
 		// Get the author of the user
-		where = { userId: user.id }
-	} else {
-		where = { uuid }
+		return {
+			caching: false,
+			data: await context.prisma.author.findFirst({
+				where: { userId: user.id }
+			})
+		}
 	}
 
-	return await context.prisma.author.findFirst({ where })
+	return {
+		caching: true,
+		data: await context.prisma.author.findFirst({ where: { uuid } })
+	}
 }
 
 export async function listAuthors(
@@ -62,13 +70,14 @@ export async function listAuthors(
 		offset?: number
 	},
 	context: ResolverContext
-): Promise<List<Author>> {
+): Promise<QueryResult<List<Author>>> {
 	let take = args.limit || 10
 	if (take <= 0) take = 10
 
 	let skip = args.offset || 0
 	if (skip < 0) skip = 0
 
+	let caching = true
 	let mine = args.mine || false
 	let random = args.random || false
 	let where = {}
@@ -86,6 +95,7 @@ export async function listAuthors(
 
 		// Get the authors of the user
 		where = { userId: user.id, publisher: null }
+		caching = false
 	} else if (random) {
 		let total = await context.prisma.author.count()
 		if (take > total) take = total
@@ -106,8 +116,11 @@ export async function listAuthors(
 		}
 
 		return {
-			total,
-			items
+			caching: true,
+			data: {
+				total,
+				items
+			}
 		}
 	} else {
 		orderBy = { id: "desc" }
@@ -124,8 +137,11 @@ export async function listAuthors(
 	])
 
 	return {
-		total,
-		items
+		caching,
+		data: {
+			total,
+			items
+		}
 	}
 }
 
@@ -319,14 +335,20 @@ export async function publisher(
 	author: Author,
 	args: any,
 	context: ResolverContext
-): Promise<Publisher> {
+): Promise<QueryResult<Publisher>> {
 	if (author.publisherId == null) {
-		return null
+		return {
+			caching: false,
+			data: null
+		}
 	}
 
-	return await context.prisma.publisher.findFirst({
-		where: { id: author.publisherId }
-	})
+	return {
+		caching: true,
+		data: await context.prisma.publisher.findFirst({
+			where: { id: author.publisherId }
+		})
+	}
 }
 
 export async function bio(
@@ -334,7 +356,7 @@ export async function bio(
 	args: { languages?: String[] },
 	context: ResolverContext,
 	info: any
-): Promise<AuthorBio> {
+): Promise<QueryResult<AuthorBio>> {
 	let languages = args.languages || ["en"]
 	let where = { OR: [], AND: { authorId: author.id } }
 
@@ -345,7 +367,10 @@ export async function bio(
 	let bios = await context.prisma.authorBio.findMany({ where })
 
 	if (bios.length == 0) {
-		return null
+		return {
+			caching: true,
+			data: null
+		}
 	}
 
 	// Find the optimal bio for the given languages
@@ -353,18 +378,24 @@ export async function bio(
 		let bio = bios.find(b => b.language == lang)
 
 		if (bio != null) {
-			return bio
+			return {
+				caching: true,
+				data: bio
+			}
 		}
 	}
 
-	return bios[0]
+	return {
+		caching: true,
+		data: bios[0]
+	}
 }
 
 export async function bios(
 	author: Author,
 	args: { limit?: number; offset?: number },
 	context: ResolverContext
-): Promise<List<AuthorBio>> {
+): Promise<QueryResult<List<AuthorBio>>> {
 	let take = args.limit || 10
 	if (take <= 0) take = 10
 
@@ -383,8 +414,11 @@ export async function bios(
 	])
 
 	return {
-		total,
-		items
+		caching: true,
+		data: {
+			total,
+			items
+		}
 	}
 }
 
@@ -392,14 +426,24 @@ export async function profileImage(
 	author: Author,
 	args: any,
 	context: ResolverContext
-): Promise<AuthorProfileImage> {
+): Promise<QueryResult<AuthorProfileImage>> {
 	let profileImage = await context.prisma.authorProfileImage.findFirst({
 		where: { authorId: author.id }
 	})
 
+	if (profileImage == null) {
+		return {
+			caching: true,
+			data: null
+		}
+	}
+
 	return {
-		...profileImage,
-		url: getTableObjectFileCdnUrl(profileImage.uuid)
+		caching: true,
+		data: {
+			...profileImage,
+			url: getTableObjectFileCdnUrl(profileImage.uuid)
+		}
 	}
 }
 
@@ -407,7 +451,7 @@ export async function collections(
 	author: Author,
 	args: { limit?: number; offset?: number },
 	context: ResolverContext
-): Promise<List<StoreBookCollection>> {
+): Promise<QueryResult<List<StoreBookCollection>>> {
 	let take = args.limit || 10
 	if (take <= 0) take = 10
 
@@ -426,8 +470,11 @@ export async function collections(
 	])
 
 	return {
-		total,
-		items
+		caching: true,
+		data: {
+			total,
+			items
+		}
 	}
 }
 
@@ -435,7 +482,7 @@ export async function series(
 	author: Author,
 	args: { limit?: number; offset?: number },
 	context: ResolverContext
-): Promise<List<StoreBookSeries>> {
+): Promise<QueryResult<List<StoreBookSeries>>> {
 	let take = args.limit || 10
 	if (take <= 0) take = 10
 
@@ -454,7 +501,10 @@ export async function series(
 	])
 
 	return {
-		total,
-		items
+		caching: true,
+		data: {
+			total,
+			items
+		}
 	}
 }

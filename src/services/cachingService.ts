@@ -1,4 +1,4 @@
-import { ResolverContext } from "../types.js"
+import { ResolverContext, QueryResult } from "../types.js"
 
 function generateCacheKey(
 	resolverName: string,
@@ -37,17 +37,19 @@ export async function cachingResolver(
 		parent?.uuid,
 		args
 	)
-	let result = await context.redis.get(key)
+	let cachedResult = await context.redis.get(key)
 
-	if (result != null) {
-		return JSON.parse(result)
+	if (cachedResult != null) {
+		return JSON.parse(cachedResult)
 	}
 
 	// Call the resolver function and save the result
-	result = await resolver(parent, args, context)
+	let result: QueryResult<any> = await resolver(parent, args, context)
 
-	await context.redis.set(key, JSON.stringify(result))
-	await context.redis.expire(key, 60 * 60 * 24) // Expire after 1 day
+	if (result.caching) {
+		await context.redis.set(key, JSON.stringify(result.data))
+		await context.redis.expire(key, 60 * 60 * 24) // Expire after 1 day
+	}
 
-	return result
+	return result.data
 }

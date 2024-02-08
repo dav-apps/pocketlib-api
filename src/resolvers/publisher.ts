@@ -1,6 +1,6 @@
 import { Publisher, Author } from "@prisma/client"
 import * as crypto from "crypto"
-import { ResolverContext, List, PublisherLogo } from "../types.js"
+import { ResolverContext, QueryResult, List, PublisherLogo } from "../types.js"
 import {
 	throwApiError,
 	throwValidationError,
@@ -21,11 +21,8 @@ export async function retrievePublisher(
 	parent: any,
 	args: { uuid: string },
 	context: ResolverContext
-): Promise<Publisher> {
+): Promise<QueryResult<Publisher>> {
 	const uuid = args.uuid
-	if (uuid == null) return null
-
-	let where = {}
 
 	if (uuid == "mine") {
 		// Check if the user is a publisher
@@ -38,19 +35,27 @@ export async function retrievePublisher(
 		}
 
 		// Get the publisher of the user
-		where = { userId: user.id }
-	} else {
-		where = { uuid }
+		return {
+			caching: false,
+			data: await context.prisma.publisher.findFirst({
+				where: { userId: user.id }
+			})
+		}
 	}
 
-	return await context.prisma.publisher.findFirst({ where })
+	return {
+		caching: true,
+		data: await context.prisma.publisher.findFirst({
+			where: { uuid }
+		})
+	}
 }
 
 export async function listPublishers(
 	parent: any,
 	args: { limit?: number; offset?: number },
 	context: ResolverContext
-): Promise<List<Publisher>> {
+): Promise<QueryResult<List<Publisher>>> {
 	let take = args.limit || 10
 	if (take <= 0) take = 10
 
@@ -66,8 +71,11 @@ export async function listPublishers(
 	])
 
 	return {
-		total,
-		items
+		caching: true,
+		data: {
+			total,
+			items
+		}
 	}
 }
 
@@ -240,18 +248,24 @@ export async function logo(
 	publisher: Publisher,
 	args: any,
 	context: ResolverContext
-): Promise<PublisherLogo> {
+): Promise<QueryResult<PublisherLogo>> {
 	let publisherLogo = await context.prisma.publisherLogo.findFirst({
 		where: { publisherId: publisher.id }
 	})
 
 	if (publisherLogo == null) {
-		return null
+		return {
+			caching: true,
+			data: null
+		}
 	}
 
 	return {
-		...publisherLogo,
-		url: getTableObjectFileCdnUrl(publisherLogo.uuid)
+		caching: true,
+		data: {
+			...publisherLogo,
+			url: getTableObjectFileCdnUrl(publisherLogo.uuid)
+		}
 	}
 }
 
@@ -259,7 +273,7 @@ export async function authors(
 	publisher: Publisher,
 	args: { limit?: number; offset?: number },
 	context: ResolverContext
-): Promise<List<Author>> {
+): Promise<QueryResult<List<Author>>> {
 	let take = args.limit || 10
 	if (take <= 0) take = 10
 
@@ -278,7 +292,10 @@ export async function authors(
 	])
 
 	return {
-		total,
-		items
+		caching: true,
+		data: {
+			total,
+			items
+		}
 	}
 }

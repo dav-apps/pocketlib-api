@@ -1,6 +1,6 @@
 import { PrismaClient, Author, StoreBookSeries } from "@prisma/client"
 import * as crypto from "crypto"
-import { ResolverContext, List, StoreBook } from "../types.js"
+import { ResolverContext, QueryResult, List, StoreBook } from "../types.js"
 import {
 	throwApiError,
 	throwValidationError,
@@ -18,10 +18,13 @@ export async function retrieveStoreBookSeries(
 	parent: any,
 	args: { uuid: string },
 	context: ResolverContext
-): Promise<StoreBookSeries> {
-	return await context.prisma.storeBookSeries.findFirst({
-		where: { uuid: args.uuid }
-	})
+): Promise<QueryResult<StoreBookSeries>> {
+	return {
+		caching: true,
+		data: await context.prisma.storeBookSeries.findFirst({
+			where: { uuid: args.uuid }
+		})
+	}
 }
 
 export async function listStoreBookSeries(
@@ -33,7 +36,7 @@ export async function listStoreBookSeries(
 		offset?: number
 	},
 	context: ResolverContext
-): Promise<List<StoreBookSeries>> {
+): Promise<QueryResult<List<StoreBookSeries>>> {
 	let take = args.limit || 10
 	if (take <= 0) take = 10
 
@@ -69,8 +72,11 @@ export async function listStoreBookSeries(
 		}
 
 		return {
-			total,
-			items
+			caching: true,
+			data: {
+				total,
+				items
+			}
 		}
 	}
 
@@ -84,8 +90,11 @@ export async function listStoreBookSeries(
 	])
 
 	return {
-		total,
-		items
+		caching: true,
+		data: {
+			total,
+			items
+		}
 	}
 }
 
@@ -245,7 +254,7 @@ export async function storeBooks(
 	storeBookSeries: StoreBookSeries,
 	args: { limit?: number; offset?: number },
 	context: ResolverContext
-): Promise<List<StoreBook>> {
+): Promise<QueryResult<List<StoreBook>>> {
 	let take = args.limit || 10
 	if (take <= 0) take = 10
 
@@ -267,8 +276,11 @@ export async function storeBooks(
 	}
 
 	return {
-		total,
-		items
+		caching: true,
+		data: {
+			total,
+			items
+		}
 	}
 }
 

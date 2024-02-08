@@ -1,22 +1,24 @@
 import { Category, CategoryName } from "@prisma/client"
-import { ResolverContext, List } from "../types.js"
+import { ResolverContext, QueryResult, List } from "../types.js"
 
 export async function retrieveCategory(
 	parent: any,
 	args: { uuid: string },
 	context: ResolverContext
-): Promise<Category> {
-	const uuid = args.uuid
-	if (uuid == null) return null
-
-	return context.prisma.category.findFirst({ where: { uuid } })
+): Promise<QueryResult<Category>> {
+	return {
+		caching: true,
+		data: await context.prisma.category.findFirst({
+			where: { uuid: args.uuid }
+		})
+	}
 }
 
 export async function listCategories(
 	parent: any,
 	args: { limit?: number; offset?: number },
 	context: ResolverContext
-): Promise<List<Category>> {
+): Promise<QueryResult<List<Category>>> {
 	let take = args.limit || 10
 	if (take <= 0) take = 10
 
@@ -32,8 +34,11 @@ export async function listCategories(
 	])
 
 	return {
-		total,
-		items
+		caching: true,
+		data: {
+			total,
+			items
+		}
 	}
 }
 
@@ -41,7 +46,7 @@ export async function name(
 	category: Category,
 	args: { languages?: String[] },
 	context: ResolverContext
-): Promise<CategoryName> {
+): Promise<QueryResult<CategoryName>> {
 	let languages = args.languages || ["en"]
 	let where = { OR: [], AND: { categoryId: category.id } }
 
@@ -52,7 +57,10 @@ export async function name(
 	let names = await context.prisma.categoryName.findMany({ where })
 
 	if (names.length == null) {
-		return null
+		return {
+			caching: true,
+			data: null
+		}
 	}
 
 	// Find the optimal name for the given languages
@@ -60,18 +68,24 @@ export async function name(
 		let name = names.find(n => n.language == lang)
 
 		if (name != null) {
-			return name
+			return {
+				caching: true,
+				data: name
+			}
 		}
 	}
 
-	return names[0]
+	return {
+		caching: true,
+		data: names[0]
+	}
 }
 
 export async function names(
 	category: Category,
 	args: { limit?: number; offset?: number },
 	context: ResolverContext
-): Promise<List<CategoryName>> {
+): Promise<QueryResult<List<CategoryName>>> {
 	let take = args.limit || 10
 	if (take <= 0) take = 10
 
@@ -90,7 +104,10 @@ export async function names(
 	])
 
 	return {
-		total,
-		items
+		caching: true,
+		data: {
+			total,
+			items
+		}
 	}
 }

@@ -6,7 +6,7 @@ import {
 	Category
 } from "@prisma/client"
 import { getDocument } from "pdfjs-dist"
-import { ResolverContext, List, StoreBookCover } from "../types.js"
+import { ResolverContext, QueryResult, List, StoreBookCover } from "../types.js"
 import {
 	throwApiError,
 	throwValidationError,
@@ -28,19 +28,26 @@ export async function retrieveStoreBookRelease(
 	parent: any,
 	args: { uuid: string },
 	context: ResolverContext
-): Promise<StoreBookRelease> {
-	const uuid = args.uuid
-	if (uuid == null) return null
-
+): Promise<QueryResult<StoreBookRelease>> {
 	let release = await context.prisma.storeBookRelease.findFirst({
-		where: { uuid }
+		where: { uuid: args.uuid }
 	})
+
+	if (release == null) {
+		return {
+			caching: true,
+			data: null
+		}
+	}
 
 	if (release.status == null) {
 		release.status = "unpublished"
 	}
 
-	return release
+	return {
+		caching: true,
+		data: release
+	}
 }
 
 export async function publishStoreBookRelease(
@@ -53,8 +60,6 @@ export async function publishStoreBookRelease(
 	context: ResolverContext
 ): Promise<StoreBookRelease> {
 	const uuid = args.uuid
-	if (uuid == null) return null
-
 	const user = context.user
 
 	if (user == null) {
@@ -159,9 +164,12 @@ export async function cover(
 	storeBookRelease: StoreBookRelease,
 	args: any,
 	context: ResolverContext
-): Promise<StoreBookCover> {
+): Promise<QueryResult<StoreBookCover>> {
 	if (storeBookRelease.coverId == null) {
-		return null
+		return {
+			caching: false,
+			data: null
+		}
 	}
 
 	let cover = await context.prisma.storeBookCover.findFirst({
@@ -169,12 +177,18 @@ export async function cover(
 	})
 
 	if (cover == null) {
-		return null
+		return {
+			caching: true,
+			data: null
+		}
 	}
 
 	return {
-		...cover,
-		url: getTableObjectFileCdnUrl(cover.uuid)
+		caching: true,
+		data: {
+			...cover,
+			url: getTableObjectFileCdnUrl(cover.uuid)
+		}
 	}
 }
 
@@ -182,49 +196,67 @@ export async function file(
 	storeBookRelease: StoreBookRelease,
 	args: any,
 	context: ResolverContext
-): Promise<StoreBookFile> {
+): Promise<QueryResult<StoreBookFile>> {
 	if (storeBookRelease.fileId == null) {
-		return null
+		return {
+			caching: false,
+			data: null
+		}
 	}
 
-	return await context.prisma.storeBookFile.findFirst({
-		where: { id: storeBookRelease.fileId }
-	})
+	return {
+		caching: true,
+		data: await context.prisma.storeBookFile.findFirst({
+			where: { id: storeBookRelease.fileId }
+		})
+	}
 }
 
 export async function printCover(
 	storeBookRelease: StoreBookRelease,
 	args: any,
 	context: ResolverContext
-): Promise<StoreBookPrintCover> {
+): Promise<QueryResult<StoreBookPrintCover>> {
 	if (storeBookRelease.printCoverId == null) {
-		return null
+		return {
+			caching: false,
+			data: null
+		}
 	}
 
-	return await context.prisma.storeBookPrintCover.findFirst({
-		where: { id: storeBookRelease.printCoverId }
-	})
+	return {
+		caching: true,
+		data: await context.prisma.storeBookPrintCover.findFirst({
+			where: { id: storeBookRelease.printCoverId }
+		})
+	}
 }
 
 export async function printFile(
 	storeBookRelease: StoreBookRelease,
 	args: any,
 	context: ResolverContext
-): Promise<StoreBookPrintFile> {
+): Promise<QueryResult<StoreBookPrintFile>> {
 	if (storeBookRelease.printFileId == null) {
-		return null
+		return {
+			caching: false,
+			data: null
+		}
 	}
 
-	return await context.prisma.storeBookPrintFile.findFirst({
-		where: { id: storeBookRelease.printFileId }
-	})
+	return {
+		caching: true,
+		data: await context.prisma.storeBookPrintFile.findFirst({
+			where: { id: storeBookRelease.printFileId }
+		})
+	}
 }
 
 export async function categories(
 	storeBookRelease: StoreBookRelease,
 	args: { limit?: number; offset?: number },
 	context: ResolverContext
-): Promise<List<Category>> {
+): Promise<QueryResult<List<Category>>> {
 	let take = args.limit || 10
 	if (take <= 0) take = 10
 
@@ -243,7 +275,10 @@ export async function categories(
 	])
 
 	return {
-		total,
-		items
+		caching: true,
+		data: {
+			total,
+			items
+		}
 	}
 }

@@ -3,34 +3,40 @@ import {
 	StoreBookCollection,
 	StoreBookCollectionName
 } from "@prisma/client"
-import { ResolverContext, List, StoreBook } from "../types.js"
+import { ResolverContext, QueryResult, List, StoreBook } from "../types.js"
 import { loadStoreBookData } from "../utils.js"
 
 export async function retrieveStoreBookCollection(
 	parent: any,
 	args: { uuid: string },
 	context: ResolverContext
-): Promise<StoreBookCollection> {
-	return await context.prisma.storeBookCollection.findFirst({
-		where: { uuid: args.uuid }
-	})
+): Promise<QueryResult<StoreBookCollection>> {
+	return {
+		caching: true,
+		data: await context.prisma.storeBookCollection.findFirst({
+			where: { uuid: args.uuid }
+		})
+	}
 }
 
 export async function author(
 	storeBookCollection: StoreBookCollection,
 	args: any,
 	context: ResolverContext
-): Promise<Author> {
-	return await context.prisma.author.findFirst({
-		where: { id: storeBookCollection.authorId }
-	})
+): Promise<QueryResult<Author>> {
+	return {
+		caching: true,
+		data: await context.prisma.author.findFirst({
+			where: { id: storeBookCollection.authorId }
+		})
+	}
 }
 
 export async function name(
 	storeBookCollection: StoreBookCollection,
 	args: { languages?: String[] },
 	context: ResolverContext
-): Promise<StoreBookCollectionName> {
+): Promise<QueryResult<StoreBookCollectionName>> {
 	let languages = args.languages || ["en"]
 	let where = { OR: [], AND: { collectionId: storeBookCollection.id } }
 
@@ -41,7 +47,10 @@ export async function name(
 	let names = await context.prisma.storeBookCollectionName.findMany({ where })
 
 	if (names.length == 0) {
-		return null
+		return {
+			caching: true,
+			data: null
+		}
 	}
 
 	// Find the optimal name for the given languages
@@ -49,18 +58,24 @@ export async function name(
 		let name = names.find(n => n.language == lang)
 
 		if (name != null) {
-			return name
+			return {
+				caching: true,
+				data: name
+			}
 		}
 	}
 
-	return names[0]
+	return {
+		caching: true,
+		data: names[0]
+	}
 }
 
 export async function names(
 	storeBookCollection: StoreBookCollection,
 	args: { limit?: number; offset?: number },
 	context: ResolverContext
-): Promise<List<StoreBookCollectionName>> {
+): Promise<QueryResult<List<StoreBookCollectionName>>> {
 	let take = args.limit || 10
 	if (take <= 0) take = 10
 
@@ -79,8 +94,11 @@ export async function names(
 	])
 
 	return {
-		total,
-		items
+		caching: true,
+		data: {
+			total,
+			items
+		}
 	}
 }
 
@@ -88,7 +106,7 @@ export async function storeBooks(
 	storeBookCollection: StoreBookCollection,
 	args: { limit?: number; offset?: number },
 	context: ResolverContext
-): Promise<List<StoreBook>> {
+): Promise<QueryResult<List<StoreBook>>> {
 	let take = args.limit || 10
 	if (take <= 0) take = 10
 
@@ -99,18 +117,21 @@ export async function storeBooks(
 
 	let total = await context.prisma.storeBook.count({ where })
 
-	let items = await context.prisma.storeBook.findMany({
+	let items = (await context.prisma.storeBook.findMany({
 		where,
 		take,
 		skip
-	}) as StoreBook[]
+	})) as StoreBook[]
 
 	for (let storeBook of items) {
 		await loadStoreBookData(context.prisma, storeBook)
 	}
 
 	return {
-		total,
-		items
+		caching: true,
+		data: {
+			total,
+			items
+		}
 	}
 }

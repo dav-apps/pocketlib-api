@@ -12,7 +12,13 @@ import {
 } from "@prisma/client"
 import * as crypto from "crypto"
 import { isSuccessStatusCode, TableObjectsController } from "dav-js"
-import { ResolverContext, List, StoreBook, StoreBookCover } from "../types.js"
+import {
+	ResolverContext,
+	QueryResult,
+	List,
+	StoreBook,
+	StoreBookCover
+} from "../types.js"
 import {
 	throwApiError,
 	throwValidationError,
@@ -44,13 +50,19 @@ export async function retrieveStoreBook(
 	parent: any,
 	args: { uuid: string },
 	context: ResolverContext
-): Promise<StoreBook> {
+): Promise<QueryResult<StoreBook>> {
 	const uuid = args.uuid
-	if (uuid == null) return null
 
 	let storeBook = (await context.prisma.storeBook.findFirst({
 		where: { uuid }
 	})) as StoreBook
+
+	if (storeBook == null) {
+		return {
+			caching: true,
+			data: null
+		}
+	}
 
 	await loadStoreBookData(
 		context.prisma,
@@ -58,7 +70,10 @@ export async function retrieveStoreBook(
 		context.user == null || BigInt(context.user.id) != storeBook.userId
 	)
 
-	return storeBook
+	return {
+		caching: true,
+		data: storeBook
+	}
 }
 
 export async function listStoreBooks(
@@ -73,7 +88,7 @@ export async function listStoreBooks(
 		offset?: number
 	},
 	context: ResolverContext
-): Promise<List<StoreBook>> {
+): Promise<QueryResult<List<StoreBook>>> {
 	let take = args.limit || 10
 	if (take <= 0) take = 10
 
@@ -119,8 +134,11 @@ export async function listStoreBooks(
 		}
 
 		return {
-			total: storeBooks.length,
-			items: storeBooks.slice(skip, skip + take)
+			caching: true,
+			data: {
+				total: storeBooks.length,
+				items: storeBooks.slice(skip, skip + take)
+			}
 		}
 	} else if (inReview) {
 		// Check if the user is an admin
@@ -148,8 +166,11 @@ export async function listStoreBooks(
 		}
 
 		return {
-			total,
-			items
+			caching: false,
+			data: {
+				total,
+				items
+			}
 		}
 	} else if (random) {
 		let total = await context.prisma.storeBook.count()
@@ -177,8 +198,11 @@ export async function listStoreBooks(
 		}
 
 		return {
-			total,
-			items
+			caching: true,
+			data: {
+				total,
+				items
+			}
 		}
 	} else if (args.query.length > 0) {
 		let where = {
@@ -250,8 +274,11 @@ export async function listStoreBooks(
 		}
 
 		return {
-			total,
-			items
+			caching: true,
+			data: {
+				total,
+				items
+			}
 		}
 	} else {
 		let where = { status: { equals: "published" } }
@@ -269,8 +296,11 @@ export async function listStoreBooks(
 		}
 
 		return {
-			total,
-			items
+			caching: true,
+			data: {
+				total,
+				items
+			}
 		}
 	}
 }
@@ -799,31 +829,43 @@ export async function collection(
 	storeBook: StoreBook,
 	args: any,
 	context: ResolverContext
-): Promise<StoreBookCollection> {
-	return await context.prisma.storeBookCollection.findFirst({
-		where: { id: storeBook.collectionId }
-	})
+): Promise<QueryResult<StoreBookCollection>> {
+	return {
+		caching: true,
+		data: await context.prisma.storeBookCollection.findFirst({
+			where: { id: storeBook.collectionId }
+		})
+	}
 }
 
 export async function cover(
 	storeBook: StoreBook,
 	args: any,
 	context: ResolverContext
-): Promise<StoreBookCover> {
+): Promise<QueryResult<StoreBookCover>> {
 	let release = await getLastReleaseOfStoreBook(
 		context.prisma,
 		storeBook.id,
 		context.user == null || BigInt(context.user.id) != storeBook.userId
 	)
-	if (release.coverId == null) return null
+
+	if (release.coverId == null) {
+		return {
+			caching: false,
+			data: null
+		}
+	}
 
 	let cover = await context.prisma.storeBookCover.findFirst({
 		where: { id: release.coverId }
 	})
 
 	return {
-		...cover,
-		url: getTableObjectFileCdnUrl(cover.uuid)
+		caching: true,
+		data: {
+			...cover,
+			url: getTableObjectFileCdnUrl(cover.uuid)
+		}
 	}
 }
 
@@ -831,58 +873,85 @@ export async function file(
 	storeBook: StoreBook,
 	args: any,
 	context: ResolverContext
-): Promise<StoreBookFile> {
+): Promise<QueryResult<StoreBookFile>> {
 	let release = await getLastReleaseOfStoreBook(
 		context.prisma,
 		storeBook.id,
 		context.user == null || BigInt(context.user.id) != storeBook.userId
 	)
-	if (release.fileId == null) return null
 
-	return await context.prisma.storeBookFile.findFirst({
-		where: { id: release.fileId }
-	})
+	if (release.fileId == null) {
+		return {
+			caching: false,
+			data: null
+		}
+	}
+
+	return {
+		caching: true,
+		data: await context.prisma.storeBookFile.findFirst({
+			where: { id: release.fileId }
+		})
+	}
 }
 
 export async function printCover(
 	storeBook: StoreBook,
 	args: any,
 	context: ResolverContext
-): Promise<StoreBookPrintCover> {
+): Promise<QueryResult<StoreBookPrintCover>> {
 	let release = await getLastReleaseOfStoreBook(
 		context.prisma,
 		storeBook.id,
 		context.user == null || BigInt(context.user.id) != storeBook.userId
 	)
-	if (release.printCoverId == null) return null
 
-	return await context.prisma.storeBookPrintCover.findFirst({
-		where: { id: release.printCoverId }
-	})
+	if (release.printCoverId == null) {
+		return {
+			caching: false,
+			data: null
+		}
+	}
+
+	return {
+		caching: true,
+		data: await context.prisma.storeBookPrintCover.findFirst({
+			where: { id: release.printCoverId }
+		})
+	}
 }
 
 export async function printFile(
 	storeBook: StoreBook,
 	args: any,
 	context: ResolverContext
-): Promise<StoreBookPrintFile> {
+): Promise<QueryResult<StoreBookPrintFile>> {
 	let release = await getLastReleaseOfStoreBook(
 		context.prisma,
 		storeBook.id,
 		context.user == null || BigInt(context.user.id) != storeBook.userId
 	)
-	if (release.printFileId == null) return null
 
-	return await context.prisma.storeBookPrintFile.findFirst({
-		where: { id: release.printFileId }
-	})
+	if (release.printFileId == null) {
+		return {
+			caching: false,
+			data: null
+		}
+	}
+
+	return {
+		caching: true,
+		data: await context.prisma.storeBookPrintFile.findFirst({
+			where: { id: release.printFileId }
+		})
+	}
 }
 
 export async function categories(
 	storeBook: StoreBook,
 	args: { limit?: number; offset?: number },
 	context: ResolverContext
-): Promise<List<Category>> {
+): Promise<QueryResult<List<Category>>> {
 	let take = args.limit || 10
 	if (take <= 0) take = 10
 
@@ -898,8 +967,11 @@ export async function categories(
 	])
 
 	return {
-		total,
-		items
+		caching: true,
+		data: {
+			total,
+			items
+		}
 	}
 }
 
@@ -907,7 +979,7 @@ export async function series(
 	storeBook: StoreBook,
 	args: { limit?: number; offset?: number },
 	context: ResolverContext
-): Promise<List<StoreBookSeries>> {
+): Promise<QueryResult<List<StoreBookSeries>>> {
 	let take = args.limit || 10
 	if (take <= 0) take = 10
 
@@ -922,8 +994,11 @@ export async function series(
 	])
 
 	return {
-		total,
-		items
+		caching: true,
+		data: {
+			total,
+			items
+		}
 	}
 }
 
@@ -931,7 +1006,7 @@ export async function releases(
 	storeBook: StoreBook,
 	args: { limit?: number; offset?: number },
 	context: ResolverContext
-): Promise<List<StoreBookRelease>> {
+): Promise<QueryResult<List<StoreBookRelease>>> {
 	let take = args.limit || 10
 	if (take <= 0) take = 10
 
@@ -949,8 +1024,11 @@ export async function releases(
 	])
 
 	return {
-		total,
-		items
+		caching: true,
+		data: {
+			total,
+			items
+		}
 	}
 }
 
