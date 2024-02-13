@@ -204,7 +204,7 @@ export async function listStoreBooks(
 				items
 			}
 		}
-	} else if (args.query.length > 0) {
+	} else if (query.length > 0) {
 		let where = {
 			AND: [
 				{ status: { equals: "published" } },
