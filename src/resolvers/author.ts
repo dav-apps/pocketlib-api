@@ -218,9 +218,6 @@ export async function updateAuthor(
 	},
 	context: ResolverContext
 ): Promise<Author> {
-	const uuid = args.uuid
-	if (uuid == null) return null
-
 	let facebookUsernameResult = getFacebookUsername(args.facebookUsername)
 	let instagramUsernameResult = getInstagramUsername(args.instagramUsername)
 	let twitterUsernameResult = getTwitterUsername(args.twitterUsername)
@@ -228,7 +225,7 @@ export async function updateAuthor(
 	let author: Author = null
 	const user = context.user
 
-	if (uuid == "mine") {
+	if (args.uuid == "mine") {
 		// Check if the user is an author
 		if (user == null) {
 			throwApiError(apiErrors.notAuthenticated)
@@ -250,7 +247,7 @@ export async function updateAuthor(
 
 		// Get the author
 		author = await context.prisma.author.findFirst({
-			where: { uuid }
+			where: { uuid: args.uuid }
 		})
 	}
 
