@@ -12,6 +12,7 @@ model Publisher {
   id                BigInt         @id @default(autoincrement())
   uuid              String         @unique @db.VarChar
   userId            BigInt
+  slug              String         @unique @default(uuid()) @db.VarChar
   name              String         @db.VarChar
   description       String?        @db.VarChar
   websiteUrl        String?        @db.VarChar
@@ -40,6 +41,7 @@ model Author {
   uuid                        String                       @unique @db.VarChar
   userId                      BigInt
   publisherId                 BigInt?
+  slug                        String                       @unique @default(uuid()) @db.VarChar
   firstName                   String?                      @db.VarChar
   lastName                    String?                      @db.VarChar
   websiteUrl                  String?                      @db.VarChar
@@ -121,6 +123,7 @@ model StoreBook {
   uuid                           String                          @unique @db.VarChar
   userId                         BigInt
   collectionId                   BigInt
+  slug                           String                          @unique @default(uuid()) @db.VarChar
   language                       String                          @db.VarChar
   status                         String?                         @db.VarChar
   createdAt                      DateTime                        @default(now())

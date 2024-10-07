@@ -59,7 +59,6 @@ export interface User {
 export interface TableObject {
 	uuid: string
 	userId: number
-	user: User
 	tableId: number
 	properties: { [key: string]: string | number | boolean }
 }
