@@ -125,6 +125,7 @@ export const typeDefs = `#graphql
 
 	type Publisher {
 		uuid: String!
+		slug: String!
 		name: String!
 		description: String
 		websiteUrl: String
@@ -153,6 +154,7 @@ export const typeDefs = `#graphql
 	type Author {
 		uuid: String!
 		publisher: Publisher
+		slug: String!
 		firstName: String!
 		lastName: String!
 		bio(languages: [String!]): AuthorBio
@@ -228,6 +230,7 @@ export const typeDefs = `#graphql
 	type StoreBook {
 		uuid: String!
 		collection: StoreBookCollection!
+		slug: String!
 		title: String!
 		description: String
 		language: String!

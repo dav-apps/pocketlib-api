@@ -1,5 +1,6 @@
 import { Prisma, Publisher, Author } from "@prisma/client"
 import * as crypto from "crypto"
+import validator from "validator"
 import { ResolverContext, QueryResult, List, PublisherLogo } from "../types.js"
 import {
 	throwApiError,
@@ -7,7 +8,8 @@ import {
 	getFacebookUsername,
 	getInstagramUsername,
 	getTwitterUsername,
-	getTableObjectFileCdnUrl
+	getTableObjectFileCdnUrl,
+	stringToSlug
 } from "../utils.js"
 import { admins } from "../constants.js"
 import { apiErrors, validationErrors } from "../errors.js"
@@ -16,7 +18,6 @@ import {
 	validateDescriptionLength,
 	validateWebsiteUrl
 } from "../services/validationService.js"
-import { query } from "express"
 
 export async function retrievePublisher(
 	parent: any,
@@ -44,11 +45,15 @@ export async function retrievePublisher(
 		}
 	}
 
+	let where: any = { uuid }
+
+	if (!validator.isUUID(uuid)) {
+		where = { slug: uuid }
+	}
+
 	return {
 		caching: true,
-		data: await context.prisma.publisher.findFirst({
-			where: { uuid }
-		})
+		data: await context.prisma.publisher.findFirst({ where })
 	}
 }
 
@@ -110,11 +115,15 @@ export async function createPublisher(
 	throwValidationError(validateNameLength(args.name))
 
 	// Create the publisher
+	let uuid = crypto.randomUUID()
+	let name = args.name
+
 	return await context.prisma.publisher.create({
 		data: {
-			uuid: crypto.randomUUID(),
+			uuid,
 			userId: user.id,
-			name: args.name
+			slug: stringToSlug(`${name} ${uuid}`),
+			name
 		}
 	})
 }

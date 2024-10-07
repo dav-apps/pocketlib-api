@@ -6,6 +6,7 @@ import {
 	StoreBookSeries
 } from "@prisma/client"
 import * as crypto from "crypto"
+import validator from "validator"
 import {
 	ResolverContext,
 	QueryResult,
@@ -19,7 +20,8 @@ import {
 	getInstagramUsername,
 	getTwitterUsername,
 	getTableObjectFileCdnUrl,
-	randomNumber
+	randomNumber,
+	stringToSlug
 } from "../utils.js"
 import { apiErrors, validationErrors } from "../errors.js"
 import { admins } from "../constants.js"
@@ -55,9 +57,15 @@ export async function retrieveAuthor(
 		}
 	}
 
+	let where: any = { uuid }
+
+	if (!validator.isUUID(uuid)) {
+		where = { slug: uuid }
+	}
+
 	return {
 		caching: true,
-		data: await context.prisma.author.findFirst({ where: { uuid } })
+		data: await context.prisma.author.findFirst({ where })
 	}
 }
 
@@ -187,11 +195,16 @@ export async function createAuthor(
 	)
 
 	// Create the author
+	let uuid = crypto.randomUUID()
+	let firstName = args.firstName
+	let lastName = args.lastName
+
 	let data = {
-		uuid: crypto.randomUUID(),
+		uuid,
 		userId: user.id,
-		firstName: args.firstName,
-		lastName: args.lastName
+		slug: stringToSlug(`${firstName} ${lastName} ${uuid}`),
+		firstName,
+		lastName
 	}
 
 	if (isAdmin && publisher != null) {

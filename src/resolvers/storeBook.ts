@@ -11,6 +11,7 @@ import {
 	Category
 } from "@prisma/client"
 import * as crypto from "crypto"
+import validator from "validator"
 import { isSuccessStatusCode, TableObjectsController } from "dav-js"
 import {
 	ResolverContext,
@@ -26,7 +27,8 @@ import {
 	getLastReleaseOfStoreBook,
 	createNewStoreBookRelease,
 	getTableObjectFileCdnUrl,
-	randomNumber
+	randomNumber,
+	stringToSlug
 } from "../utils.js"
 import { apiErrors, validationErrors } from "../errors.js"
 import { admins, storeBookTableId } from "../constants.js"
@@ -53,8 +55,14 @@ export async function retrieveStoreBook(
 ): Promise<QueryResult<StoreBook>> {
 	const uuid = args.uuid
 
+	let where: any = { uuid }
+
+	if (!validator.isUUID(uuid)) {
+		where = { slug: uuid }
+	}
+
 	let storeBook = (await context.prisma.storeBook.findFirst({
-		where: { uuid }
+		where
 	})) as StoreBook
 
 	if (storeBook == null) {
@@ -449,15 +457,18 @@ export async function createStoreBook(
 	}
 
 	// Create the store book
+	let uuid = crypto.randomUUID()
+
 	let storeBook = await context.prisma.storeBook.create({
 		data: {
-			uuid: crypto.randomUUID(),
+			uuid,
 			userId: user.id,
 			collection: {
 				connect: {
 					id: storeBookCollection.id
 				}
 			},
+			slug: stringToSlug(`${author.firstName} ${author.lastName} ${args.title} ${uuid}`),
 			language: args.language,
 			status: "unpublished"
 		}
