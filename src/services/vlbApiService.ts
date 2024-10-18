@@ -13,6 +13,7 @@ export async function getProducts(query: string): Promise<{
 			firstName: string
 			lastName: string
 		}[]
+		coverUrl?: string
 	}[]
 	totalPages: number
 	totalElements: number

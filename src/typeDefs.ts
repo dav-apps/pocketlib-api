@@ -342,6 +342,7 @@ export const typeDefs = `#graphql
 		description: String
 		publisher: String!
 		author: VlbItemContributor!
+		coverUrl: String
 	}
 
 	type VlbItemContributor {

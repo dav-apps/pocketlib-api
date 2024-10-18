@@ -159,5 +159,6 @@ export interface VlbItem {
 		firstName: string
 		lastName: string
 	}
+	coverUrl?: string
 }
 //#endregion

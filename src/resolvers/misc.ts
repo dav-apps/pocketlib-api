@@ -26,7 +26,11 @@ export async function search(
 			title: product.title,
 			description: product.mainDescription,
 			publisher: product.publisher,
-			author
+			author,
+			coverUrl:
+				product.coverUrl != null
+					? `${product.coverUrl}?access_token=${process.env.VLB_COVER_TOKEN}`
+					: null
 		})
 	}
 
