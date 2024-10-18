@@ -11,6 +11,7 @@ import * as storeBookReleaseResolvers from "./resolvers/storeBookRelease.js"
 import * as checkoutSessionResolvers from "./resolvers/checkoutSession.js"
 import * as categoryResolvers from "./resolvers/category.js"
 import * as bookResolvers from "./resolvers/book.js"
+import * as miscResolvers from "./resolvers/misc.js"
 
 export const resolvers = {
 	Query: {
@@ -182,7 +183,9 @@ export const resolvers = {
 				context,
 				info,
 				categoryResolvers.listCategories
-			)
+			),
+		search: (parent: any, args: any, context: ResolverContext, info: any) =>
+			cachingResolver(parent, args, context, info, miscResolvers.search)
 	},
 	Mutation: {
 		createPublisher: publisherResolvers.createPublisher,

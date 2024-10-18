@@ -6,6 +6,7 @@ export const apiBaseUrlProduction =
 export const newApiBaseUrl = "https://dav-api-staging-sojqu.ondigitalocean.app"
 export const luluApiBaseUrlStaging = "https://api.sandbox.lulu.com"
 export const luluApiBaseUrlProduction = "https://api.lulu.com"
+export const vlbApiBaseUrl = "https://api.vlb.de/api/v2"
 export const admins = [1]
 export const languages = ["en", "de"]
 

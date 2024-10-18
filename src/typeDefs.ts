@@ -40,6 +40,7 @@ export const typeDefs = `#graphql
 			limit: Int
 			offset: Int
 		): CategoryList!
+		search(query: String!): SearchResultList!
 	}
 
 	type Mutation {
@@ -332,5 +333,26 @@ export const typeDefs = `#graphql
 		uuid: String!
 		storeBook: String
 		file: String!
+	}
+
+	type VlbItem {
+		id: String!
+		isbn: String!
+		title: String!
+		description: String
+		publisher: String!
+		author: VlbItemContributor!
+	}
+
+	type VlbItemContributor {
+		firstName: String!
+		lastName: String!
+	}
+
+	union SearchResult = StoreBook | VlbItem
+
+	type SearchResultList {
+		total: Int!
+		items: [SearchResult!]!
 	}
 `

@@ -147,4 +147,17 @@ export interface Book {
 	storeBook: string
 	file: string
 }
+
+export interface VlbItem {
+	__typename: "VlbItem"
+	id: string
+	isbn: string
+	title: string
+	description?: string
+	publisher: string
+	author: {
+		firstName: string
+		lastName: string
+	}
+}
 //#endregion
