@@ -9,10 +9,22 @@ import {
 
 export async function search(
 	parent: any,
-	args: { query: string },
+	args: { query: string; limit?: number; offset?: number },
 	context: ResolverContext
 ): Promise<QueryResult<List<StoreBook | VlbItem>>> {
-	let result = await getProducts(args.query)
+	let take = args.limit ?? 10
+	if (take <= 0) take = 10
+
+	let skip = args.offset ?? 0
+	if (skip < 0) skip = 0
+
+	const query = `${args.query.toLowerCase()} und (pt=pbook)`
+
+	let result = await getProducts({
+		query,
+		page: skip > 0 ? Math.floor(skip / take) + 1 : 1,
+		size: take
+	})
 
 	let items: VlbItem[] = []
 

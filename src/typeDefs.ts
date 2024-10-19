@@ -40,7 +40,11 @@ export const typeDefs = `#graphql
 			limit: Int
 			offset: Int
 		): CategoryList!
-		search(query: String!): SearchResultList!
+		search(
+			query: String!
+			limit: Int
+			offset: Int
+		): SearchResultList!
 	}
 
 	type Mutation {

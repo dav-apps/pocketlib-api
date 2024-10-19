@@ -1,7 +1,11 @@
 import axios from "axios"
 import { vlbApiBaseUrl } from "../constants.js"
 
-export async function getProducts(query: string): Promise<{
+export async function getProducts(params: {
+	query: string
+	page?: number
+	size?: number
+}): Promise<{
 	content: {
 		productId: string
 		isbn: string
@@ -26,7 +30,9 @@ export async function getProducts(query: string): Promise<{
 				Authorization: `Bearer ${process.env.VLB_METADATA_TOKEN}`
 			},
 			params: {
-				search: `${query} und (pt=pbook)`
+				search: params.query,
+				page: params.page ?? 1,
+				size: params.size ?? 10
 			}
 		})
 
