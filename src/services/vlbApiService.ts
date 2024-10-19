@@ -12,7 +12,7 @@ export async function getProducts(params: {
 		title: string
 		mainDescription?: string
 		publisher: string
-		contributors: {
+		contributors?: {
 			type: string
 			firstName: string
 			lastName: string
@@ -33,6 +33,51 @@ export async function getProducts(params: {
 				search: params.query,
 				page: params.page ?? 1,
 				size: params.size ?? 10
+			}
+		})
+
+		return response.data
+	} catch (error) {
+		console.error(error)
+		return null
+	}
+}
+
+export async function getProduct(id: string): Promise<{
+	productId: string
+	titles: {
+		title: string
+		subtitle?: string
+		titleType: string
+	}[]
+	contributors?: {
+		firstName: string
+		lastName: string
+		contributorRole: string
+	}[]
+	identifiers: {
+		productIdentifierType: string
+		idValue: string
+	}[]
+	publishers: {
+		publisherName: string
+	}[]
+	textContents: {
+		textType: string
+		text: string
+	}[]
+	supportingResources: {
+		resourceContentType: string
+		exportedLink: string
+	}[]
+}> {
+	try {
+		let response = await axios({
+			method: "get",
+			url: `${vlbApiBaseUrl}/product/${id}`,
+			headers: {
+				Authorization: `Bearer ${process.env.VLB_METADATA_TOKEN}`,
+				"Content-Type": "application/json-short"
 			}
 		})
 

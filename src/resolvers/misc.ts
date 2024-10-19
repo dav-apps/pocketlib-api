@@ -18,7 +18,7 @@ export async function search(
 	let skip = args.offset ?? 0
 	if (skip < 0) skip = 0
 
-	const query = `${args.query.toLowerCase()} und (pt=pbook)`
+	const query = `${args.query.toLowerCase()} und (pt=pbook) und (li=20)`
 
 	let result = await getProducts({
 		query,
@@ -29,7 +29,7 @@ export async function search(
 	let items: VlbItem[] = []
 
 	for (let product of result.content) {
-		let author = product.contributors.find(c => c.type == "A01")
+		let author = product.contributors?.find(c => c.type == "A01")
 
 		items.push({
 			__typename: "VlbItem",

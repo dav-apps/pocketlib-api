@@ -155,7 +155,7 @@ export interface VlbItem {
 	title: string
 	description?: string
 	publisher: string
-	author: {
+	author?: {
 		firstName: string
 		lastName: string
 	}

@@ -11,6 +11,7 @@ import * as storeBookReleaseResolvers from "./resolvers/storeBookRelease.js"
 import * as checkoutSessionResolvers from "./resolvers/checkoutSession.js"
 import * as categoryResolvers from "./resolvers/category.js"
 import * as bookResolvers from "./resolvers/book.js"
+import * as vlbItemResolvers from "./resolvers/vlbItem.js"
 import * as miscResolvers from "./resolvers/misc.js"
 
 export const resolvers = {
@@ -183,6 +184,19 @@ export const resolvers = {
 				context,
 				info,
 				categoryResolvers.listCategories
+			),
+		retrieveVlbItem: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				vlbItemResolvers.retrieveVlbItem
 			),
 		search: (parent: any, args: any, context: ResolverContext, info: any) =>
 			cachingResolver(parent, args, context, info, miscResolvers.search)
