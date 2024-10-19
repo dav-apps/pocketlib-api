@@ -154,6 +154,7 @@ export interface VlbItem {
 	isbn: string
 	title: string
 	description?: string
+	price: number
 	publisher: string
 	author?: {
 		firstName: string

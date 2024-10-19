@@ -345,6 +345,7 @@ export const typeDefs = `#graphql
 		isbn: String!
 		title: String!
 		description: String
+		price: Float!
 		publisher: String!
 		author: VlbItemContributor
 		coverUrl: String

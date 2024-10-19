@@ -59,6 +59,12 @@ export async function getProduct(id: string): Promise<{
 		productIdentifierType: string
 		idValue: string
 	}[]
+	prices: {
+		priceType: string
+		countriesIncluded: string
+		priceAmount: number
+		priceStatus: string
+	}[]
 	publishers: {
 		publisherName: string
 	}[]
