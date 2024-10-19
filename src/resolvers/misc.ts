@@ -37,6 +37,7 @@ export async function search(
 			isbn: product.isbn,
 			title: product.title,
 			description: product.mainDescription,
+			price: product.priceEurD * 100,
 			publisher: product.publisher,
 			author,
 			coverUrl:

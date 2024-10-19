@@ -11,6 +11,7 @@ export async function getProducts(params: {
 		isbn: string
 		title: string
 		mainDescription?: string
+		priceEurD: number
 		publisher: string
 		contributors?: {
 			type: string

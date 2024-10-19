@@ -11,7 +11,7 @@ import {
 	createPrintJobCostCalculation
 } from "../services/luluApiService.js"
 
-export async function createCheckoutSession(
+export async function createCheckoutSessionForStoreBook(
 	parent: any,
 	args: { storeBookUuid: string; successUrl: string; cancelUrl: string },
 	context: ResolverContext

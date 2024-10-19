@@ -121,7 +121,7 @@ export const typeDefs = `#graphql
 			releaseName: String!
 			releaseNotes: String
 		): StoreBookRelease
-		createCheckoutSession(
+		createCheckoutSessionForStoreBook(
 			storeBookUuid: String!
 			successUrl: String!
 			cancelUrl: String!

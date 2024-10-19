@@ -215,7 +215,8 @@ export const resolvers = {
 		updateStoreBook: storeBookResolvers.updateStoreBook,
 		publishStoreBookRelease:
 			storeBookReleaseResolvers.publishStoreBookRelease,
-		createCheckoutSession: checkoutSessionResolvers.createCheckoutSession,
+		createCheckoutSessionForStoreBook:
+			checkoutSessionResolvers.createCheckoutSessionForStoreBook,
 		createBook: bookResolvers.createBook
 	},
 	Publisher: {
