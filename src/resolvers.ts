@@ -217,6 +217,8 @@ export const resolvers = {
 			storeBookReleaseResolvers.publishStoreBookRelease,
 		createCheckoutSessionForStoreBook:
 			checkoutSessionResolvers.createCheckoutSessionForStoreBook,
+		createCheckoutSessionForVlbItem:
+			checkoutSessionResolvers.createCheckoutSessionForVlbItem,
 		createBook: bookResolvers.createBook
 	},
 	Publisher: {

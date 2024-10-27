@@ -5,11 +5,13 @@ import {
 	getTableObjectFileCdnUrl
 } from "../utils.js"
 import { apiErrors } from "../errors.js"
+import { vlbItemOrderTableId } from "../constants.js"
 import * as apiService from "../services/apiService.js"
 import {
 	authenticate,
 	createPrintJobCostCalculation
 } from "../services/luluApiService.js"
+import { getProduct } from "../services/vlbApiService.js"
 
 export async function createCheckoutSessionForStoreBook(
 	parent: any,
@@ -99,10 +101,8 @@ export async function createCheckoutSessionForStoreBook(
 		price = Number(costCalculationResponse.total_cost_incl_tax) * 100
 	}
 
-	let createCheckoutSessionResponse = await apiService.createCheckoutSession(
-		`url`,
-		accessToken,
-		{
+	let createCheckoutSessionResponse =
+		await apiService.createPaymentCheckoutSession(`url`, accessToken, {
 			tableObjectUuid: storeBook.uuid,
 			type: "ORDER",
 			price,
@@ -111,8 +111,60 @@ export async function createCheckoutSessionForStoreBook(
 			productImage: getTableObjectFileCdnUrl(cover.uuid),
 			successUrl: args.successUrl,
 			cancelUrl: args.cancelUrl
-		}
+		})
+
+	return { url: createCheckoutSessionResponse }
+}
+
+export async function createCheckoutSessionForVlbItem(
+	parent: any,
+	args: { productId: string; successUrl: string; cancelUrl: string },
+	context: ResolverContext
+): Promise<{ url: string }> {
+	const user = context.user
+	const accessToken = context.accessToken
+
+	// Check if the user is logged in
+	if (user == null) {
+		throwApiError(apiErrors.notAuthenticated)
+	}
+
+	// Get the VlbItem
+	let result = await getProduct(args.productId)
+
+	if (result == null) {
+		throwApiError(apiErrors.vlbItemDoesNotExist)
+	}
+
+	// Create the table object
+	let orderTableObject = await apiService.createTableObject(
+		crypto.randomUUID(),
+		vlbItemOrderTableId
 	)
+
+	let title = result.titles.find(t => t.titleType == "01")
+	let price = result.prices.find(
+		p =>
+			(p.priceType == "02" || p.priceType == "04") &&
+			p.countriesIncluded == "DE"
+	)
+	let cover = result.supportingResources.find(
+		r => r.resourceContentType == "01"
+	)
+
+	let createCheckoutSessionResponse =
+		await apiService.createPaymentCheckoutSession(`url`, accessToken, {
+			tableObjectUuid: orderTableObject.uuid,
+			type: "ORDER",
+			price: price.priceAmount * 100,
+			currency: "EUR",
+			productName: title.title,
+			productImage: cover.exportedLink
+				? `${cover.exportedLink}?access_token=${process.env.VLB_COVER_TOKEN}`
+				: null,
+			successUrl: args.successUrl,
+			cancelUrl: args.cancelUrl
+		})
 
 	return { url: createCheckoutSessionResponse }
 }

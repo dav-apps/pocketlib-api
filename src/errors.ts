@@ -58,6 +58,11 @@ export const apiErrors = {
 		message: "StoreBookRelease does not exist",
 		status: 404
 	},
+	vlbItemDoesNotExist: {
+		code: "VLB_ITEM_NOT_EXISTS",
+		message: "VlbItem does not exist",
+		status: 404
+	},
 	cannotUpdateStoreBookLanguage: {
 		code: "CANNOT_UPDATE_LANGUAGE_OF_PUBLISHED_STORE_BOOK",
 		message: "Can't update language of published store book",

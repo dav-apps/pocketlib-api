@@ -5,6 +5,7 @@ export async function getProducts(params: {
 	query: string
 	page?: number
 	size?: number
+	active?: boolean
 }): Promise<{
 	content: {
 		productId: string
@@ -33,7 +34,8 @@ export async function getProducts(params: {
 			params: {
 				search: params.query,
 				page: params.page ?? 1,
-				size: params.size ?? 10
+				size: params.size ?? 10,
+				active: params.active
 			}
 		})
 

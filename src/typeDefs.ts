@@ -126,6 +126,11 @@ export const typeDefs = `#graphql
 			successUrl: String!
 			cancelUrl: String!
 		): CheckoutSession
+		createCheckoutSessionForVlbItem(
+			productId: String!
+			successUrl: String!
+			cancelUrl: String!
+		): CheckoutSession
 		createBook(storeBook: String!): Book
 	}
 

@@ -23,7 +23,8 @@ export async function search(
 	let result = await getProducts({
 		query,
 		page: skip > 0 ? Math.floor(skip / take) + 1 : 1,
-		size: take
+		size: take,
+		active: true
 	})
 
 	let items: VlbItem[] = []

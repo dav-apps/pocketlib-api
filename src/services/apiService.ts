@@ -412,7 +412,7 @@ export async function listShippingAddresses(
 	return result.listShippingAddresses
 }
 
-export async function createCheckoutSession(
+export async function createPaymentCheckoutSession(
 	queryData: string,
 	accessToken: string,
 	variables: {
@@ -426,10 +426,12 @@ export async function createCheckoutSession(
 		cancelUrl: string
 	}
 ): Promise<string> {
-	let response = await request<{ createCheckoutSession: { url: string } }>(
+	let response = await request<{
+		createPaymentCheckoutSession: { url: string }
+	}>(
 		newApiBaseUrl,
 		gql`
-			mutation CreateCheckoutSession(
+			mutation CreatePaymentCheckoutSession(
 				$tableObjectUuid: String!
 				$type: TableObjectPriceType!
 				$price: Int
@@ -439,7 +441,7 @@ export async function createCheckoutSession(
 				$successUrl: String!
 				$cancelUrl: String!
 			) {
-				createCheckoutSession(
+				createPaymentCheckoutSession(
 					tableObjectUuid: $tableObjectUuid
 					type: $type
 					price: $price
@@ -459,5 +461,5 @@ export async function createCheckoutSession(
 		}
 	)
 
-	return response.createCheckoutSession.url
+	return response.createPaymentCheckoutSession.url
 }
