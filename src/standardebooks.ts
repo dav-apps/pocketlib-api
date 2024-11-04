@@ -14,7 +14,11 @@ import {
 import { getUser } from "./services/apiService.js"
 import { createStoreBook, updateStoreBook } from "./resolvers/storeBook.js"
 import { publishStoreBookRelease } from "./resolvers/storeBookRelease.js"
-import { getLastReleaseOfStoreBook, getTableObjectFileCdnUrl } from "./utils.js"
+import {
+	getLastReleaseOfStoreBook,
+	getTableObjectFileCdnUrl,
+	downloadFile
+} from "./utils.js"
 import { User } from "./types.js"
 import { appId } from "./constants.js"
 
@@ -627,20 +631,6 @@ async function getFileSize(url: string): Promise<number> {
 	} catch (error) {}
 
 	return 0
-}
-
-async function downloadFile(url: string): Promise<Buffer> {
-	try {
-		let response = await axios({
-			method: "get",
-			url,
-			responseType: "arraybuffer"
-		})
-
-		return Buffer.from(response.data, "binary")
-	} catch (error) {
-		return null
-	}
 }
 //#endregion
 

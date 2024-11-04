@@ -2,6 +2,7 @@ import { Response } from "express"
 import { GraphQLError } from "graphql"
 import { encode } from "blurhash"
 import { createCanvas, loadImage, Image } from "canvas"
+import axios from "axios"
 import * as crypto from "crypto"
 import { PrismaClient, StoreBookRelease } from "@prisma/client"
 import { TableObjectsController, isSuccessStatusCode } from "dav-js"
@@ -326,4 +327,18 @@ export function stringToSlug(str: string): string {
 		.replace(/[^a-z0-9 -]/g, "") // remove invalid chars
 		.replace(/\s+/g, "-") // collapse whitespace and replace by -
 		.replace(/-+/g, "-") // collapse dashes
+}
+
+export async function downloadFile(url: string): Promise<Buffer> {
+	try {
+		let response = await axios({
+			method: "get",
+			url,
+			responseType: "arraybuffer"
+		})
+
+		return Buffer.from(response.data, "binary")
+	} catch (error) {
+		return null
+	}
 }

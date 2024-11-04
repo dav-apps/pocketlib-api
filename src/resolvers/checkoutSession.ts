@@ -2,7 +2,8 @@ import { ResolverContext, StoreBook } from "../types.js"
 import {
 	throwApiError,
 	getLastReleaseOfStoreBook,
-	getTableObjectFileCdnUrl
+	getTableObjectFileCdnUrl,
+	downloadFile
 } from "../utils.js"
 import { apiErrors } from "../errors.js"
 import { vlbItemOrderTableId } from "../constants.js"
@@ -12,6 +13,7 @@ import {
 	createPrintJobCostCalculation
 } from "../services/luluApiService.js"
 import { getProduct } from "../services/vlbApiService.js"
+import { check, upload, getFileLink } from "../services/fileService.js"
 
 export async function createCheckoutSessionForStoreBook(
 	parent: any,
@@ -136,6 +138,30 @@ export async function createCheckoutSessionForVlbItem(
 		throwApiError(apiErrors.vlbItemDoesNotExist)
 	}
 
+	// Get the id
+	let identifier = result.identifiers.find(
+		i => i.productIdentifierType == "15"
+	)
+
+	const coverKey = `vlb-covers/${identifier.idValue}.jpg`
+	let coverLink = getFileLink(coverKey)
+
+	// Check if the cover was already uploaded
+	if (!(await check(coverKey))) {
+		// Get the cover
+		let cover = result.supportingResources.find(
+			r => r.resourceContentType == "01"
+		)
+
+		if (cover.exportedLink != null) {
+			// Download the cover & upload it on DO
+			let link = `${cover.exportedLink}?access_token=${process.env.VLB_COVER_TOKEN}`
+			let coverData = await downloadFile(link)
+
+			await upload(coverKey, coverData, "image/jpeg")
+		}
+	}
+
 	// Create the table object
 	let orderTableObject = await apiService.createTableObject(
 		crypto.randomUUID(),
@@ -148,9 +174,6 @@ export async function createCheckoutSessionForVlbItem(
 			(p.priceType == "02" || p.priceType == "04") &&
 			p.countriesIncluded == "DE"
 	)
-	let cover = result.supportingResources.find(
-		r => r.resourceContentType == "01"
-	)
 
 	let createCheckoutSessionResponse =
 		await apiService.createPaymentCheckoutSession(`url`, accessToken, {
@@ -159,9 +182,7 @@ export async function createCheckoutSessionForVlbItem(
 			price: price.priceAmount * 100,
 			currency: "EUR",
 			productName: title.title,
-			productImage: cover.exportedLink
-				? `${cover.exportedLink}?access_token=${process.env.VLB_COVER_TOKEN}`
-				: null,
+			productImage: coverLink,
 			successUrl: args.successUrl,
 			cancelUrl: args.cancelUrl
 		})
