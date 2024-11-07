@@ -198,6 +198,19 @@ export const resolvers = {
 				info,
 				vlbItemResolvers.retrieveVlbItem
 			),
+		listVlbItems: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				vlbItemResolvers.listVlbItems
+			),
 		search: (parent: any, args: any, context: ResolverContext, info: any) =>
 			cachingResolver(parent, args, context, info, miscResolvers.search)
 	},

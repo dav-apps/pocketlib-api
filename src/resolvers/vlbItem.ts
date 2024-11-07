@@ -1,5 +1,6 @@
-import { ResolverContext, QueryResult, VlbItem } from "../types.js"
-import { getProduct } from "../services/vlbApiService.js"
+import { getProduct, getProducts } from "../services/vlbApiService.js"
+import { ResolverContext, QueryResult, List, VlbItem } from "../types.js"
+import { randomNumber } from "../utils.js"
 
 export async function retrieveVlbItem(
 	parent: any,
@@ -41,6 +42,66 @@ export async function retrieveVlbItem(
 			coverUrl: cover.exportedLink
 				? `${cover.exportedLink}?access_token=${process.env.VLB_COVER_TOKEN}`
 				: null
+		}
+	}
+}
+
+export async function listVlbItems(
+	parent: any,
+	args: {
+		random?: boolean
+		limit?: number
+		offset?: number
+	},
+	context: ResolverContext
+): Promise<QueryResult<List<VlbItem>>> {
+	let take = args.limit || 10
+	if (take <= 0) take = 10
+
+	let skip = args.offset || 0
+	if (skip < 0) skip = 0
+
+	let random = args.random || false
+	let items: VlbItem[] = []
+	let total: number = 0
+
+	if (random) {
+		const query = `(pt=pbook) und (li=20)`
+
+		let result = await getProducts({
+			query,
+			page: randomNumber(1, 10000 / take),
+			size: take,
+			active: true
+		})
+
+		total = result.totalElements
+
+		for (let product of result.content) {
+			let author = product.contributors?.find(c => c.type == "A01")
+
+			items.push({
+				__typename: "VlbItem",
+				id: product.productId,
+				isbn: product.isbn,
+				title: product.title,
+				description: product.mainDescription,
+				price: product.priceEurD * 100,
+				publisher: product.publisher,
+				author,
+				coverUrl:
+					product.coverUrl != null
+						? `${product.coverUrl}?access_token=${process.env.VLB_COVER_TOKEN}`
+						: null
+			})
+		}
+	}
+
+	return {
+		caching: true,
+		data: {
+			total,
+			items
 		}
 	}
 }

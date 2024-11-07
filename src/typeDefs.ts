@@ -41,6 +41,11 @@ export const typeDefs = `#graphql
 			offset: Int
 		): CategoryList!
 		retrieveVlbItem(id: String!): VlbItem
+		listVlbItems(
+			random: Boolean
+			limit: Int
+			offset: Int
+		): VlbItemList!
 		search(
 			query: String!
 			limit: Int
@@ -354,6 +359,11 @@ export const typeDefs = `#graphql
 		publisher: String!
 		author: VlbItemContributor
 		coverUrl: String
+	}
+
+	type VlbItemList {
+		total: Int!
+		items: [VlbItem!]!
 	}
 
 	type VlbItemContributor {
