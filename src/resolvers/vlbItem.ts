@@ -35,10 +35,13 @@ export async function retrieveVlbItem(
 			description: description.text,
 			price: price.priceAmount * 100,
 			publisher: result.publishers[0].publisherName,
-			author: {
-				firstName: author.firstName,
-				lastName: author.lastName
-			},
+			author:
+				author != null
+					? {
+							firstName: author.firstName,
+							lastName: author.lastName
+					  }
+					: null,
 			coverUrl: cover.exportedLink
 				? `${cover.exportedLink}?access_token=${process.env.VLB_COVER_TOKEN}`
 				: null
