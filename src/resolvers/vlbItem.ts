@@ -14,14 +14,14 @@ export async function retrieveVlbItem(
 	)
 
 	let title = result.titles.find(t => t.titleType == "01")
-	let description = result.textContents.find(t => t.textType == "03")
+	let description = result.textContents?.find(t => t.textType == "03")
 	let price = result.prices.find(
 		p =>
 			(p.priceType == "02" || p.priceType == "04") &&
 			p.countriesIncluded == "DE"
 	)
 	let author = result.contributors?.find(c => c.contributorRole == "A01")
-	let cover = result.supportingResources.find(
+	let cover = result.supportingResources?.find(
 		r => r.resourceContentType == "01"
 	)
 
@@ -32,7 +32,7 @@ export async function retrieveVlbItem(
 			id: result.productId,
 			isbn: identifier.idValue,
 			title: title.title,
-			description: description.text,
+			description: description?.text,
 			price: price.priceAmount * 100,
 			publisher: result.publishers[0].publisherName,
 			author:
@@ -69,7 +69,7 @@ export async function listVlbItems(
 	let total: number = 0
 
 	if (random) {
-		const query = `(pt=pbook) und (li=20)`
+		const query = `pt=pbook li=20 (wg=11** oder wg=21**)`
 
 		let result = await getProducts({
 			query,
