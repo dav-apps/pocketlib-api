@@ -21,6 +21,10 @@ export async function getProducts(params: {
 			lastName: string
 		}[]
 		coverUrl?: string
+		collections?: {
+			collectionId: string
+			title: string
+		}[]
 	}[]
 	totalPages: number
 	totalElements: number
@@ -80,6 +84,10 @@ export async function getProduct(id: string): Promise<{
 	supportingResources: {
 		resourceContentType: string
 		exportedLink: string
+	}[]
+	collections?: {
+		collectionId: string
+		title: string
 	}[]
 }> {
 	try {

@@ -1,8 +1,4 @@
-import {
-	getProduct,
-	getProducts,
-	getCollection
-} from "../services/vlbApiService.js"
+import { getProduct, getProducts } from "../services/vlbApiService.js"
 import { ResolverContext, QueryResult, List, VlbItem } from "../types.js"
 import { randomNumber } from "../utils.js"
 
@@ -29,6 +25,20 @@ export async function retrieveVlbItem(
 		r => r.resourceContentType == "01"
 	)
 
+	let collections: {
+		id: string
+		title: string
+	}[] = []
+
+	if (result.collections != null) {
+		for (let c of result.collections) {
+			collections.push({
+				id: c.collectionId,
+				title: c.title
+			})
+		}
+	}
+
 	return {
 		caching: true,
 		data: {
@@ -48,7 +58,8 @@ export async function retrieveVlbItem(
 					: null,
 			coverUrl: cover.exportedLink
 				? `${cover.exportedLink}?access_token=${process.env.VLB_COVER_TOKEN}`
-				: null
+				: null,
+			collections
 		}
 	}
 }
@@ -88,6 +99,20 @@ export async function listVlbItems(
 		for (let product of result.content) {
 			let author = product.contributors?.find(c => c.type == "A01")
 
+			let collections: {
+				id: string
+				title: string
+			}[] = []
+
+			if (product.collections != null) {
+				for (let c of product.collections) {
+					collections.push({
+						id: c.collectionId,
+						title: c.title
+					})
+				}
+			}
+
 			items.push({
 				__typename: "VlbItem",
 				id: product.productId,
@@ -100,7 +125,8 @@ export async function listVlbItems(
 				coverUrl:
 					product.coverUrl != null
 						? `${product.coverUrl}?access_token=${process.env.VLB_COVER_TOKEN}`
-						: null
+						: null,
+				collections
 			})
 		}
 	} else if (args.collectionId != null) {
@@ -115,6 +141,20 @@ export async function listVlbItems(
 		for (let product of result.content) {
 			let author = product.contributors?.find(c => c.type == "A01")
 
+			let collections: {
+				id: string
+				title: string
+			}[] = []
+
+			if (product.collections != null) {
+				for (let c of product.collections) {
+					collections.push({
+						id: c.collectionId,
+						title: c.title
+					})
+				}
+			}
+
 			items.push({
 				__typename: "VlbItem",
 				id: product.productId,
@@ -127,7 +167,8 @@ export async function listVlbItems(
 				coverUrl:
 					product.coverUrl != null
 						? `${product.coverUrl}?access_token=${process.env.VLB_COVER_TOKEN}`
-						: null
+						: null,
+				collections
 			})
 		}
 	}

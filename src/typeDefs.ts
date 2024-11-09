@@ -360,6 +360,7 @@ export const typeDefs = `#graphql
 		publisher: String!
 		author: VlbItemContributor
 		coverUrl: String
+		collections: [VlbItemCollection!]
 	}
 
 	type VlbItemList {
@@ -370,6 +371,11 @@ export const typeDefs = `#graphql
 	type VlbItemContributor {
 		firstName: String!
 		lastName: String!
+	}
+
+	type VlbItemCollection {
+		id: String!
+		title: String!
 	}
 
 	union SearchResult = StoreBook | VlbItem
