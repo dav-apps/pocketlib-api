@@ -136,3 +136,47 @@ export async function listVlbItems(
 		}
 	}
 }
+
+export async function description(
+	vlbItem: VlbItem,
+	args: any,
+	context: ResolverContext
+): Promise<QueryResult<string>> {
+	let result = await getProduct(vlbItem.id)
+
+	if (result == null) {
+		return {
+			caching: false,
+			data: null
+		}
+	}
+
+	let description = result.textContents?.find(t => t.textType == "03")
+
+	return {
+		caching: true,
+		data: description?.text
+	}
+}
+
+export async function author(
+	vlbItem: VlbItem,
+	args: any,
+	context: ResolverContext
+): Promise<QueryResult<{ firstName: string; lastName: string }>> {
+	let result = await getProduct(vlbItem.id)
+
+	if (result == null) {
+		return {
+			caching: false,
+			data: null
+		}
+	}
+
+	let author = result.contributors?.find(c => c.contributorRole == "A01")
+
+	return {
+		caching: true,
+		data: author
+	}
+}
