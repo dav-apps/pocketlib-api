@@ -199,13 +199,7 @@ export interface VlbGetProductResponseData {
 		subtitle?: string
 		titleType: string
 	}[]
-	contributors?: {
-		isni: string
-		firstName: string
-		lastName: string
-		contributorRole: string
-		biographicalNote?: string
-	}[]
+	contributors?: VlbGetProductResponseDataContributor[]
 	identifiers: {
 		productIdentifierType: string
 		idValue: string
@@ -231,5 +225,13 @@ export interface VlbGetProductResponseData {
 		collectionId: string
 		title: string
 	}[]
+}
+
+export interface VlbGetProductResponseDataContributor {
+	isni?: string
+	firstName: string
+	lastName: string
+	contributorRole: string
+	biographicalNote?: string
 }
 //#endregion

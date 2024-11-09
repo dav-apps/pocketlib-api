@@ -4,7 +4,7 @@ import { encode } from "blurhash"
 import { createCanvas, loadImage, Image } from "canvas"
 import axios from "axios"
 import * as crypto from "crypto"
-import { PrismaClient, StoreBookRelease } from "@prisma/client"
+import { PrismaClient, StoreBookRelease, VlbAuthor } from "@prisma/client"
 import { TableObjectsController, isSuccessStatusCode } from "dav-js"
 import {
 	RegexResult,
@@ -12,7 +12,8 @@ import {
 	User,
 	StoreBook,
 	VlbItem,
-	VlbGetProductsResponseDataItem
+	VlbGetProductsResponseDataItem,
+	VlbGetProductResponseDataContributor
 } from "./types.js"
 import {
 	storeBookReleaseTableId,
@@ -348,6 +349,67 @@ export async function downloadFile(url: string): Promise<Buffer> {
 	} catch (error) {
 		return null
 	}
+}
+
+export async function findVlbAuthor(
+	prisma: PrismaClient,
+	author: VlbGetProductResponseDataContributor
+) {
+	if (author == null) return null
+
+	let vlbAuthor: VlbAuthor = null
+
+	// Check if the VlbAuthor already exists
+	if (author.isni != null) {
+		vlbAuthor = await prisma.vlbAuthor.findFirst({
+			where: { isni: author.isni }
+		})
+	}
+
+	if (vlbAuthor == null) {
+		vlbAuthor = await prisma.vlbAuthor.findFirst({
+			where: {
+				firstName: author.firstName,
+				lastName: author.lastName
+			}
+		})
+	}
+
+	if (vlbAuthor != null) {
+		if (vlbAuthor.isni == null && author.isni != null) {
+			// Add the isni to the VlbAuthor
+			await prisma.vlbAuthor.update({
+				where: { uuid: vlbAuthor.uuid },
+				data: { isni: author.isni }
+			})
+		}
+
+		if (vlbAuthor.description == null && author.biographicalNote != null) {
+			// Add the description to the VlbAuthor
+			await prisma.vlbAuthor.update({
+				where: { uuid: vlbAuthor.uuid },
+				data: { description: author.biographicalNote }
+			})
+		}
+	} else {
+		// Create the VlbAuthor
+		let uuid = crypto.randomUUID()
+
+		vlbAuthor = await prisma.vlbAuthor.create({
+			data: {
+				uuid,
+				slug: stringToSlug(
+					`${author.firstName} ${author.lastName} ${uuid}`
+				),
+				isni: author.isni,
+				firstName: author.firstName,
+				lastName: author.lastName,
+				description: author.biographicalNote
+			}
+		})
+	}
+
+	return vlbAuthor
 }
 
 export function convertVlbGetProductsResponseDataItemToVlbItem(
