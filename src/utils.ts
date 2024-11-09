@@ -353,8 +353,6 @@ export async function downloadFile(url: string): Promise<Buffer> {
 export function convertVlbGetProductsResponseDataItemToVlbItem(
 	item: VlbGetProductsResponseDataItem
 ): VlbItem {
-	let author = item.contributors?.find(c => c.type == "A01")
-
 	let collections: {
 		id: string
 		title: string
@@ -381,7 +379,7 @@ export function convertVlbGetProductsResponseDataItemToVlbItem(
 		description: item.mainDescription,
 		price: item.priceEurD * 100,
 		publisher: item.publisher,
-		author,
+		author: null,
 		coverUrl:
 			item.coverUrl != null
 				? `${item.coverUrl}?access_token=${process.env.VLB_COVER_TOKEN}`

@@ -358,7 +358,7 @@ export const typeDefs = `#graphql
 		description: String
 		price: Float!
 		publisher: String!
-		author: VlbItemContributor
+		author: VlbAuthor
 		coverUrl: String
 		collections: [VlbItemCollection!]
 	}
@@ -368,14 +368,18 @@ export const typeDefs = `#graphql
 		items: [VlbItem!]!
 	}
 
-	type VlbItemContributor {
-		firstName: String!
-		lastName: String!
-	}
-
 	type VlbItemCollection {
 		id: String!
 		title: String!
+	}
+
+	type VlbAuthor {
+		uuid: String!
+		slug: String!
+		isni: String!
+		firstName: String!
+		lastName: String!
+		description: String
 	}
 
 	union SearchResult = StoreBook | VlbItem

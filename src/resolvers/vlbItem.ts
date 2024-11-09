@@ -1,6 +1,8 @@
+import { VlbAuthor } from "@prisma/client"
 import { getProduct, getProducts } from "../services/vlbApiService.js"
 import { ResolverContext, QueryResult, List, VlbItem } from "../types.js"
 import {
+	stringToSlug,
 	randomNumber,
 	convertVlbGetProductsResponseDataItemToVlbItem
 } from "../utils.js"
@@ -46,6 +48,33 @@ export async function retrieveVlbItem(
 		}
 	}
 
+	let vlbAuthor: VlbAuthor = null
+
+	if (author != null) {
+		// Check if the VlbAuthor already exists
+		vlbAuthor = await context.prisma.vlbAuthor.findFirst({
+			where: { isni: author.isni }
+		})
+
+		if (vlbAuthor == null) {
+			// Create the VlbAuthor
+			let uuid = crypto.randomUUID()
+
+			vlbAuthor = await context.prisma.vlbAuthor.create({
+				data: {
+					uuid,
+					slug: stringToSlug(
+						`${author.firstName} ${author.lastName} ${uuid}`
+					),
+					isni: author.isni,
+					firstName: author.firstName,
+					lastName: author.lastName,
+					description: author.biographicalNote
+				}
+			})
+		}
+	}
+
 	return {
 		caching: true,
 		data: {
@@ -56,13 +85,7 @@ export async function retrieveVlbItem(
 			description: description?.text,
 			price: price.priceAmount * 100,
 			publisher: result.publishers[0].publisherName,
-			author:
-				author != null
-					? {
-							firstName: author.firstName,
-							lastName: author.lastName
-					  }
-					: null,
+			author: vlbAuthor,
 			coverUrl: cover.exportedLink
 				? `${cover.exportedLink}?access_token=${process.env.VLB_COVER_TOKEN}`
 				: null,

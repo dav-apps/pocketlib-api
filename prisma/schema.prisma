@@ -248,3 +248,13 @@ model StandardEbooksStoreBookMapping {
   createdAt   DateTime  @default(now())
   storeBook   StoreBook @relation(fields: [storeBookId], references: [id])
 }
+
+model VlbAuthor {
+  id          BigInt  @id @default(autoincrement())
+  uuid        String  @unique @default(uuid()) @db.VarChar
+  slug        String  @unique @default(uuid()) @db.VarChar
+  isni        String  @unique @db.VarChar
+  firstName   String  @db.VarChar
+  lastName    String  @db.VarChar
+  description String? @db.VarChar
+}
