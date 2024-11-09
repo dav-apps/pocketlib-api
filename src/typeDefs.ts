@@ -47,6 +47,7 @@ export const typeDefs = `#graphql
 			limit: Int
 			offset: Int
 		): VlbItemList!
+		retrieveVlbAuthor(uuid: String!): VlbAuthor
 		search(
 			query: String!
 			limit: Int

@@ -63,9 +63,11 @@ export async function retrieveAuthor(
 		where = { slug: uuid }
 	}
 
+	let author = await context.prisma.author.findFirst({ where })
+
 	return {
-		caching: true,
-		data: await context.prisma.author.findFirst({ where })
+		caching: author != null,
+		data: author
 	}
 }
 
