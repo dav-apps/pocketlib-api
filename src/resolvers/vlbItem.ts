@@ -71,6 +71,7 @@ export async function listVlbItems(
 	args: {
 		random?: boolean
 		collectionId?: string
+		vlbAuthorUuid?: string
 		limit?: number
 		offset?: number
 	},
@@ -104,6 +105,8 @@ export async function listVlbItems(
 	} else if (args.collectionId != null) {
 		let result = await getProducts({
 			query: args.collectionId,
+			page: skip > 0 ? Math.floor(skip / take) + 1 : 1,
+			size: take,
 			active: true,
 			sort: "publicationDate"
 		})
@@ -112,6 +115,27 @@ export async function listVlbItems(
 
 		for (let product of result.content) {
 			items.push(convertVlbGetProductsResponseDataItemToVlbItem(product))
+		}
+	} else if (args.vlbAuthorUuid != null) {
+		let vlbAuthor = await context.prisma.vlbAuthor.findFirst({
+			where: { uuid: args.vlbAuthorUuid }
+		})
+
+		if (vlbAuthor != null) {
+			let query = `au="${vlbAuthor.lastName} ${vlbAuthor.firstName}"`
+
+			let result = await getProducts({
+				query,
+				page: skip > 0 ? Math.floor(skip / take) + 1 : 1,
+				size: take,
+				active: true
+			})
+
+			total = result.totalElements
+
+			for (let product of result.content) {
+				items.push(convertVlbGetProductsResponseDataItemToVlbItem(product))
+			}
 		}
 	}
 
