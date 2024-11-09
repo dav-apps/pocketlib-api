@@ -104,22 +104,26 @@ export async function listVlbItems(
 			})
 		}
 	} else if (args.collectionId != null) {
-		let result = await getCollection({
-			collectionId: args.collectionId
+		let result = await getProducts({
+			query: args.collectionId,
+			active: true,
+			sort: "publicationDate"
 		})
 
 		total = result.totalElements
 
 		for (let product of result.content) {
+			let author = product.contributors?.find(c => c.type == "A01")
+
 			items.push({
 				__typename: "VlbItem",
-				id: product.id,
+				id: product.productId,
 				isbn: product.isbn,
 				title: product.title,
-				description: null,
+				description: product.mainDescription,
 				price: product.priceEurD * 100,
 				publisher: product.publisher,
-				author: null,
+				author,
 				coverUrl:
 					product.coverUrl != null
 						? `${product.coverUrl}?access_token=${process.env.VLB_COVER_TOKEN}`

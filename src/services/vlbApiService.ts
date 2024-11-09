@@ -6,6 +6,7 @@ export async function getProducts(params: {
 	page?: number
 	size?: number
 	active?: boolean
+	sort?: "publicationDate"
 }): Promise<{
 	content: {
 		productId: string
@@ -35,7 +36,8 @@ export async function getProducts(params: {
 				search: params.query,
 				page: params.page ?? 1,
 				size: params.size ?? 10,
-				active: params.active
+				active: params.active,
+				sort: params.sort
 			}
 		})
 
