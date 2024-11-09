@@ -6,6 +6,7 @@ import {
 	StoreBook,
 	VlbItem
 } from "../types.js"
+import { convertVlbGetProductsResponseDataItemToVlbItem } from "../utils.js"
 
 export async function search(
 	parent: any,
@@ -30,22 +31,7 @@ export async function search(
 	let items: VlbItem[] = []
 
 	for (let product of result.content) {
-		let author = product.contributors?.find(c => c.type == "A01")
-
-		items.push({
-			__typename: "VlbItem",
-			id: product.productId,
-			isbn: product.isbn,
-			title: product.title,
-			description: product.mainDescription,
-			price: product.priceEurD * 100,
-			publisher: product.publisher,
-			author,
-			coverUrl:
-				product.coverUrl != null
-					? `${product.coverUrl}?access_token=${process.env.VLB_COVER_TOKEN}`
-					: null
-		})
+		items.push(convertVlbGetProductsResponseDataItemToVlbItem(product))
 	}
 
 	return {

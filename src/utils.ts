@@ -6,7 +6,14 @@ import axios from "axios"
 import * as crypto from "crypto"
 import { PrismaClient, StoreBookRelease } from "@prisma/client"
 import { TableObjectsController, isSuccessStatusCode } from "dav-js"
-import { RegexResult, ApiError, User, StoreBook } from "./types.js"
+import {
+	RegexResult,
+	ApiError,
+	User,
+	StoreBook,
+	VlbItem,
+	VlbGetProductsResponseDataItem
+} from "./types.js"
 import {
 	storeBookReleaseTableId,
 	facebookUsernameRegex,
@@ -340,5 +347,45 @@ export async function downloadFile(url: string): Promise<Buffer> {
 		return Buffer.from(response.data, "binary")
 	} catch (error) {
 		return null
+	}
+}
+
+export function convertVlbGetProductsResponseDataItemToVlbItem(
+	item: VlbGetProductsResponseDataItem
+): VlbItem {
+	let author = item.contributors?.find(c => c.type == "A01")
+
+	let collections: {
+		id: string
+		title: string
+	}[] = []
+
+	if (item.collections != null) {
+		for (let c of item.collections) {
+			if (collections.find(co => co.id == c.collectionId) != null) {
+				continue
+			}
+
+			collections.push({
+				id: c.collectionId,
+				title: c.title
+			})
+		}
+	}
+
+	return {
+		__typename: "VlbItem",
+		id: item.productId,
+		isbn: item.isbn,
+		title: item.title,
+		description: item.mainDescription,
+		price: item.priceEurD * 100,
+		publisher: item.publisher,
+		author,
+		coverUrl:
+			item.coverUrl != null
+				? `${item.coverUrl}?access_token=${process.env.VLB_COVER_TOKEN}`
+				: null,
+		collections
 	}
 }

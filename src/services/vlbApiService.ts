@@ -1,4 +1,8 @@
 import axios from "axios"
+import {
+	VlbGetProductsResponseData,
+	VlbGetProductResponseData
+} from "../types.js"
 import { vlbApiBaseUrl } from "../constants.js"
 
 export async function getProducts(params: {
@@ -7,28 +11,7 @@ export async function getProducts(params: {
 	size?: number
 	active?: boolean
 	sort?: "publicationDate"
-}): Promise<{
-	content: {
-		productId: string
-		isbn: string
-		title: string
-		mainDescription?: string
-		priceEurD: number
-		publisher: string
-		contributors?: {
-			type: string
-			firstName: string
-			lastName: string
-		}[]
-		coverUrl?: string
-		collections?: {
-			collectionId: string
-			title: string
-		}[]
-	}[]
-	totalPages: number
-	totalElements: number
-}> {
+}): Promise<VlbGetProductsResponseData> {
 	try {
 		let response = await axios({
 			method: "get",
@@ -52,44 +35,9 @@ export async function getProducts(params: {
 	}
 }
 
-export async function getProduct(id: string): Promise<{
-	productId: string
-	titles: {
-		title: string
-		subtitle?: string
-		titleType: string
-	}[]
-	contributors?: {
-		firstName: string
-		lastName: string
-		contributorRole: string
-	}[]
-	identifiers: {
-		productIdentifierType: string
-		idValue: string
-	}[]
-	prices: {
-		priceType: string
-		countriesIncluded: string
-		priceAmount: number
-		priceStatus: string
-	}[]
-	publishers: {
-		publisherName: string
-	}[]
-	textContents: {
-		textType: string
-		text: string
-	}[]
-	supportingResources: {
-		resourceContentType: string
-		exportedLink: string
-	}[]
-	collections?: {
-		collectionId: string
-		title: string
-	}[]
-}> {
+export async function getProduct(
+	id: string
+): Promise<VlbGetProductResponseData> {
 	try {
 		let response = await axios({
 			method: "get",

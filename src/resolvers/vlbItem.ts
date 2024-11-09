@@ -1,6 +1,9 @@
 import { getProduct, getProducts } from "../services/vlbApiService.js"
 import { ResolverContext, QueryResult, List, VlbItem } from "../types.js"
-import { randomNumber } from "../utils.js"
+import {
+	randomNumber,
+	convertVlbGetProductsResponseDataItemToVlbItem
+} from "../utils.js"
 
 export async function retrieveVlbItem(
 	parent: any,
@@ -101,41 +104,7 @@ export async function listVlbItems(
 		total = result.totalElements
 
 		for (let product of result.content) {
-			let author = product.contributors?.find(c => c.type == "A01")
-
-			let collections: {
-				id: string
-				title: string
-			}[] = []
-
-			if (product.collections != null) {
-				for (let c of product.collections) {
-					if (collections.find(co => co.id == c.collectionId) != null) {
-						continue
-					}
-
-					collections.push({
-						id: c.collectionId,
-						title: c.title
-					})
-				}
-			}
-
-			items.push({
-				__typename: "VlbItem",
-				id: product.productId,
-				isbn: product.isbn,
-				title: product.title,
-				description: product.mainDescription,
-				price: product.priceEurD * 100,
-				publisher: product.publisher,
-				author,
-				coverUrl:
-					product.coverUrl != null
-						? `${product.coverUrl}?access_token=${process.env.VLB_COVER_TOKEN}`
-						: null,
-				collections
-			})
+			items.push(convertVlbGetProductsResponseDataItemToVlbItem(product))
 		}
 	} else if (args.collectionId != null) {
 		let result = await getProducts({
@@ -147,41 +116,7 @@ export async function listVlbItems(
 		total = result.totalElements
 
 		for (let product of result.content) {
-			let author = product.contributors?.find(c => c.type == "A01")
-
-			let collections: {
-				id: string
-				title: string
-			}[] = []
-
-			if (product.collections != null) {
-				for (let c of product.collections) {
-					if (collections.find(co => co.id == c.collectionId) != null) {
-						continue
-					}
-
-					collections.push({
-						id: c.collectionId,
-						title: c.title
-					})
-				}
-			}
-
-			items.push({
-				__typename: "VlbItem",
-				id: product.productId,
-				isbn: product.isbn,
-				title: product.title,
-				description: product.mainDescription,
-				price: product.priceEurD * 100,
-				publisher: product.publisher,
-				author,
-				coverUrl:
-					product.coverUrl != null
-						? `${product.coverUrl}?access_token=${process.env.VLB_COVER_TOKEN}`
-						: null,
-				collections
-			})
+			items.push(convertVlbGetProductsResponseDataItemToVlbItem(product))
 		}
 	}
 

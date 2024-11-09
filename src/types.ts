@@ -167,3 +167,69 @@ export interface VlbItem {
 	}[]
 }
 //#endregion
+
+//#region Vlb API models
+export interface VlbGetProductsResponseData {
+	content: VlbGetProductsResponseDataItem[]
+	totalPages: number
+	totalElements: number
+}
+
+export interface VlbGetProductsResponseDataItem {
+	productId: string
+	isbn: string
+	title: string
+	mainDescription?: string
+	priceEurD: number
+	publisher: string
+	contributors?: {
+		type: string
+		firstName: string
+		lastName: string
+	}[]
+	coverUrl?: string
+	collections?: {
+		collectionId: string
+		title: string
+	}[]
+}
+
+export interface VlbGetProductResponseData {
+	productId: string
+	titles: {
+		title: string
+		subtitle?: string
+		titleType: string
+	}[]
+	contributors?: {
+		firstName: string
+		lastName: string
+		contributorRole: string
+	}[]
+	identifiers: {
+		productIdentifierType: string
+		idValue: string
+	}[]
+	prices: {
+		priceType: string
+		countriesIncluded: string
+		priceAmount: number
+		priceStatus: string
+	}[]
+	publishers: {
+		publisherName: string
+	}[]
+	textContents: {
+		textType: string
+		text: string
+	}[]
+	supportingResources: {
+		resourceContentType: string
+		exportedLink: string
+	}[]
+	collections?: {
+		collectionId: string
+		title: string
+	}[]
+}
+//#endregion
