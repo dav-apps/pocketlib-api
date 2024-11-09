@@ -96,3 +96,40 @@ export async function getProduct(id: string): Promise<{
 		return null
 	}
 }
+
+export async function getCollection(params: {
+	collectionId: string
+	page?: number
+	size?: number
+}): Promise<{
+	content: {
+		id: string
+		title: string
+		author: string
+		isbn: string
+		coverUrl: string
+		priceEurD: number
+		publisher: string
+	}[]
+	totalPages: number
+	totalElements: number
+}> {
+	try {
+		let response = await axios({
+			method: "get",
+			url: `${vlbApiBaseUrl}/collections/collection/${params.collectionId}`,
+			headers: {
+				Authorization: `Bearer ${process.env.VLB_METADATA_TOKEN}`
+			},
+			params: {
+				page: params.page ?? 1,
+				size: params.size ?? 10
+			}
+		})
+
+		return response.data
+	} catch (error) {
+		console.error(error)
+		return null
+	}
+}
