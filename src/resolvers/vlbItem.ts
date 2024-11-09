@@ -32,6 +32,10 @@ export async function retrieveVlbItem(
 
 	if (result.collections != null) {
 		for (let c of result.collections) {
+			if (collections.find(co => co.id == c.collectionId) != null) {
+				continue
+			}
+
 			collections.push({
 				id: c.collectionId,
 				title: c.title
@@ -106,6 +110,10 @@ export async function listVlbItems(
 
 			if (product.collections != null) {
 				for (let c of product.collections) {
+					if (collections.find(co => co.id == c.collectionId) != null) {
+						continue
+					}
+
 					collections.push({
 						id: c.collectionId,
 						title: c.title
@@ -148,6 +156,10 @@ export async function listVlbItems(
 
 			if (product.collections != null) {
 				for (let c of product.collections) {
+					if (collections.find(co => co.id == c.collectionId) != null) {
+						continue
+					}
+
 					collections.push({
 						id: c.collectionId,
 						title: c.title
