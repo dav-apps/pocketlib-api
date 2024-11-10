@@ -212,6 +212,10 @@ export async function publisher(
 
 		if (p.webSites?.length > 0) {
 			url = p.webSites[0].websiteLink
+
+			if (!/^https?:\/\//i.test(url)) {
+				url = `https://${url}`
+			}
 		}
 
 		publisher = {

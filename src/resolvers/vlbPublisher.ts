@@ -7,13 +7,18 @@ export async function retrieveVlbPublisher(
 	context: ResolverContext
 ): Promise<QueryResult<VlbPublisher>> {
 	let publisher = await getPublisher(args.id)
+	let url = publisher.url
+
+	if (!/^https?:\/\//i.test(url)) {
+		url = `https://${url}`
+	}
 
 	return {
 		caching: publisher != null,
 		data: {
 			id: publisher.mvbId,
 			name: publisher.name,
-			url: publisher.url
+			url
 		}
 	}
 }
