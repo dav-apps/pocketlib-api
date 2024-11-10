@@ -71,6 +71,7 @@ export async function listVlbItems(
 	args: {
 		random?: boolean
 		collectionId?: string
+		vlbPublisherId?: string
 		vlbAuthorUuid?: string
 		limit?: number
 		offset?: number
@@ -109,6 +110,19 @@ export async function listVlbItems(
 			size: take,
 			active: true,
 			sort: "publicationDate"
+		})
+
+		total = result.totalElements
+
+		for (let product of result.content) {
+			items.push(convertVlbGetProductsResponseDataItemToVlbItem(product))
+		}
+	} else if (args.vlbPublisherId != null) {
+		let result = await getProducts({
+			query: `vl=${args.vlbPublisherId} pt=pbook li=20 (wg=11** oder wg=21**)`,
+			page: skip > 0 ? Math.floor(skip / take) + 1 : 1,
+			size: take,
+			active: true
 		})
 
 		total = result.totalElements

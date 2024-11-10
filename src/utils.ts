@@ -355,7 +355,9 @@ export async function findVlbAuthor(
 	prisma: PrismaClient,
 	author: VlbGetProductResponseDataContributor
 ) {
-	if (author == null) return null
+	if (author == null || author.firstName == null || author.lastName == null) {
+		return null
+	}
 
 	let vlbAuthor: VlbAuthor = null
 

@@ -44,6 +44,7 @@ export const typeDefs = `#graphql
 		listVlbItems(
 			random: Boolean
 			collectionId: String
+			vlbPublisherId: String
 			vlbAuthorUuid: String
 			limit: Int
 			offset: Int
