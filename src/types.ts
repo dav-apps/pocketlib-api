@@ -156,7 +156,7 @@ export interface VlbItem {
 	title: string
 	description?: string
 	price: number
-	publisher: string
+	publisher?: VlbPublisher
 	author?: VlbAuthor
 	coverUrl?: string
 	collections: {
@@ -217,7 +217,12 @@ export interface VlbGetProductResponseData {
 		priceStatus: string
 	}[]
 	publishers: {
+		idValue: string
 		publisherName: string
+		webSites: {
+			websiteRole: string
+			websiteLink: string
+		}[]
 	}[]
 	textContents: {
 		textType: string

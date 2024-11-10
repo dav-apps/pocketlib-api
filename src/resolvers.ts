@@ -528,6 +528,19 @@ export const resolvers = {
 				info,
 				vlbItemResolvers.description
 			),
+		publisher: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				vlbItemResolvers.publisher
+			),
 		author: (parent: any, args: any, context: ResolverContext, info: any) =>
 			cachingResolver(parent, args, context, info, vlbItemResolvers.author)
 	}

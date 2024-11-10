@@ -1,5 +1,11 @@
 import { getProduct, getProducts } from "../services/vlbApiService.js"
-import { ResolverContext, QueryResult, List, VlbItem } from "../types.js"
+import {
+	ResolverContext,
+	QueryResult,
+	List,
+	VlbItem,
+	VlbPublisher
+} from "../types.js"
 import {
 	randomNumber,
 	convertVlbGetProductsResponseDataItemToVlbItem,
@@ -56,7 +62,6 @@ export async function retrieveVlbItem(
 			title: title.title,
 			description: description?.text,
 			price: price.priceAmount * 100,
-			publisher: result.publishers[0].publisherName,
 			author: await findVlbAuthor(context.prisma, author),
 			coverUrl: cover.exportedLink
 				? `${cover.exportedLink}?access_token=${process.env.VLB_COVER_TOKEN}`
@@ -181,6 +186,44 @@ export async function description(
 	return {
 		caching: true,
 		data: description?.text
+	}
+}
+
+export async function publisher(
+	vlbItem: VlbItem,
+	args: any,
+	context: ResolverContext
+): Promise<QueryResult<VlbPublisher>> {
+	let result = await getProduct(vlbItem.id)
+
+	if (result == null) {
+		return {
+			caching: false,
+			data: null
+		}
+	}
+
+	let publisher: VlbPublisher = null
+
+	if (result.publishers.length > 0) {
+		let p = result.publishers[0]
+
+		let url = null
+
+		if (p.webSites?.length > 0) {
+			url = p.webSites[0].websiteLink
+		}
+
+		publisher = {
+			id: p.idValue,
+			name: p.publisherName,
+			url
+		}
+	}
+
+	return {
+		caching: true,
+		data: publisher
 	}
 }
 

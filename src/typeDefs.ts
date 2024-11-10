@@ -361,7 +361,7 @@ export const typeDefs = `#graphql
 		title: String!
 		description: String
 		price: Float!
-		publisher: String!
+		publisher: VlbPublisher
 		author: VlbAuthor
 		coverUrl: String
 		collections: [VlbItemCollection!]
@@ -380,7 +380,7 @@ export const typeDefs = `#graphql
 	type VlbPublisher {
 		id: String!
 		name: String!
-		url: String!
+		url: String
 	}
 
 	type VlbAuthor {

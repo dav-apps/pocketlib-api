@@ -442,7 +442,6 @@ export function convertVlbGetProductsResponseDataItemToVlbItem(
 		title: item.title,
 		description: item.mainDescription,
 		price: item.priceEurD * 100,
-		publisher: item.publisher,
 		author: null,
 		coverUrl:
 			item.coverUrl != null
