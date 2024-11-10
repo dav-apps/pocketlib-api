@@ -48,6 +48,7 @@ export const typeDefs = `#graphql
 			limit: Int
 			offset: Int
 		): VlbItemList!
+		retrieveVlbPublisher(id: String!): VlbPublisher
 		retrieveVlbAuthor(uuid: String!): VlbAuthor
 		search(
 			query: String!
@@ -373,6 +374,12 @@ export const typeDefs = `#graphql
 	type VlbItemCollection {
 		id: String!
 		title: String!
+	}
+
+	type VlbPublisher {
+		id: String!
+		name: String!
+		url: String!
 	}
 
 	type VlbAuthor {

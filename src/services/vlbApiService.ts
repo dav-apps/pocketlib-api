@@ -91,3 +91,24 @@ export async function getCollection(params: {
 		return null
 	}
 }
+
+export async function getPublisher(id: string): Promise<{
+	mvbId: string
+	name: string
+	url: string
+}> {
+	try {
+		let response = await axios({
+			method: "get",
+			url: `${vlbApiBaseUrl}/publisher/${id}`,
+			headers: {
+				Authorization: `Bearer ${process.env.VLB_METADATA_TOKEN}`
+			}
+		})
+
+		return response.data
+	} catch (error) {
+		console.error(error)
+		return null
+	}
+}

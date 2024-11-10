@@ -122,7 +122,7 @@ export async function listVlbItems(
 		})
 
 		if (vlbAuthor != null) {
-			let query = `au="${vlbAuthor.lastName} ${vlbAuthor.firstName}"`
+			let query = `au="${vlbAuthor.lastName} ${vlbAuthor.firstName}" pt=pbook li=20 (wg=11** oder wg=21**)`
 
 			let result = await getProducts({
 				query,

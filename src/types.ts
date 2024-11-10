@@ -164,6 +164,12 @@ export interface VlbItem {
 		title: string
 	}[]
 }
+
+export interface VlbPublisher {
+	id: string
+	name: string
+	url: string
+}
 //#endregion
 
 //#region Vlb API models

@@ -19,10 +19,8 @@ export async function search(
 	let skip = args.offset ?? 0
 	if (skip < 0) skip = 0
 
-	const query = `${args.query.toLowerCase()} und (pt=pbook) und (li=20)`
-
 	let result = await getProducts({
-		query,
+		query: `${args.query.toLowerCase()} pt=pbook li=20`,
 		page: skip > 0 ? Math.floor(skip / take) + 1 : 1,
 		size: take,
 		active: true
