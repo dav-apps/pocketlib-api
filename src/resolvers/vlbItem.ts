@@ -9,7 +9,8 @@ import {
 import {
 	randomNumber,
 	convertVlbGetProductsResponseDataItemToVlbItem,
-	findVlbAuthor
+	findVlbAuthor,
+	findVlbCollections
 } from "../utils.js"
 
 export async function retrieveVlbItem(
@@ -66,7 +67,10 @@ export async function retrieveVlbItem(
 			coverUrl: cover.exportedLink
 				? `${cover.exportedLink}?access_token=${process.env.VLB_COVER_TOKEN}`
 				: null,
-			collections
+			collections: await findVlbCollections(
+				context.prisma,
+				result.collections
+			)
 		}
 	}
 }
@@ -106,7 +110,12 @@ export async function listVlbItems(
 		total = result.totalElements
 
 		for (let product of result.content) {
-			items.push(convertVlbGetProductsResponseDataItemToVlbItem(product))
+			items.push(
+				await convertVlbGetProductsResponseDataItemToVlbItem(
+					context.prisma,
+					product
+				)
+			)
 		}
 	} else if (args.collectionId != null) {
 		let result = await getProducts({
@@ -120,11 +129,16 @@ export async function listVlbItems(
 		total = result.totalElements
 
 		for (let product of result.content) {
-			items.push(convertVlbGetProductsResponseDataItemToVlbItem(product))
+			items.push(
+				await convertVlbGetProductsResponseDataItemToVlbItem(
+					context.prisma,
+					product
+				)
+			)
 		}
 	} else if (args.vlbPublisherId != null) {
 		let result = await getProducts({
-			query: `vl=${args.vlbPublisherId} pt=pbook li=20 (wg=11** oder wg=21**)`,
+			query: `vl=${args.vlbPublisherId} pt=pbook li=20`,
 			page: skip > 0 ? Math.floor(skip / take) + 1 : 1,
 			size: take,
 			active: true
@@ -133,7 +147,12 @@ export async function listVlbItems(
 		total = result.totalElements
 
 		for (let product of result.content) {
-			items.push(convertVlbGetProductsResponseDataItemToVlbItem(product))
+			items.push(
+				await convertVlbGetProductsResponseDataItemToVlbItem(
+					context.prisma,
+					product
+				)
+			)
 		}
 	} else if (args.vlbAuthorUuid != null) {
 		let vlbAuthor = await context.prisma.vlbAuthor.findFirst({
@@ -141,7 +160,7 @@ export async function listVlbItems(
 		})
 
 		if (vlbAuthor != null) {
-			let query = `au="${vlbAuthor.lastName} ${vlbAuthor.firstName}" pt=pbook li=20 (wg=11** oder wg=21**)`
+			let query = `au="${vlbAuthor.lastName} ${vlbAuthor.firstName}" pt=pbook li=20`
 
 			let result = await getProducts({
 				query,
@@ -153,7 +172,12 @@ export async function listVlbItems(
 			total = result.totalElements
 
 			for (let product of result.content) {
-				items.push(convertVlbGetProductsResponseDataItemToVlbItem(product))
+				items.push(
+					await convertVlbGetProductsResponseDataItemToVlbItem(
+						context.prisma,
+						product
+					)
+				)
 			}
 		}
 	}

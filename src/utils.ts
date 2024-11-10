@@ -4,7 +4,12 @@ import { encode } from "blurhash"
 import { createCanvas, loadImage, Image } from "canvas"
 import axios from "axios"
 import * as crypto from "crypto"
-import { PrismaClient, StoreBookRelease, VlbAuthor } from "@prisma/client"
+import {
+	PrismaClient,
+	StoreBookRelease,
+	VlbAuthor,
+	VlbCollection
+} from "@prisma/client"
 import { TableObjectsController, isSuccessStatusCode } from "dav-js"
 import {
 	RegexResult,
@@ -13,7 +18,8 @@ import {
 	StoreBook,
 	VlbItem,
 	VlbGetProductsResponseDataItem,
-	VlbGetProductResponseDataContributor
+	VlbGetProductResponseDataContributor,
+	VlbGetProductResponseDataCollection
 } from "./types.js"
 import {
 	storeBookReleaseTableId,
@@ -414,27 +420,49 @@ export async function findVlbAuthor(
 	return vlbAuthor
 }
 
-export function convertVlbGetProductsResponseDataItemToVlbItem(
-	item: VlbGetProductsResponseDataItem
-): VlbItem {
-	let collections: {
-		id: string
-		title: string
-	}[] = []
+export async function findVlbCollections(
+	prisma: PrismaClient,
+	collections: VlbGetProductResponseDataCollection[]
+): Promise<VlbCollection[]> {
+	let result: VlbCollection[] = []
 
-	if (item.collections != null) {
-		for (let c of item.collections) {
-			if (collections.find(co => co.id == c.collectionId) != null) {
+	if (collections != null) {
+		for (let collection of collections) {
+			// Check if the collection is already in the result
+			if (result.find(c => c.mvbId == collection.collectionId) != null) {
 				continue
 			}
 
-			collections.push({
-				id: c.collectionId,
-				title: c.title
+			// Check if the collection already exists in the database
+			let vlbCollection = await prisma.vlbCollection.findFirst({
+				where: { mvbId: collection.collectionId }
 			})
+
+			if (vlbCollection == null) {
+				// Create the VlbCollection
+				let uuid = crypto.randomUUID()
+
+				vlbCollection = await prisma.vlbCollection.create({
+					data: {
+						uuid,
+						slug: stringToSlug(`${collection.title} ${uuid}`),
+						mvbId: collection.collectionId,
+						title: collection.title
+					}
+				})
+			}
+
+			result.push(vlbCollection)
 		}
 	}
 
+	return result
+}
+
+export async function convertVlbGetProductsResponseDataItemToVlbItem(
+	prisma: PrismaClient,
+	item: VlbGetProductsResponseDataItem
+): Promise<VlbItem> {
 	return {
 		__typename: "VlbItem",
 		id: item.productId,
@@ -442,11 +470,10 @@ export function convertVlbGetProductsResponseDataItemToVlbItem(
 		title: item.title,
 		description: item.mainDescription,
 		price: item.priceEurD * 100,
-		author: null,
 		coverUrl:
 			item.coverUrl != null
 				? `${item.coverUrl}?access_token=${process.env.VLB_COVER_TOKEN}`
 				: null,
-		collections
+		collections: await findVlbCollections(prisma, item.collections)
 	}
 }

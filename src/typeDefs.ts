@@ -373,7 +373,8 @@ export const typeDefs = `#graphql
 	}
 
 	type VlbItemCollection {
-		id: String!
+		uuid: String!
+		slug: String!
 		title: String!
 	}
 

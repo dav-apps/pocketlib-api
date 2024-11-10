@@ -258,3 +258,11 @@ model VlbAuthor {
   lastName    String  @db.VarChar
   description String? @db.VarChar
 }
+
+model VlbCollection {
+  id    BigInt @id @default(autoincrement())
+  uuid  String @unique @default(uuid()) @db.VarChar
+  slug  String @unique @default(uuid()) @db.VarChar
+  mvbId String @unique @db.VarChar
+  title String @db.VarChar
+}

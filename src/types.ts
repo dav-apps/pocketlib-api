@@ -4,7 +4,8 @@ import {
 	AuthorProfileImage as AuthorProfileImageModel,
 	StoreBook as StoreBookModel,
 	StoreBookCover as StoreBookCoverModel,
-	VlbAuthor
+	VlbAuthor,
+	VlbCollection
 } from "@prisma/client"
 import { RedisClientType } from "redis"
 
@@ -159,10 +160,7 @@ export interface VlbItem {
 	publisher?: VlbPublisher
 	author?: VlbAuthor
 	coverUrl?: string
-	collections: {
-		id: string
-		title: string
-	}[]
+	collections: VlbCollection[]
 }
 
 export interface VlbPublisher {
@@ -192,10 +190,7 @@ export interface VlbGetProductsResponseDataItem {
 		lastName: string
 	}[]
 	coverUrl?: string
-	collections?: {
-		collectionId: string
-		title: string
-	}[]
+	collections?: VlbGetProductResponseDataCollection[]
 }
 
 export interface VlbGetProductResponseData {
@@ -232,10 +227,7 @@ export interface VlbGetProductResponseData {
 		resourceContentType: string
 		exportedLink: string
 	}[]
-	collections?: {
-		collectionId: string
-		title: string
-	}[]
+	collections?: VlbGetProductResponseDataCollection[]
 }
 
 export interface VlbGetProductResponseDataContributor {
@@ -244,5 +236,10 @@ export interface VlbGetProductResponseDataContributor {
 	lastName: string
 	contributorRole: string
 	biographicalNote?: string
+}
+
+export interface VlbGetProductResponseDataCollection {
+	collectionId: string
+	title: string
 }
 //#endregion

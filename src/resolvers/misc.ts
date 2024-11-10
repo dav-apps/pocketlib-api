@@ -29,7 +29,12 @@ export async function search(
 	let items: VlbItem[] = []
 
 	for (let product of result.content) {
-		items.push(convertVlbGetProductsResponseDataItemToVlbItem(product))
+		items.push(
+			await convertVlbGetProductsResponseDataItemToVlbItem(
+				context.prisma,
+				product
+			)
+		)
 	}
 
 	return {
