@@ -51,6 +51,7 @@ export const typeDefs = `#graphql
 		): VlbItemList!
 		retrieveVlbPublisher(id: String!): VlbPublisher
 		retrieveVlbAuthor(uuid: String!): VlbAuthor
+		retrieveVlbCollection(uuid: String!): VlbCollection
 		search(
 			query: String!
 			limit: Int
@@ -364,7 +365,7 @@ export const typeDefs = `#graphql
 		publisher: VlbPublisher
 		author: VlbAuthor
 		coverUrl: String
-		collections: [VlbItemCollection!]
+		collections: [VlbCollection!]
 	}
 
 	type VlbItemList {
@@ -372,7 +373,7 @@ export const typeDefs = `#graphql
 		items: [VlbItem!]!
 	}
 
-	type VlbItemCollection {
+	type VlbCollection {
 		uuid: String!
 		slug: String!
 		title: String!

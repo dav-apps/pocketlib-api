@@ -14,6 +14,7 @@ import * as bookResolvers from "./resolvers/book.js"
 import * as vlbItemResolvers from "./resolvers/vlbItem.js"
 import * as vlbPublisherResolvers from "./resolvers/vlbPublisher.js"
 import * as vlbAuthorResolvers from "./resolvers/vlbAuthor.js"
+import * as vlbCollectionResolvers from "./resolvers/vlbCollection.js"
 import * as miscResolvers from "./resolvers/misc.js"
 
 export const resolvers = {
@@ -238,6 +239,19 @@ export const resolvers = {
 				context,
 				info,
 				vlbAuthorResolvers.retrieveVlbAuthor
+			),
+		retrieveVlbCollection: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				vlbCollectionResolvers.retrieveVlbCollection
 			),
 		search: (parent: any, args: any, context: ResolverContext, info: any) =>
 			cachingResolver(parent, args, context, info, miscResolvers.search)
