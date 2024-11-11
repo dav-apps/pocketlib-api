@@ -1,3 +1,4 @@
+import validator from "validator"
 import { getProduct, getProducts } from "../services/vlbApiService.js"
 import {
 	ResolverContext,
@@ -118,9 +119,15 @@ export async function listVlbItems(
 			)
 		}
 	} else if (args.vlbCollectionUuid != null) {
+		let where: any = { uuid: args.vlbCollectionUuid }
+
+		if (!validator.isUUID(args.vlbCollectionUuid)) {
+			where = { slug: args.vlbCollectionUuid }
+		}
+
 		// Get the VlbCollection
 		let vlbCollection = await context.prisma.vlbCollection.findFirst({
-			where: { uuid: args.vlbCollectionUuid }
+			where
 		})
 
 		if (vlbCollection != null) {
