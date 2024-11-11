@@ -79,9 +79,9 @@ export async function listVlbItems(
 	parent: any,
 	args: {
 		random?: boolean
-		collectionId?: string
 		vlbPublisherId?: string
 		vlbAuthorUuid?: string
+		vlbCollectionUuid?: string
 		limit?: number
 		offset?: number
 	},
@@ -117,24 +117,31 @@ export async function listVlbItems(
 				)
 			)
 		}
-	} else if (args.collectionId != null) {
-		let result = await getProducts({
-			query: args.collectionId,
-			page: skip > 0 ? Math.floor(skip / take) + 1 : 1,
-			size: take,
-			active: true,
-			sort: "publicationDate"
+	} else if (args.vlbCollectionUuid != null) {
+		// Get the VlbCollection
+		let vlbCollection = await context.prisma.vlbCollection.findFirst({
+			where: { uuid: args.vlbCollectionUuid }
 		})
 
-		total = result.totalElements
+		if (vlbCollection != null) {
+			let result = await getProducts({
+				query: `${vlbCollection.mvbId} pt=pbook li=20`,
+				page: skip > 0 ? Math.floor(skip / take) + 1 : 1,
+				size: take,
+				active: true,
+				sort: "publicationDate"
+			})
 
-		for (let product of result.content) {
-			items.push(
-				await convertVlbGetProductsResponseDataItemToVlbItem(
-					context.prisma,
-					product
+			total = result.totalElements
+
+			for (let product of result.content) {
+				items.push(
+					await convertVlbGetProductsResponseDataItemToVlbItem(
+						context.prisma,
+						product
+					)
 				)
-			)
+			}
 		}
 	} else if (args.vlbPublisherId != null) {
 		let result = await getProducts({

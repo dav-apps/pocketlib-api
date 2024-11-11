@@ -43,9 +43,9 @@ export const typeDefs = `#graphql
 		retrieveVlbItem(id: String!): VlbItem
 		listVlbItems(
 			random: Boolean
-			collectionId: String
 			vlbPublisherId: String
 			vlbAuthorUuid: String
+			vlbCollectionUuid: String
 			limit: Int
 			offset: Int
 		): VlbItemList!
