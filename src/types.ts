@@ -213,6 +213,7 @@ export interface VlbGetProductResponseData {
 	}[]
 	publishers: {
 		idValue: string
+		adbName: string
 		publisherName: string
 		webSites: {
 			websiteRole: string

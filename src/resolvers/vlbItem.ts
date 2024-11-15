@@ -258,7 +258,7 @@ export async function publisher(
 
 		publisher = {
 			id: p.idValue,
-			name: p.publisherName,
+			name: p.adbName,
 			url
 		}
 	}
