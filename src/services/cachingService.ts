@@ -35,7 +35,7 @@ export async function cachingResolver(
 	// Check if the result is cached
 	let key = generateCacheKey(
 		`${info.path.typename}-${info.path.key}`,
-		parent?.uuid,
+		parent?.id ?? parent?.uuid,
 		args
 	)
 	let cachedResult = await context.redis.get(key)
