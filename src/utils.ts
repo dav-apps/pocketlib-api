@@ -379,7 +379,6 @@ export async function loadVlbItem(
 			(p.priceType == "02" || p.priceType == "04") &&
 			p.countriesIncluded == "DE"
 	)
-	let author = item.contributors?.find(c => c.contributorRole == "A01")
 	let cover = item.supportingResources?.find(
 		r => r.resourceContentType == "01"
 	)
@@ -398,11 +397,10 @@ export async function loadVlbItem(
 		isbn: identifier.idValue,
 		description: description?.text,
 		price: price.priceAmount * 100,
-		author: await findVlbAuthor(prisma, author),
 		coverUrl: cover.exportedLink
 			? `${cover.exportedLink}?access_token=${process.env.VLB_COVER_TOKEN}`
 			: null,
-		collections: await findVlbCollections(prisma, item.collections)
+		collections: []
 	}
 }
 
@@ -465,7 +463,7 @@ export async function findVlbItemByVlbGetProductsResponseDataItem(
 			item.coverUrl != null
 				? `${item.coverUrl}?access_token=${process.env.VLB_COVER_TOKEN}`
 				: null,
-		collections: await findVlbCollections(prisma, item.collections)
+		collections: []
 	}
 }
 

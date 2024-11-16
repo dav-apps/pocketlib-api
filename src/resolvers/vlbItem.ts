@@ -1,3 +1,4 @@
+import { VlbCollection } from "@prisma/client"
 import validator from "validator"
 import { getProduct, getProducts } from "../services/vlbApiService.js"
 import {
@@ -11,7 +12,8 @@ import {
 	randomNumber,
 	loadVlbItem,
 	findVlbItemByVlbGetProductsResponseDataItem,
-	findVlbAuthor
+	findVlbAuthor,
+	findVlbCollections
 } from "../utils.js"
 
 export async function retrieveVlbItem(
@@ -253,5 +255,25 @@ export async function author(
 	return {
 		caching: true,
 		data: await findVlbAuthor(context.prisma, author)
+	}
+}
+
+export async function collections(
+	vlbItem: VlbItem,
+	args: any,
+	context: ResolverContext
+): Promise<QueryResult<VlbCollection[]>> {
+	let item = await getProduct(vlbItem.mvbId)
+
+	if (item == null) {
+		return {
+			caching: false,
+			data: []
+		}
+	}
+
+	return {
+		caching: true,
+		data: await findVlbCollections(context.prisma, item.collections)
 	}
 }
