@@ -249,6 +249,14 @@ model StandardEbooksStoreBookMapping {
   storeBook   StoreBook @relation(fields: [storeBookId], references: [id])
 }
 
+model VlbItem {
+  id    BigInt @id @default(autoincrement())
+  uuid  String @unique @default(uuid()) @db.VarChar
+  slug  String @unique @default(uuid()) @db.VarChar
+  mvbId String @unique @db.VarChar
+  title String @db.VarChar
+}
+
 model VlbAuthor {
   id        BigInt  @id @default(autoincrement())
   uuid      String  @unique @default(uuid()) @db.VarChar

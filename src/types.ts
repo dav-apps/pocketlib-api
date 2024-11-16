@@ -4,6 +4,7 @@ import {
 	AuthorProfileImage as AuthorProfileImageModel,
 	StoreBook as StoreBookModel,
 	StoreBookCover as StoreBookCoverModel,
+	VlbItem as VlbItemModel,
 	VlbAuthor,
 	VlbCollection
 } from "@prisma/client"
@@ -150,11 +151,9 @@ export interface Book {
 	file: string
 }
 
-export interface VlbItem {
+export interface VlbItem extends VlbItemModel {
 	__typename: "VlbItem"
-	id: string
 	isbn: string
-	title: string
 	description?: string
 	price: number
 	publisher?: VlbPublisher

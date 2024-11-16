@@ -1,5 +1,5 @@
 import { Response } from "express"
-import { GraphQLError } from "graphql"
+import { GraphQLError, printSchema } from "graphql"
 import { encode } from "blurhash"
 import { createCanvas, loadImage, Image } from "canvas"
 import axios from "axios"
@@ -7,6 +7,7 @@ import * as crypto from "crypto"
 import {
 	PrismaClient,
 	StoreBookRelease,
+	VlbItem as VlbItemModel,
 	VlbAuthor,
 	VlbCollection
 } from "@prisma/client"
@@ -30,6 +31,7 @@ import {
 } from "./constants.js"
 import { apiErrors } from "./errors.js"
 import { getUser } from "./services/apiService.js"
+import { getProduct } from "./services/vlbApiService.js"
 
 export function throwApiError(error: ApiError) {
 	throw new GraphQLError(error.message, {
@@ -359,6 +361,114 @@ export async function downloadFile(url: string): Promise<Buffer> {
 	}
 }
 
+export async function loadVlbItem(
+	prisma: PrismaClient,
+	vlbItem: VlbItemModel
+): Promise<VlbItem> {
+	if (vlbItem == null) return null
+
+	// Get the full item from the API
+	let item = await getProduct(vlbItem.mvbId)
+	if (item == null) return null
+
+	let identifier = item.identifiers.find(i => i.productIdentifierType == "15")
+	let titleObj = item.titles.find(t => t.titleType == "01")
+	let description = item.textContents?.find(t => t.textType == "03")
+	let price = item.prices.find(
+		p =>
+			(p.priceType == "02" || p.priceType == "04") &&
+			p.countriesIncluded == "DE"
+	)
+	let author = item.contributors?.find(c => c.contributorRole == "A01")
+	let cover = item.supportingResources?.find(
+		r => r.resourceContentType == "01"
+	)
+
+	if (vlbItem != null && titleObj != null && vlbItem.title != titleObj.title) {
+		// Update the title
+		vlbItem = await prisma.vlbItem.update({
+			where: { id: vlbItem.id },
+			data: { title: titleObj.title }
+		})
+	}
+
+	return {
+		__typename: "VlbItem",
+		...vlbItem,
+		isbn: identifier.idValue,
+		description: description?.text,
+		price: price.priceAmount * 100,
+		author: await findVlbAuthor(prisma, author),
+		coverUrl: cover.exportedLink
+			? `${cover.exportedLink}?access_token=${process.env.VLB_COVER_TOKEN}`
+			: null,
+		collections: await findVlbCollections(prisma, item.collections)
+	}
+}
+
+export async function findVlbItemByVlbGetProductsResponseDataItem(
+	prisma: PrismaClient,
+	item: VlbGetProductsResponseDataItem
+): Promise<VlbItem> {
+	if (item == null) return null
+
+	// Check if the VlbItem already exists
+	let vlbItem = await prisma.vlbItem.findFirst({
+		where: { mvbId: item.productId }
+	})
+
+	if (vlbItem != null && item.title != null && vlbItem.title != item.title) {
+		// Update the title
+		vlbItem = await prisma.vlbItem.update({
+			where: { id: vlbItem.id },
+			data: { title: item.title }
+		})
+	}
+
+	if (vlbItem == null) {
+		// Get the entire item data to create the VlbItem in the database
+		let productItem = await getProduct(item.productId)
+
+		if (productItem != null) {
+			// Create the VlbItem
+			let uuid = crypto.randomUUID()
+			let slug = stringToSlug(`${item.title} ${uuid}`)
+
+			let author = productItem.contributors?.find(
+				c => c.contributorRole == "A01"
+			)
+
+			if (author != null) {
+				slug = stringToSlug(
+					`${author.firstName} ${author.lastName} ${item.title} ${uuid}`
+				)
+			}
+
+			vlbItem = await prisma.vlbItem.create({
+				data: {
+					uuid,
+					slug,
+					mvbId: item.productId,
+					title: item.title
+				}
+			})
+		}
+	}
+
+	return {
+		__typename: "VlbItem",
+		...vlbItem,
+		isbn: item.isbn,
+		description: item.mainDescription,
+		price: item.priceEurD * 100,
+		coverUrl:
+			item.coverUrl != null
+				? `${item.coverUrl}?access_token=${process.env.VLB_COVER_TOKEN}`
+				: null,
+		collections: await findVlbCollections(prisma, item.collections)
+	}
+}
+
 export async function findVlbAuthor(
 	prisma: PrismaClient,
 	author: VlbGetProductResponseDataContributor
@@ -459,23 +569,4 @@ export async function findVlbCollections(
 	}
 
 	return result
-}
-
-export async function convertVlbGetProductsResponseDataItemToVlbItem(
-	prisma: PrismaClient,
-	item: VlbGetProductsResponseDataItem
-): Promise<VlbItem> {
-	return {
-		__typename: "VlbItem",
-		id: item.productId,
-		isbn: item.isbn,
-		title: item.title,
-		description: item.mainDescription,
-		price: item.priceEurD * 100,
-		coverUrl:
-			item.coverUrl != null
-				? `${item.coverUrl}?access_token=${process.env.VLB_COVER_TOKEN}`
-				: null,
-		collections: await findVlbCollections(prisma, item.collections)
-	}
 }

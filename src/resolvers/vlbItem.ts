@@ -9,70 +9,35 @@ import {
 } from "../types.js"
 import {
 	randomNumber,
-	convertVlbGetProductsResponseDataItemToVlbItem,
-	findVlbAuthor,
-	findVlbCollections
+	loadVlbItem,
+	findVlbItemByVlbGetProductsResponseDataItem,
+	findVlbAuthor
 } from "../utils.js"
 
 export async function retrieveVlbItem(
 	parent: any,
-	args: { id: string },
+	args: { uuid: string },
 	context: ResolverContext
 ): Promise<QueryResult<VlbItem>> {
-	let result = await getProduct(args.id)
+	const uuid = args.uuid
+	let where: any = { uuid }
 
-	let identifier = result.identifiers.find(
-		i => i.productIdentifierType == "15"
-	)
+	if (!validator.isUUID(uuid)) {
+		where = { slug: uuid }
+	}
 
-	let title = result.titles.find(t => t.titleType == "01")
-	let description = result.textContents?.find(t => t.textType == "03")
-	let price = result.prices.find(
-		p =>
-			(p.priceType == "02" || p.priceType == "04") &&
-			p.countriesIncluded == "DE"
-	)
-	let author = result.contributors?.find(c => c.contributorRole == "A01")
-	let cover = result.supportingResources?.find(
-		r => r.resourceContentType == "01"
-	)
+	let vlbItem = await context.prisma.vlbItem.findFirst({ where })
 
-	let collections: {
-		id: string
-		title: string
-	}[] = []
-
-	if (result.collections != null) {
-		for (let c of result.collections) {
-			if (collections.find(co => co.id == c.collectionId) != null) {
-				continue
-			}
-
-			collections.push({
-				id: c.collectionId,
-				title: c.title
-			})
+	if (vlbItem == null) {
+		return {
+			caching: false,
+			data: null
 		}
 	}
 
 	return {
 		caching: true,
-		data: {
-			__typename: "VlbItem",
-			id: result.productId,
-			isbn: identifier.idValue,
-			title: title.title,
-			description: description?.text,
-			price: price.priceAmount * 100,
-			author: await findVlbAuthor(context.prisma, author),
-			coverUrl: cover.exportedLink
-				? `${cover.exportedLink}?access_token=${process.env.VLB_COVER_TOKEN}`
-				: null,
-			collections: await findVlbCollections(
-				context.prisma,
-				result.collections
-			)
-		}
+		data: await loadVlbItem(context.prisma, vlbItem)
 	}
 }
 
@@ -112,7 +77,7 @@ export async function listVlbItems(
 
 		for (let product of result.content) {
 			items.push(
-				await convertVlbGetProductsResponseDataItemToVlbItem(
+				await findVlbItemByVlbGetProductsResponseDataItem(
 					context.prisma,
 					product
 				)
@@ -143,7 +108,7 @@ export async function listVlbItems(
 
 			for (let product of result.content) {
 				items.push(
-					await convertVlbGetProductsResponseDataItemToVlbItem(
+					await findVlbItemByVlbGetProductsResponseDataItem(
 						context.prisma,
 						product
 					)
@@ -162,7 +127,7 @@ export async function listVlbItems(
 
 		for (let product of result.content) {
 			items.push(
-				await convertVlbGetProductsResponseDataItemToVlbItem(
+				await findVlbItemByVlbGetProductsResponseDataItem(
 					context.prisma,
 					product
 				)
@@ -187,7 +152,7 @@ export async function listVlbItems(
 
 			for (let product of result.content) {
 				items.push(
-					await convertVlbGetProductsResponseDataItemToVlbItem(
+					await findVlbItemByVlbGetProductsResponseDataItem(
 						context.prisma,
 						product
 					)
@@ -210,7 +175,7 @@ export async function description(
 	args: any,
 	context: ResolverContext
 ): Promise<QueryResult<string>> {
-	let result = await getProduct(vlbItem.id)
+	let result = await getProduct(vlbItem.mvbId)
 
 	if (result == null) {
 		return {
@@ -232,7 +197,7 @@ export async function publisher(
 	args: any,
 	context: ResolverContext
 ): Promise<QueryResult<VlbPublisher>> {
-	let result = await getProduct(vlbItem.id)
+	let result = await getProduct(vlbItem.mvbId)
 
 	if (result == null) {
 		return {
@@ -274,7 +239,7 @@ export async function author(
 	args: any,
 	context: ResolverContext
 ): Promise<QueryResult<{ firstName: string; lastName: string }>> {
-	let result = await getProduct(vlbItem.id)
+	let result = await getProduct(vlbItem.mvbId)
 
 	if (result == null) {
 		return {

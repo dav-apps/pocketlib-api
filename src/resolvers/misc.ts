@@ -6,7 +6,7 @@ import {
 	StoreBook,
 	VlbItem
 } from "../types.js"
-import { convertVlbGetProductsResponseDataItemToVlbItem } from "../utils.js"
+import { findVlbItemByVlbGetProductsResponseDataItem } from "../utils.js"
 
 export async function search(
 	parent: any,
@@ -30,7 +30,7 @@ export async function search(
 
 	for (let product of result.content) {
 		items.push(
-			await convertVlbGetProductsResponseDataItemToVlbItem(
+			await findVlbItemByVlbGetProductsResponseDataItem(
 				context.prisma,
 				product
 			)

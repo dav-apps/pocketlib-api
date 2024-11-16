@@ -40,7 +40,7 @@ export const typeDefs = `#graphql
 			limit: Int
 			offset: Int
 		): CategoryList!
-		retrieveVlbItem(id: String!): VlbItem
+		retrieveVlbItem(uuid: String!): VlbItem
 		listVlbItems(
 			random: Boolean
 			vlbPublisherId: String
@@ -357,7 +357,8 @@ export const typeDefs = `#graphql
 	}
 
 	type VlbItem {
-		id: String!
+		uuid: String!
+		slug: String!
 		isbn: String!
 		title: String!
 		description: String
