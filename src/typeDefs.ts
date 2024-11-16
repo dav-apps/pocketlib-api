@@ -391,7 +391,7 @@ export const typeDefs = `#graphql
 		isni: String
 		firstName: String!
 		lastName: String!
-		description: String
+		bio: String
 	}
 
 	union SearchResult = StoreBook | VlbItem

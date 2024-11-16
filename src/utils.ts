@@ -392,11 +392,11 @@ export async function findVlbAuthor(
 			})
 		}
 
-		if (vlbAuthor.description == null && author.biographicalNote != null) {
+		if (vlbAuthor.bio == null && author.biographicalNote != null) {
 			// Add the description to the VlbAuthor
 			await prisma.vlbAuthor.update({
 				where: { uuid: vlbAuthor.uuid },
-				data: { description: author.biographicalNote }
+				data: { bio: author.biographicalNote }
 			})
 		}
 	} else {
@@ -412,7 +412,7 @@ export async function findVlbAuthor(
 				isni: author.isni,
 				firstName: author.firstName,
 				lastName: author.lastName,
-				description: author.biographicalNote
+				bio: author.biographicalNote
 			}
 		})
 	}
