@@ -27,7 +27,7 @@ export const storeBookPrintFileTableId = 42
 export const storeBookReleaseTableId = 32
 export const bookTableId = 14
 export const bookFileTableId = 15
-export const vlbItemOrderTableId = 46
+export const vlbItemTableId = 46
 //#endregion
 
 //#region Regexes

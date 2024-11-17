@@ -6,7 +6,7 @@ import {
 	downloadFile
 } from "../utils.js"
 import { apiErrors } from "../errors.js"
-import { vlbItemOrderTableId } from "../constants.js"
+import { vlbItemTableId } from "../constants.js"
 import * as apiService from "../services/apiService.js"
 import {
 	authenticate,
@@ -120,7 +120,7 @@ export async function createCheckoutSessionForStoreBook(
 
 export async function createCheckoutSessionForVlbItem(
 	parent: any,
-	args: { productId: string; successUrl: string; cancelUrl: string },
+	args: { uuid: string; successUrl: string; cancelUrl: string },
 	context: ResolverContext
 ): Promise<{ url: string }> {
 	const user = context.user
@@ -131,22 +131,26 @@ export async function createCheckoutSessionForVlbItem(
 		throwApiError(apiErrors.notAuthenticated)
 	}
 
+	// Get the VlbItem from the database
+	let vlbItem = await context.prisma.vlbItem.findFirst({
+		where: { uuid: args.uuid }
+	})
+
+	if (vlbItem == null) {
+		throwApiError(apiErrors.vlbItemDoesNotExist)
+	}
+
 	// Get the VlbItem
-	let result = await getProduct(args.productId)
+	let result = await getProduct(vlbItem.mvbId)
 
 	if (result == null) {
 		throwApiError(apiErrors.vlbItemDoesNotExist)
 	}
 
-	// Get the id
-	let identifier = result.identifiers.find(
-		i => i.productIdentifierType == "15"
-	)
-
-	const coverKey = `vlb-covers/${identifier.idValue}.jpg`
+	// Check if the cover was already uploaded
+	const coverKey = `vlb-covers/${vlbItem.mvbId}.jpg`
 	let coverLink = getFileLink(coverKey)
 
-	// Check if the cover was already uploaded
 	if (!(await check(coverKey))) {
 		// Get the cover
 		let cover = result.supportingResources.find(
@@ -162,11 +166,20 @@ export async function createCheckoutSessionForVlbItem(
 		}
 	}
 
-	// Create the table object
-	let orderTableObject = await apiService.createTableObject(
-		crypto.randomUUID(),
-		vlbItemOrderTableId
-	)
+	// Check if the table object of the VlbItem already exists
+	let tableObject = await apiService.getTableObject(vlbItem.uuid, false)
+
+	if (tableObject == null) {
+		// Create the table object
+		tableObject = await apiService.createTableObject(
+			vlbItem.uuid,
+			vlbItemTableId
+		)
+	}
+
+	if (tableObject == null) {
+		throwApiError(apiErrors.unexpectedError)
+	}
 
 	let title = result.titles.find(t => t.titleType == "01")
 	let price = result.prices.find(
@@ -177,7 +190,7 @@ export async function createCheckoutSessionForVlbItem(
 
 	let createCheckoutSessionResponse =
 		await apiService.createPaymentCheckoutSession(`url`, accessToken, {
-			tableObjectUuid: orderTableObject.uuid,
+			tableObjectUuid: vlbItem.uuid,
 			type: "ORDER",
 			price: price.priceAmount * 100,
 			currency: "EUR",

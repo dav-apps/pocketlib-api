@@ -138,7 +138,7 @@ export const typeDefs = `#graphql
 			cancelUrl: String!
 		): CheckoutSession
 		createCheckoutSessionForVlbItem(
-			productId: String!
+			uuid: String!
 			successUrl: String!
 			cancelUrl: String!
 		): CheckoutSession
