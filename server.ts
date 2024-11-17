@@ -7,6 +7,7 @@ import http from "http"
 import cors from "cors"
 import { PrismaClient } from "@prisma/client"
 import { createClient } from "redis"
+import { Resend } from "resend"
 import { Dav, Environment, isSuccessStatusCode } from "dav-js"
 import { User } from "./src/types.js"
 import { throwApiError } from "./src/utils.js"
@@ -29,6 +30,7 @@ const app = express()
 const httpServer = http.createServer(app)
 
 export const prisma = new PrismaClient()
+export const resend = new Resend(process.env.RESEND_API_KEY)
 
 //#region Redis config
 export const redis = createClient({
