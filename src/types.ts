@@ -96,7 +96,7 @@ export interface Purchase {
 
 export interface Order {
 	uuid: string
-	userId: number
+	user: User
 	tableObject: TableObject
 	shippingAddress: ShippingAddress
 	paymentIntentId: string

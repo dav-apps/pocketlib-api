@@ -3,6 +3,8 @@ import cors from "cors"
 import { prisma, resend } from "../../server.js"
 import { retrieveOrder } from "../services/apiService.js"
 import OrderEmail from "../emails/order.js"
+import OrderConfirmationEmail from "../emails/orderConfirmation.js"
+import { noReplyEmailAddress } from "../constants.js"
 
 const webhookKey = process.env.WEBHOOK_KEY
 
@@ -17,7 +19,10 @@ async function davWebhook(req: Request, res: Response) {
 
 		let order = await retrieveOrder(
 			`
-				userId
+				user {
+					id
+					email
+				}
 				tableObject {
 					uuid
 				}
@@ -53,10 +58,17 @@ async function davWebhook(req: Request, res: Response) {
 
 		// Send order email to admin
 		resend.emails.send({
-			from: "no-reply@dav-apps.tech",
+			from: noReplyEmailAddress,
 			to: "temp1@dav-apps.tech",
 			subject: `New order received - ${vlbItem.title}`,
 			react: <OrderEmail order={order} vlbItem={vlbItem} />
+		})
+
+		resend.emails.send({
+			from: noReplyEmailAddress,
+			to: order.user.email,
+			subject: "Vielen Dank für deine Bestellung bei PocketLib",
+			react: <OrderConfirmationEmail />
 		})
 	}
 

@@ -9,6 +9,7 @@ export const luluApiBaseUrlProduction = "https://api.lulu.com"
 export const vlbApiBaseUrl = "https://api.vlb.de/api/v2"
 export const admins = [1]
 export const languages = ["en", "de"]
+export const noReplyEmailAddress = "no-reply@dav-apps.tech"
 
 //#region App & Table ids
 export const appId = 6
