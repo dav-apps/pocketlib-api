@@ -361,6 +361,10 @@ export async function downloadFile(url: string): Promise<Buffer> {
 	}
 }
 
+export function getVlbItemCoverUrl(mvbId: string): string {
+	return `https://pocketlib.fra1.cdn.digitaloceanspaces.com/vlb-covers/${mvbId}.jpg`
+}
+
 export async function loadVlbItem(
 	prisma: PrismaClient,
 	vlbItem: VlbItemModel

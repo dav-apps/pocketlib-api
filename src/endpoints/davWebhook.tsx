@@ -1,9 +1,11 @@
 import { Express, Request, Response, json } from "express"
 import cors from "cors"
-import { prisma, resend } from "../../server.js"
+import Stripe from "stripe"
+import { prisma, stripe, resend } from "../../server.js"
 import { retrieveOrder } from "../services/apiService.js"
 import OrderEmail from "../emails/order.js"
 import OrderConfirmationEmail from "../emails/orderConfirmation.js"
+import { getVlbItemCoverUrl } from "../utils.js"
 import { noReplyEmailAddress } from "../constants.js"
 
 const webhookKey = process.env.WEBHOOK_KEY
@@ -19,6 +21,7 @@ async function davWebhook(req: Request, res: Response) {
 
 		let order = await retrieveOrder(
 			`
+				paymentIntentId
 				user {
 					id
 					email
@@ -64,11 +67,37 @@ async function davWebhook(req: Request, res: Response) {
 			react: <OrderEmail order={order} vlbItem={vlbItem} />
 		})
 
+		// Send order confirmation email to user
+		let name = order.shippingAddress.name?.split(" ")[0]
+		let product = {
+			title: vlbItem.title,
+			price: `${(order.price / 100).toFixed(2)} €`,
+			coverUrl: getVlbItemCoverUrl(vlbItem.mvbId)
+		}
+
+		// Get the invoice link of the payment intent
+		let paymentIntent = await stripe.paymentIntents.retrieve(
+			order.paymentIntentId,
+			{ expand: ["invoice"] }
+		)
+		let invoiceUrl: string = null
+
+		if (paymentIntent != null) {
+			invoiceUrl = (paymentIntent.invoice as Stripe.Invoice)
+				?.hosted_invoice_url
+		}
+
 		resend.emails.send({
 			from: noReplyEmailAddress,
 			to: order.user.email,
 			subject: "Vielen Dank für deine Bestellung bei PocketLib",
-			react: <OrderConfirmationEmail />
+			react: (
+				<OrderConfirmationEmail
+					name={name}
+					invoiceUrl={invoiceUrl}
+					product={product}
+				/>
+			)
 		})
 	}
 
