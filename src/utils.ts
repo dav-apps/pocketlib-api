@@ -400,7 +400,7 @@ export async function loadVlbItem(
 		...vlbItem,
 		isbn: identifier.idValue,
 		description: description?.text,
-		price: price.priceAmount * 100,
+		price: Math.round(price.priceAmount * 100),
 		coverUrl: cover.exportedLink
 			? `${cover.exportedLink}?access_token=${process.env.VLB_COVER_TOKEN}`
 			: null,
@@ -462,7 +462,7 @@ export async function findVlbItemByVlbGetProductsResponseDataItem(
 		...vlbItem,
 		isbn: item.isbn,
 		description: item.mainDescription,
-		price: item.priceEurD * 100,
+		price: Math.round(item.priceEurD * 100),
 		coverUrl:
 			item.coverUrl != null
 				? `${item.coverUrl}?access_token=${process.env.VLB_COVER_TOKEN}`

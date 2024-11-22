@@ -71,7 +71,7 @@ async function davWebhook(req: Request, res: Response) {
 		let name = order.shippingAddress.name?.split(" ")[0]
 		let product = {
 			title: vlbItem.title,
-			price: `${(order.price / 100).toFixed(2)} €`,
+			price: `${(order.price / 100).toFixed(2)} €`.replace(".", ","),
 			coverUrl: getVlbItemCoverUrl(vlbItem.mvbId)
 		}
 

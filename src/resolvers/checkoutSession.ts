@@ -192,7 +192,7 @@ export async function createCheckoutSessionForVlbItem(
 		await apiService.createPaymentCheckoutSession(`url`, accessToken, {
 			tableObjectUuid: vlbItem.uuid,
 			type: "ORDER",
-			price: price.priceAmount * 100,
+			price: Math.round(price.priceAmount * 100),
 			currency: "EUR",
 			productName: title.title,
 			productImage: coverLink,
