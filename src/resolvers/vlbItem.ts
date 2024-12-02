@@ -66,7 +66,7 @@ export async function listVlbItems(
 	let total: number = 0
 
 	if (random) {
-		const query = `pt=pbook li=20 (wg=11** oder wg=21**)`
+		const query = `pt=pbook li=20 wg=11**`
 
 		let result = await getProducts({
 			query,
@@ -136,8 +136,14 @@ export async function listVlbItems(
 			)
 		}
 	} else if (args.vlbAuthorUuid != null) {
+		let where: any = { uuid: args.vlbAuthorUuid }
+
+		if (!validator.isUUID(args.vlbAuthorUuid)) {
+			where = { slug: args.vlbAuthorUuid }
+		}
+
 		let vlbAuthor = await context.prisma.vlbAuthor.findFirst({
-			where: { uuid: args.vlbAuthorUuid }
+			where
 		})
 
 		if (vlbAuthor != null) {
