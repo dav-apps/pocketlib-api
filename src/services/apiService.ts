@@ -422,6 +422,10 @@ export async function createPaymentCheckoutSession(
 		currency?: Currency
 		productName: string
 		productImage: string
+		shippingRate?: {
+			name: string
+			price: number
+		}
 		successUrl: string
 		cancelUrl: string
 	}
@@ -438,6 +442,7 @@ export async function createPaymentCheckoutSession(
 				$currency: Currency
 				$productName: String!
 				$productImage: String!
+				$shippingRate: ShippingRate
 				$successUrl: String!
 				$cancelUrl: String!
 			) {
@@ -448,6 +453,7 @@ export async function createPaymentCheckoutSession(
 					currency: $currency
 					productName: $productName
 					productImage: $productImage
+					shippingRate: $shippingRate
 					successUrl: $successUrl
 					cancelUrl: $cancelUrl
 				) {

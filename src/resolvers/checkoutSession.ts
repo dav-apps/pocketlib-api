@@ -196,6 +196,10 @@ export async function createCheckoutSessionForVlbItem(
 			currency: "EUR",
 			productName: title.title,
 			productImage: coverLink,
+			shippingRate: {
+				name: "Standard-Versand",
+				price: 250
+			},
 			successUrl: args.successUrl,
 			cancelUrl: args.cancelUrl
 		})
