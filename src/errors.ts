@@ -28,6 +28,11 @@ export const apiErrors = {
 		message: "Session has ended and must be renewed",
 		status: 403
 	},
+	orderDoesNotExist: {
+		code: "ORDER_NOT_EXISTS",
+		message: "Order does not exist",
+		status: 404
+	},
 	publisherDoesNotExist: {
 		code: "PUBLISHER_NOT_EXISTS",
 		message: "Publisher does not exist",
@@ -98,6 +103,11 @@ export const apiErrors = {
 		code: "STORE_BOOK_ALREADY_IN_LIBRARY",
 		message: "This StoreBook is already in your library",
 		status: 422
+	},
+	orderHasIncorrectState: {
+		code: "ORDER_HAS_INCORRECT_STATE",
+		message: "The state of the order is incorrect",
+		status: 409
 	}
 }
 

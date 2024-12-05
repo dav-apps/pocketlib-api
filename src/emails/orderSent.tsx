@@ -25,7 +25,7 @@ export default function Email(props: {
 				<Text style={{ marginBottom: "8px" }}>Hi {name},</Text>
 				<Text style={{ marginTop: "0" }}>
 					vielen Dank für deine Bestellung! Folgender Artikel wurde soeben
-					verschickt und sollte innerhalb von 3 bis 5 Tagen bei dir
+					verschickt und sollte innerhalb von 2 bis 5 Tagen bei dir
 					ankommen:
 				</Text>
 

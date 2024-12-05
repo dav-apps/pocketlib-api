@@ -143,6 +143,7 @@ export const typeDefs = `#graphql
 			cancelUrl: String!
 		): CheckoutSession
 		createBook(storeBook: String!): Book
+		completeOrder(orderUuid: String!): Order
 	}
 
 	type Publisher {
@@ -393,6 +394,10 @@ export const typeDefs = `#graphql
 		firstName: String!
 		lastName: String!
 		bio: String
+	}
+
+	type Order {
+		uuid: String!
 	}
 
 	union SearchResult = StoreBook | VlbItem

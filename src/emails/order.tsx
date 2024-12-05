@@ -18,7 +18,8 @@ export default function Email(props: { order: Order; vlbItem: VlbItem }) {
 	return (
 		<Html>
 			<Body>
-				<p style={pStyles}>UUID: {props.vlbItem?.uuid}</p>
+				<p style={pStyles}>Order UUID: {props.order?.uuid}</p>
+				<p style={pStyles}>VlbItem UUID: {props.vlbItem?.uuid}</p>
 				<p style={pStyles}>Title: {props.vlbItem?.title}</p>
 				<p style={pStyles}>Price: {formattedPrice}</p>
 

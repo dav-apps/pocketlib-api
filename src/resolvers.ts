@@ -274,7 +274,8 @@ export const resolvers = {
 			checkoutSessionResolvers.createCheckoutSessionForStoreBook,
 		createCheckoutSessionForVlbItem:
 			checkoutSessionResolvers.createCheckoutSessionForVlbItem,
-		createBook: bookResolvers.createBook
+		createBook: bookResolvers.createBook,
+		completeOrder: miscResolvers.completeOrder
 	},
 	Publisher: {
 		logo: (parent: any, args: any, context: ResolverContext, info: any) =>
