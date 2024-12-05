@@ -9,10 +9,12 @@ import {
 	VlbCollection
 } from "@prisma/client"
 import { RedisClientType } from "redis"
+import { Resend } from "resend"
 
 export interface ResolverContext {
 	prisma: PrismaClient
 	redis: RedisClientType<any, any, any>
+	resend: Resend
 	accessToken?: string
 	user?: User
 }

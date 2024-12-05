@@ -304,7 +304,7 @@ async function saveBook(
 						language: "en",
 						categories: categoryKeys
 					},
-					{ user, accessToken, prisma, redis }
+					{ user, accessToken, prisma, redis, resend: null }
 				)
 
 				storeBookUuid = createStoreBookResponse.uuid
@@ -370,7 +370,7 @@ async function saveBook(
 						uuid: storeBookUuid,
 						status: "review"
 					},
-					{ user, accessToken, prisma, redis }
+					{ user, accessToken, prisma, redis, resend: null }
 				)
 			} catch (error) {
 				console.log(
@@ -437,7 +437,7 @@ async function saveBook(
 						description,
 						categories: categoryKeys
 					},
-					{ user, accessToken, prisma, redis }
+					{ user, accessToken, prisma, redis, resend: null }
 				)
 
 				storeBookUpdated = true
@@ -554,7 +554,7 @@ async function saveBook(
 							releaseName: `Update to revision ${revision}`,
 							releaseNotes: `Automatic update based on commit ${commitUrl} from ${commitDate}`
 						},
-						{ user, accessToken, prisma, redis }
+						{ user, accessToken, prisma, redis, resend: null }
 					)
 				}
 			}

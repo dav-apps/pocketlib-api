@@ -585,7 +585,6 @@ export async function updateStoreBook(
 	},
 	context: ResolverContext
 ): Promise<StoreBook> {
-	const accessToken = context.accessToken
 	const user = context.user
 
 	// Check if the user is logged in

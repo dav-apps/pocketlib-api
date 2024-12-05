@@ -111,6 +111,7 @@ app.use(
 			return {
 				prisma,
 				redis,
+				resend,
 				accessToken,
 				user
 			}
