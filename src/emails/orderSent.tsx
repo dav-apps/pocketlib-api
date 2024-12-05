@@ -1,9 +1,9 @@
-import { Html, Body, Text, Link } from "@react-email/components"
+import * as React from "react"
+import { Html, Body, Text } from "@react-email/components"
 import { Logo, ProductView } from "./components.js"
 
 export default function Email(props: {
 	name: string
-	invoiceUrl: string
 	product: {
 		title: string
 		price: string
@@ -11,7 +11,6 @@ export default function Email(props: {
 	}
 }) {
 	const name = props.name ?? "Name"
-	const invoiceUrl = props.invoiceUrl
 	const title = props.product?.title ?? "Titel"
 	const price = props.product?.price ?? "1 €"
 	const coverUrl =
@@ -25,21 +24,22 @@ export default function Email(props: {
 
 				<Text style={{ marginBottom: "8px" }}>Hi {name},</Text>
 				<Text style={{ marginTop: "0" }}>
-					vielen Dank für deine Bestellung! Folgender Artikel wird in Kürze
-					zu dir geliefert:
+					vielen Dank für deine Bestellung! Folgender Artikel wurde soeben
+					verschickt und sollte innerhalb von 3 bis 5 Tagen bei dir
+					ankommen:
 				</Text>
 
 				<ProductView title={title} coverUrl={coverUrl} price={price} />
 
-				{invoiceUrl && (
-					<Text>
-						Hier findest du die Rechnung zu deiner Bestellung:{" "}
-						<Link href={invoiceUrl} target="_blank">
-							Rechnung öffnen
-						</Link>
-					</Text>
-				)}
-
+				<Text style={{ marginBottom: "12px" }}>
+					Bei Fragen kannst du dich jederzeit ans uns wenden:{" "}
+					<a
+						href="mailto:support@dav-apps.tech"
+						style={{ color: "black", textDecoration: "none" }}
+					>
+						support@dav-apps.tech
+					</a>
+				</Text>
 				<Text style={{ marginBottom: "8px" }}>Viele Grüße</Text>
 				<Text style={{ marginTop: "0" }}>Dein PocketLib-Team</Text>
 			</Body>
