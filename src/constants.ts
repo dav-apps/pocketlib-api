@@ -3,7 +3,11 @@ export const apiBaseUrlStaging =
 	"https://dav-backend-tfpik.ondigitalocean.app/staging"
 export const apiBaseUrlProduction =
 	"https://dav-backend-tfpik.ondigitalocean.app"
-export const newApiBaseUrl = "https://dav-api-staging-sojqu.ondigitalocean.app"
+export const newApiBaseUrlDevelopment = "http://localhost:4000"
+export const newApiBaseUrlStaging =
+	"https://dav-api-staging-kb5tf.ondigitalocean.app"
+export const newApiBaseUrlProduction =
+	"https://dav-api-ax6gp.ondigitalocean.app"
 export const luluApiBaseUrlStaging = "https://api.sandbox.lulu.com"
 export const luluApiBaseUrlProduction = "https://api.lulu.com"
 export const vlbApiBaseUrl = "https://api.vlb.de/api/v2"

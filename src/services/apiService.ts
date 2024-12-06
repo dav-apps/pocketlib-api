@@ -17,7 +17,9 @@ import {
 	apiBaseUrlDevelopment,
 	apiBaseUrlStaging,
 	apiBaseUrlProduction,
-	newApiBaseUrl,
+	newApiBaseUrlDevelopment,
+	newApiBaseUrlStaging,
+	newApiBaseUrlProduction,
 	appId
 } from "../constants.js"
 
@@ -29,6 +31,17 @@ function getApiBaseUrl() {
 			return apiBaseUrlProduction
 		default:
 			return apiBaseUrlDevelopment
+	}
+}
+
+function getNewApiBaseUrl() {
+	switch (process.env.ENVIRONMENT) {
+		case "staging":
+			return newApiBaseUrlStaging
+		case "production":
+			return newApiBaseUrlProduction
+		default:
+			return newApiBaseUrlDevelopment
 	}
 }
 
@@ -237,7 +250,7 @@ export async function setTableObjectPrice(params: {
 	type: TableObjectPriceType
 }): Promise<TableObjectPrice> {
 	let response = await request<{ setTableObjectPrice: TableObjectPrice }>(
-		newApiBaseUrl,
+		getNewApiBaseUrl(),
 		gql`
 			mutation SetTableObjectPrice(
 				$tableObjectUuid: String!
@@ -335,7 +348,7 @@ export async function retrieveOrder(
 	variables: { uuid: string }
 ): Promise<Order> {
 	let result = await request<{ retrieveOrder: Order }>(
-		newApiBaseUrl,
+		getNewApiBaseUrl(),
 		gql`
 			query RetrieveOrder($uuid: String!) {
 				retrieveOrder(uuid: $uuid) {
@@ -357,7 +370,7 @@ export async function updateOrder(
 	variables: { uuid: string; status?: OrderStatus }
 ): Promise<Order> {
 	let result = await request<{ updateOrder: Order }>(
-		newApiBaseUrl,
+		getNewApiBaseUrl(),
 		gql`
 			mutation UpdateOrder(
 				$uuid: String!
@@ -387,7 +400,7 @@ export async function listShippingAddresses(
 	let result = await request<{
 		listShippingAddresses: List<ShippingAddress>
 	}>(
-		newApiBaseUrl,
+		getNewApiBaseUrl(),
 		gql`
 			query ListShippingAddresses(
 				$userId: Int!
@@ -433,7 +446,7 @@ export async function createPaymentCheckoutSession(
 	let response = await request<{
 		createPaymentCheckoutSession: { url: string }
 	}>(
-		newApiBaseUrl,
+		getNewApiBaseUrl(),
 		gql`
 			mutation CreatePaymentCheckoutSession(
 				$tableObjectUuid: String!
