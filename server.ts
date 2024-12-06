@@ -53,7 +53,8 @@ schema = authDirectiveTransformer(schema, "auth")
 
 const server = new ApolloServer({
 	schema,
-	plugins: [ApolloServerPluginDrainHttpServer({ httpServer })]
+	plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+	introspection: true
 })
 
 await server.start()
