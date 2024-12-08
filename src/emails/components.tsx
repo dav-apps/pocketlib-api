@@ -2,12 +2,15 @@ import { Img, Section, Text } from "@react-email/components"
 
 export function Logo() {
 	return (
-		<Img
-			alt="PocketLib Logo"
-			height={50}
-			src="https://dav-misc.fra1.cdn.digitaloceanspaces.com/pocketlib-logo.png"
-			style={{ marginLeft: "auto", marginRight: "auto" }}
-		/>
+		<div style={{ display: "flex", justifyContent: "center" }}>
+			<a href="https://pocketlib.app" target="_blank">
+				<Img
+					src="https://dav-misc.fra1.cdn.digitaloceanspaces.com/pocketlib-logo.png"
+					height={50}
+					alt="PocketLib Logo"
+				/>
+			</a>
+		</div>
 	)
 }
 
