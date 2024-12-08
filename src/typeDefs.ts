@@ -52,6 +52,11 @@ export const typeDefs = `#graphql
 		retrieveVlbPublisher(id: String!): VlbPublisher
 		retrieveVlbAuthor(uuid: String!): VlbAuthor
 		retrieveVlbCollection(uuid: String!): VlbCollection
+		listVlbCollections(
+			random: Boolean
+			limit: Int
+			offset: Int
+		): VlbCollectionList!
 		search(
 			query: String!
 			limit: Int
@@ -379,6 +384,11 @@ export const typeDefs = `#graphql
 		uuid: String!
 		slug: String!
 		title: String!
+	}
+
+	type VlbCollectionList {
+		total: Int!
+		items: [VlbCollection!]!
 	}
 
 	type VlbPublisher {
