@@ -244,4 +244,20 @@ export interface VlbGetProductResponseDataCollection {
 	collectionId: string
 	title: string
 }
+
+export interface VlbGetCollectionResponseData {
+	content: VlbGetCollectionResponseDataItem[]
+	totalPages: number
+	totalElements: number
+}
+
+export interface VlbGetCollectionResponseDataItem {
+	id: string
+	title: string
+	author: string
+	isbn: string
+	coverUrl: string
+	priceEurD: number
+	publisher: string
+}
 //#endregion

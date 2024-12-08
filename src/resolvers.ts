@@ -584,5 +584,15 @@ export const resolvers = {
 				info,
 				vlbItemResolvers.collections
 			)
+	},
+	VlbCollection: {
+		vlbItems: (parent: any, args: any, context: ResolverContext, info: any) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				vlbCollectionResolvers.vlbItems
+			)
 	}
 }

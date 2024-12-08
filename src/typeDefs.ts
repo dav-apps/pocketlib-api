@@ -384,6 +384,10 @@ export const typeDefs = `#graphql
 		uuid: String!
 		slug: String!
 		title: String!
+		vlbItems(
+			limit: Int
+			offset: Int
+		): VlbItemList!
 	}
 
 	type VlbCollectionList {

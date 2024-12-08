@@ -1,7 +1,8 @@
 import axios from "axios"
 import {
 	VlbGetProductsResponseData,
-	VlbGetProductResponseData
+	VlbGetProductResponseData,
+	VlbGetCollectionResponseData
 } from "../types.js"
 import { vlbApiBaseUrl } from "../constants.js"
 
@@ -59,19 +60,7 @@ export async function getCollection(params: {
 	collectionId: string
 	page?: number
 	size?: number
-}): Promise<{
-	content: {
-		id: string
-		title: string
-		author: string
-		isbn: string
-		coverUrl: string
-		priceEurD: number
-		publisher: string
-	}[]
-	totalPages: number
-	totalElements: number
-}> {
+}): Promise<VlbGetCollectionResponseData> {
 	try {
 		let response = await axios({
 			method: "get",

@@ -1,7 +1,11 @@
-import { VlbCollection } from "@prisma/client"
+import { VlbCollection, VlbItem } from "@prisma/client"
 import validator from "validator"
-import { QueryResult, ResolverContext } from "../types.js"
-import { randomNumber } from "../utils.js"
+import { getCollection } from "../services/vlbApiService.js"
+import { List, QueryResult, ResolverContext } from "../types.js"
+import {
+	randomNumber,
+	findVlbItemByVlbGetCollectionResponseDataItem
+} from "../utils.js"
 
 export async function retrieveVlbCollection(
 	parent: any,
@@ -79,6 +83,47 @@ export async function listVlbCollections(
 			skip
 		})
 	])
+
+	return {
+		caching: true,
+		data: {
+			total,
+			items
+		}
+	}
+}
+
+export async function vlbItems(
+	vlbCollection: VlbCollection,
+	args: {
+		limit: number
+		offset: number
+	},
+	context: ResolverContext
+): Promise<QueryResult<List<VlbItem>>> {
+	let take = args.limit || 10
+	if (take <= 0) take = 10
+
+	let skip = args.offset || 0
+	if (skip < 0) skip = 0
+
+	let result = await getCollection({
+		collectionId: vlbCollection.mvbId,
+		page: skip > 0 ? Math.floor(skip / take) + 1 : 1,
+		size: take
+	})
+
+	let total = result.totalElements
+	let items: VlbItem[] = []
+
+	for (let product of result.content) {
+		items.push(
+			await findVlbItemByVlbGetCollectionResponseDataItem(
+				context.prisma,
+				product
+			)
+		)
+	}
 
 	return {
 		caching: true,

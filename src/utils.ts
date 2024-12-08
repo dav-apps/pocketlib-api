@@ -1,5 +1,5 @@
 import { Response } from "express"
-import { GraphQLError, printSchema } from "graphql"
+import { GraphQLError } from "graphql"
 import { encode } from "blurhash"
 import { createCanvas, loadImage, Image } from "canvas"
 import axios from "axios"
@@ -20,7 +20,8 @@ import {
 	VlbItem,
 	VlbGetProductsResponseDataItem,
 	VlbGetProductResponseDataContributor,
-	VlbGetProductResponseDataCollection
+	VlbGetProductResponseDataCollection,
+	VlbGetCollectionResponseDataItem
 } from "./types.js"
 import {
 	storeBookReleaseTableId,
@@ -472,6 +473,16 @@ export async function findVlbItemByVlbGetProductsResponseDataItem(
 				: null,
 		collections: []
 	}
+}
+
+export async function findVlbItemByVlbGetCollectionResponseDataItem(
+	prisma: PrismaClient,
+	item: VlbGetCollectionResponseDataItem
+): Promise<VlbItem> {
+	return await findVlbItemByVlbGetProductsResponseDataItem(prisma, {
+		productId: item.id,
+		...item
+	})
 }
 
 export async function findVlbAuthor(
