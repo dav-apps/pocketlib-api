@@ -188,6 +188,16 @@ export async function createCheckoutSessionForVlbItem(
 			p.countriesIncluded == "DE"
 	)
 
+	let shippingRate = null
+
+	if (user.plan < 2) {
+		// Add shipping rate
+		shippingRate = {
+			name: "Standard-Versand",
+			price: 250
+		}
+	}
+
 	let createCheckoutSessionResponse =
 		await apiService.createPaymentCheckoutSession(`url`, accessToken, {
 			tableObjectUuid: vlbItem.uuid,
@@ -196,10 +206,7 @@ export async function createCheckoutSessionForVlbItem(
 			currency: "EUR",
 			productName: title.title,
 			productImage: coverLink,
-			shippingRate: {
-				name: "Standard-Versand",
-				price: 250
-			},
+			shippingRate,
 			successUrl: args.successUrl,
 			cancelUrl: args.cancelUrl
 		})
