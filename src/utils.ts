@@ -405,6 +405,7 @@ export async function loadVlbItem(
 		isbn: identifier.idValue,
 		description: description?.text,
 		price: Math.round(price.priceAmount * 100),
+		publicationDate: item.publicationDate,
 		coverUrl: cover.exportedLink
 			? `${cover.exportedLink}?access_token=${process.env.VLB_COVER_TOKEN}`
 			: null,
@@ -467,6 +468,7 @@ export async function findVlbItemByVlbGetProductsResponseDataItem(
 		isbn: item.isbn,
 		description: item.mainDescription,
 		price: Math.round(item.priceEurD * 100),
+		publicationDate: item.publicationDate,
 		coverUrl:
 			item.coverUrl != null
 				? `${item.coverUrl}?access_token=${process.env.VLB_COVER_TOKEN}`
