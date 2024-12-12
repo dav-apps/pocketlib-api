@@ -408,6 +408,7 @@ export async function loadVlbItem(
 		price: Math.round(price.priceAmount * 100),
 		language: vlbLanguageToLanguage(lang.languageCode),
 		publicationDate: item.publicationDate,
+		pageCount: item.extent?.mainContentPageCount,
 		coverUrl: cover.exportedLink
 			? `${cover.exportedLink}?access_token=${process.env.VLB_COVER_TOKEN}`
 			: null,
@@ -473,6 +474,7 @@ export async function findVlbItemByVlbGetProductsResponseDataItem(
 		publicationDate: item.publicationDate.includes(".")
 			? item.publicationDate
 			: null,
+		pageCount: item.pages ?? item.pagesArabic,
 		coverUrl:
 			item.coverUrl != null
 				? `${item.coverUrl}?access_token=${process.env.VLB_COVER_TOKEN}`

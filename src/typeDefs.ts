@@ -371,6 +371,7 @@ export const typeDefs = `#graphql
 		price: Float!
 		language: String
 		publicationDate: String
+		pageCount: Int
 		publisher: VlbPublisher
 		author: VlbAuthor
 		coverUrl: String

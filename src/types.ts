@@ -160,6 +160,7 @@ export interface VlbItem extends VlbItemModel {
 	price: number
 	language?: string
 	publicationDate?: string
+	pageCount?: number
 	publisher?: VlbPublisher
 	author?: VlbAuthor
 	coverUrl?: string
@@ -189,6 +190,8 @@ export interface VlbGetProductsResponseDataItem {
 	publisher: string
 	language?: string
 	publicationDate?: string
+	pages?: number
+	pagesArabic?: number
 	contributors?: {
 		type: string
 		firstName: string
@@ -206,6 +209,9 @@ export interface VlbGetProductResponseData {
 		subtitle?: string
 		titleType: string
 	}[]
+	extent?: {
+		mainContentPageCount?: number
+	}
 	contributors?: VlbGetProductResponseDataContributor[]
 	identifiers: {
 		productIdentifierType: string

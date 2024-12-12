@@ -251,6 +251,31 @@ export async function publicationDate(
 	}
 }
 
+export async function pageCount(
+	vlbItem: VlbItem
+): Promise<QueryResult<number>> {
+	if (vlbItem.pageCount != null) {
+		return {
+			caching: true,
+			data: vlbItem.pageCount
+		}
+	}
+
+	let result = await getProduct(vlbItem.mvbId)
+
+	if (result == null) {
+		return {
+			caching: false,
+			data: null
+		}
+	}
+
+	return {
+		caching: true,
+		data: result.extent?.mainContentPageCount
+	}
+}
+
 export async function publisher(
 	vlbItem: VlbItem
 ): Promise<QueryResult<VlbPublisher>> {

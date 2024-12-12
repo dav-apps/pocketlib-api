@@ -577,6 +577,19 @@ export const resolvers = {
 				info,
 				vlbItemResolvers.publicationDate
 			),
+		pageCount: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				vlbItemResolvers.pageCount
+			),
 		publisher: (
 			parent: any,
 			args: any,
