@@ -303,6 +303,13 @@ export async function author(
 	args: any,
 	context: ResolverContext
 ): Promise<QueryResult<{ firstName: string; lastName: string }>> {
+	if (vlbItem.author != null) {
+		return {
+			caching: true,
+			data: vlbItem.author
+		}
+	}
+
 	let result = await getProduct(vlbItem.mvbId)
 
 	if (result == null) {
@@ -325,6 +332,13 @@ export async function collections(
 	args: any,
 	context: ResolverContext
 ): Promise<QueryResult<VlbCollection[]>> {
+	if (vlbItem.collections != null) {
+		return {
+			caching: true,
+			data: vlbItem.collections
+		}
+	}
+
 	let item = await getProduct(vlbItem.mvbId)
 
 	if (item == null) {

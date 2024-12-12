@@ -411,7 +411,7 @@ export async function loadVlbItem(
 		coverUrl: cover.exportedLink
 			? `${cover.exportedLink}?access_token=${process.env.VLB_COVER_TOKEN}`
 			: null,
-		collections: []
+		collections: null
 	}
 }
 
@@ -477,7 +477,7 @@ export async function findVlbItemByVlbGetProductsResponseDataItem(
 			item.coverUrl != null
 				? `${item.coverUrl}?access_token=${process.env.VLB_COVER_TOKEN}`
 				: null,
-		collections: []
+		collections: null
 	}
 }
 
