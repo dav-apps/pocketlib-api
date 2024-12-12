@@ -158,6 +158,7 @@ export interface VlbItem extends VlbItemModel {
 	isbn: string
 	description?: string
 	price: number
+	language?: string
 	publicationDate?: string
 	publisher?: VlbPublisher
 	author?: VlbAuthor
@@ -186,6 +187,7 @@ export interface VlbGetProductsResponseDataItem {
 	mainDescription?: string
 	priceEurD: number
 	publisher: string
+	language?: string
 	publicationDate?: string
 	contributors?: {
 		type: string
@@ -208,6 +210,10 @@ export interface VlbGetProductResponseData {
 	identifiers: {
 		productIdentifierType: string
 		idValue: string
+	}[]
+	languages: {
+		languageRole: string
+		languageCode: string
 	}[]
 	prices: {
 		priceType: string

@@ -556,6 +556,27 @@ export const resolvers = {
 				info,
 				vlbItemResolvers.description
 			),
+		language: (parent: any, args: any, context: ResolverContext, info: any) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				vlbItemResolvers.language
+			),
+		publicationDate: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				vlbItemResolvers.publicationDate
+			),
 		publisher: (
 			parent: any,
 			args: any,

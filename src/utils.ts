@@ -390,6 +390,7 @@ export async function loadVlbItem(
 	let cover = item.supportingResources?.find(
 		r => r.resourceContentType == "01"
 	)
+	let lang = item.languages?.find(l => l.languageRole == "01")
 
 	if (vlbItem != null && titleObj != null && vlbItem.title != titleObj.title) {
 		// Update the title
@@ -405,6 +406,7 @@ export async function loadVlbItem(
 		isbn: identifier.idValue,
 		description: description?.text,
 		price: Math.round(price.priceAmount * 100),
+		language: vlbLanguageToLanguage(lang.languageCode),
 		publicationDate: item.publicationDate,
 		coverUrl: cover.exportedLink
 			? `${cover.exportedLink}?access_token=${process.env.VLB_COVER_TOKEN}`
@@ -468,7 +470,9 @@ export async function findVlbItemByVlbGetProductsResponseDataItem(
 		isbn: item.isbn,
 		description: item.mainDescription,
 		price: Math.round(item.priceEurD * 100),
-		publicationDate: item.publicationDate,
+		publicationDate: item.publicationDate.includes(".")
+			? item.publicationDate
+			: null,
 		coverUrl:
 			item.coverUrl != null
 				? `${item.coverUrl}?access_token=${process.env.VLB_COVER_TOKEN}`
@@ -587,4 +591,14 @@ export async function findVlbCollections(
 	}
 
 	return result
+}
+
+export function vlbLanguageToLanguage(vlbLanguage: string) {
+	if (vlbLanguage == "ger") {
+		return "de"
+	} else if (vlbLanguage == "eng") {
+		return "en"
+	}
+
+	return null
 }

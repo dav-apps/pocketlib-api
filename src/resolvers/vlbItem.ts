@@ -13,7 +13,8 @@ import {
 	loadVlbItem,
 	findVlbItemByVlbGetProductsResponseDataItem,
 	findVlbAuthor,
-	findVlbCollections
+	findVlbCollections,
+	vlbLanguageToLanguage
 } from "../utils.js"
 
 export async function retrieveVlbItem(
@@ -200,11 +201,66 @@ export async function description(
 	}
 }
 
+export async function language(vlbItem: VlbItem): Promise<QueryResult<string>> {
+	if (vlbItem.language != null) {
+		return {
+			caching: true,
+			data: vlbItem.language
+		}
+	}
+
+	let result = await getProduct(vlbItem.mvbId)
+
+	if (result == null) {
+		return {
+			caching: false,
+			data: null
+		}
+	}
+
+	let lang = result.languages?.find(l => l.languageRole == "01")
+
+	return {
+		caching: true,
+		data: vlbLanguageToLanguage(lang.languageCode)
+	}
+}
+
+export async function publicationDate(
+	vlbItem: VlbItem
+): Promise<QueryResult<string>> {
+	if (vlbItem.publicationDate != null) {
+		return {
+			caching: true,
+			data: vlbItem.publicationDate
+		}
+	}
+
+	let result = await getProduct(vlbItem.mvbId)
+
+	if (result == null) {
+		return {
+			caching: false,
+			data: null
+		}
+	}
+
+	return {
+		caching: true,
+		data: result.publicationDate
+	}
+}
+
 export async function publisher(
-	vlbItem: VlbItem,
-	args: any,
-	context: ResolverContext
+	vlbItem: VlbItem
 ): Promise<QueryResult<VlbPublisher>> {
+	if (vlbItem.publisher != null) {
+		return {
+			caching: true,
+			data: vlbItem.publisher
+		}
+	}
+
 	let result = await getProduct(vlbItem.mvbId)
 
 	if (result == null) {

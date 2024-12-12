@@ -369,6 +369,7 @@ export const typeDefs = `#graphql
 		title: String!
 		description: String
 		price: Float!
+		language: String
 		publicationDate: String
 		publisher: VlbPublisher
 		author: VlbAuthor
