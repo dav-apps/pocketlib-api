@@ -168,6 +168,20 @@ export async function listVlbItems(
 				)
 			}
 		}
+	} else {
+		let [count, items2] = await context.prisma.$transaction([
+			context.prisma.vlbItem.count(),
+			context.prisma.vlbItem.findMany({
+				take,
+				skip
+			})
+		])
+
+		total = count
+
+		for (let item of items2) {
+			items.push(await loadVlbItem(context.prisma, item))
+		}
 	}
 
 	return {
