@@ -51,6 +51,10 @@ export const typeDefs = `#graphql
 		): VlbItemList!
 		retrieveVlbPublisher(id: String!): VlbPublisher
 		retrieveVlbAuthor(uuid: String!): VlbAuthor
+		listVlbAuthors(
+			limit: Int
+			offset: Int
+		): VlbAuthorList!
 		retrieveVlbCollection(uuid: String!): VlbCollection
 		listVlbCollections(
 			random: Boolean
@@ -411,6 +415,11 @@ export const typeDefs = `#graphql
 		firstName: String!
 		lastName: String!
 		bio: String
+	}
+
+	type VlbAuthorList {
+		total: Int!
+		items: [VlbAuthor!]!
 	}
 
 	type Order {

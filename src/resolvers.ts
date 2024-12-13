@@ -240,6 +240,19 @@ export const resolvers = {
 				info,
 				vlbAuthorResolvers.retrieveVlbAuthor
 			),
+		listVlbAuthors: (
+			parent: any,
+			args: any,
+			context: ResolverContext,
+			info: any
+		) =>
+			cachingResolver(
+				parent,
+				args,
+				context,
+				info,
+				vlbAuthorResolvers.listVlbAuthors
+			),
 		retrieveVlbCollection: (
 			parent: any,
 			args: any,
