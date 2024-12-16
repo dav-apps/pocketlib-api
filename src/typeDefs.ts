@@ -36,7 +36,7 @@ export const typeDefs = `#graphql
 		retrieveStoreBookRelease(uuid: String!): StoreBookRelease
 		retrieveCategory(uuid: String!): Category!
 		listCategories(
-			languages: [String!]
+			language: String
 			limit: Int
 			offset: Int
 		): CategoryList!
@@ -340,7 +340,7 @@ export const typeDefs = `#graphql
 	type Category {
 		uuid: String!
 		key: String!
-		name(languages: [String!]): CategoryName!
+		name(language: String): CategoryName!
 		names(limit: Int, offset: Int): CategoryNameList!
 	}
 

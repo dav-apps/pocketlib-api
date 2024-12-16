@@ -44,17 +44,13 @@ export async function listCategories(
 
 export async function name(
 	category: Category,
-	args: { languages?: String[] },
+	args: { language?: string },
 	context: ResolverContext
 ): Promise<QueryResult<CategoryName>> {
-	let languages = args.languages || ["en"]
-	let where = { OR: [], AND: { categoryId: category.id } }
-
-	for (let lang of languages) {
-		where.OR.push({ language: lang })
-	}
-
-	let names = await context.prisma.categoryName.findMany({ where })
+	let language = args.language || "en"
+	let names = await context.prisma.categoryName.findMany({
+		where: { categoryId: category.id }
+	})
 
 	if (names.length == null) {
 		return {
@@ -64,14 +60,12 @@ export async function name(
 	}
 
 	// Find the optimal name for the given languages
-	for (let lang of languages) {
-		let name = names.find(n => n.language == lang)
+	let name = names.find(n => n.language == language)
 
-		if (name != null) {
-			return {
-				caching: true,
-				data: name
-			}
+	if (name != null) {
+		return {
+			caching: true,
+			data: name
 		}
 	}
 
