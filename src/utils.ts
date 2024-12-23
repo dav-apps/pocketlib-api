@@ -406,10 +406,10 @@ export async function loadVlbItem(
 		isbn: identifier.idValue,
 		description: description?.text,
 		price: Math.round(price.priceAmount * 100),
-		language: vlbLanguageToLanguage(lang.languageCode),
+		language: vlbLanguageToLanguage(lang?.languageCode),
 		publicationDate: item.publicationDate,
 		pageCount: item.extent?.mainContentPageCount,
-		coverUrl: cover.exportedLink
+		coverUrl: cover?.exportedLink
 			? `${cover.exportedLink}?access_token=${process.env.VLB_COVER_TOKEN}`
 			: null,
 		collections: null

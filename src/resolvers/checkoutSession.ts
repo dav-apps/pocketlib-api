@@ -157,7 +157,7 @@ export async function createCheckoutSessionForVlbItem(
 			r => r.resourceContentType == "01"
 		)
 
-		if (cover.exportedLink != null) {
+		if (cover?.exportedLink != null) {
 			// Download the cover & upload it on DO
 			let link = `${cover.exportedLink}?access_token=${process.env.VLB_COVER_TOKEN}`
 			let coverData = await downloadFile(link)

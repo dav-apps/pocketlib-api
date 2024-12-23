@@ -236,7 +236,7 @@ export async function language(vlbItem: VlbItem): Promise<QueryResult<string>> {
 
 	return {
 		caching: true,
-		data: vlbLanguageToLanguage(lang.languageCode)
+		data: vlbLanguageToLanguage(lang?.languageCode)
 	}
 }
 
