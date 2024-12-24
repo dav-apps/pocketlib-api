@@ -382,7 +382,7 @@ export async function loadVlbItem(
 	let identifier = item.identifiers.find(i => i.productIdentifierType == "15")
 	let titleObj = item.titles.find(t => t.titleType == "01")
 	let description = item.textContents?.find(t => t.textType == "03")
-	let price = item.prices.find(
+	let price = item.prices?.find(
 		p =>
 			(p.priceType == "02" || p.priceType == "04") &&
 			p.countriesIncluded == "DE"
@@ -403,9 +403,12 @@ export async function loadVlbItem(
 	return {
 		__typename: "VlbItem",
 		...vlbItem,
-		isbn: identifier.idValue,
+		isbn: identifier?.idValue,
 		description: description?.text,
-		price: Math.round(price.priceAmount * 100),
+		price:
+			price?.priceAmount != null
+				? Math.round(price.priceAmount * 100)
+				: null,
 		language: vlbLanguageToLanguage(lang?.languageCode),
 		publicationDate: item.publicationDate,
 		pageCount: item.extent?.mainContentPageCount,

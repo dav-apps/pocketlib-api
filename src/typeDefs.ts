@@ -369,10 +369,10 @@ export const typeDefs = `#graphql
 	type VlbItem {
 		uuid: String!
 		slug: String!
-		isbn: String!
+		isbn: String
 		title: String!
 		description: String
-		price: Float!
+		price: Float
 		language: String
 		publicationDate: String
 		pageCount: Int
