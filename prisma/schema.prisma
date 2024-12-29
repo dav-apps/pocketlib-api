@@ -255,6 +255,8 @@ model VlbItem {
   slug  String @unique @default(uuid()) @db.VarChar
   mvbId String @unique @db.VarChar
   title String @db.VarChar
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @default(now()) @updatedAt
 }
 
 model VlbAuthor {
@@ -265,6 +267,8 @@ model VlbAuthor {
   firstName String  @db.VarChar
   lastName  String  @db.VarChar
   bio       String? @db.VarChar
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @default(now()) @updatedAt
 }
 
 model VlbCollection {
@@ -273,4 +277,6 @@ model VlbCollection {
   slug  String @unique @default(uuid()) @db.VarChar
   mvbId String @unique @db.VarChar
   title String @db.VarChar
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @default(now()) @updatedAt
 }
