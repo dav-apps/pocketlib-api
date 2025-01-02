@@ -453,7 +453,7 @@ export async function findVlbItemByVlbGetProductsResponseDataItem(
 
 			if (author != null) {
 				slug = stringToSlug(
-					`${author.firstName} ${author.lastName} ${item.title} ${uuid}`
+					`${author.firstName ?? ""} ${author.lastName ?? ""} ${item.title} ${uuid}`
 				)
 			}
 
@@ -546,7 +546,7 @@ export async function findVlbAuthor(
 			data: {
 				uuid,
 				slug: stringToSlug(
-					`${author.firstName} ${author.lastName} ${uuid}`
+					`${author.firstName ?? ""} ${author.lastName ?? ""} ${uuid}`
 				),
 				isni: author.isni,
 				firstName: author.firstName,
