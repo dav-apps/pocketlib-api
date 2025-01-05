@@ -32,7 +32,7 @@ const baseUrl = "https://standardebooks.org"
 //#region Redis client
 const redis = createClient<any, any, any>({
 	url: process.env.REDIS_URL,
-	database: process.env.ENVIRONMENT == "production" ? 5 : 4 // production: 5, staging: 4
+	database: process.env.ENV == "production" ? 5 : 4 // production: 5, staging: 4
 })
 
 redis.on("error", err => console.log("Redis Client Error", err))
@@ -42,7 +42,7 @@ await redis.connect()
 // Init dav
 let environment = Environment.Development
 
-switch (process.env.ENVIRONMENT) {
+switch (process.env.ENV) {
 	case "production":
 		environment = Environment.Production
 		break

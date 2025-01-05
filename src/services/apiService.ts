@@ -24,7 +24,7 @@ import {
 } from "../constants.js"
 
 function getApiBaseUrl() {
-	switch (process.env.ENVIRONMENT) {
+	switch (process.env.ENV) {
 		case "staging":
 			return apiBaseUrlStaging
 		case "production":
@@ -35,7 +35,7 @@ function getApiBaseUrl() {
 }
 
 function getNewApiBaseUrl() {
-	switch (process.env.ENVIRONMENT) {
+	switch (process.env.ENV) {
 		case "staging":
 			return newApiBaseUrlStaging
 		case "production":

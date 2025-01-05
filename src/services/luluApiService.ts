@@ -6,7 +6,7 @@ import {
 import { ShippingAddress } from "../types.js"
 
 function getApiBaseUrl() {
-	if (process.env.ENVIRONMENT == "production") {
+	if (process.env.ENV == "production") {
 		return luluApiBaseUrlProduction
 	}
 

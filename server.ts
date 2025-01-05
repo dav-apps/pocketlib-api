@@ -37,7 +37,7 @@ export const resend = new Resend(process.env.RESEND_API_KEY)
 //#region Redis config
 export const redis = createClient({
 	url: process.env.REDIS_URL,
-	database: process.env.ENVIRONMENT == "production" ? 5 : 4 // production: 5, staging: 4
+	database: process.env.ENV == "production" ? 5 : 4 // production: 5, staging: 4
 })
 
 redis.on("error", err => console.log("Redis Client Error", err))
@@ -62,7 +62,7 @@ await server.start()
 // Init dav
 let environment = Environment.Development
 
-switch (process.env.ENVIRONMENT) {
+switch (process.env.ENV) {
 	case "production":
 		environment = Environment.Production
 		break
