@@ -1,26 +1,26 @@
-import { throwEndpointError, roundUp, convertPtToInch } from "../utils.js"
+import { roundUp, convertPtToInch } from "../utils.js"
 import { languages, urlRegex, isbnRegex } from "../constants.js"
 import { apiErrors, validationErrors } from "../errors.js"
 
 //#region Endpoint validations
-export async function validateImageContentType(contentType: string) {
+export function validateImageContentType(contentType: string) {
 	if (contentType != "image/png" && contentType != "image/jpeg") {
-		throwEndpointError(apiErrors.contentTypeNotSupported)
+		return apiErrors.contentTypeNotSupported
 	}
 }
 
-export async function validateEbookContentType(contentType: string) {
+export function validateEbookContentType(contentType: string) {
 	if (
 		contentType != "application/epub+zip" &&
 		contentType != "application/pdf"
 	) {
-		throwEndpointError(apiErrors.contentTypeNotSupported)
+		return apiErrors.contentTypeNotSupported
 	}
 }
 
-export async function validatePdfContentType(contentType: string) {
+export function validatePdfContentType(contentType: string) {
 	if (contentType != "application/pdf") {
-		throwEndpointError(apiErrors.contentTypeNotSupported)
+		return apiErrors.contentTypeNotSupported
 	}
 }
 //#endregion

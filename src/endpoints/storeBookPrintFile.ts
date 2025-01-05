@@ -33,7 +33,7 @@ async function uploadStoreBookPrintFile(req: Request, res: Response) {
 
 		// Check if content type is supported
 		const contentType = req.headers["content-type"]
-		validatePdfContentType(contentType)
+		throwEndpointError(validatePdfContentType(contentType))
 
 		// Get the store book
 		let storeBook = (await prisma.storeBook.findFirst({

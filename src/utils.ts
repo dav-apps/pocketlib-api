@@ -58,8 +58,10 @@ export function throwValidationError(...errors: string[]) {
 	}
 }
 
-export function throwEndpointError(error: ApiError) {
-	throw new Error(error.code)
+export function throwEndpointError(error?: ApiError) {
+	if (error != null) {
+		throw new Error(error.code)
+	}
 }
 
 export function handleEndpointError(res: Response, e: Error) {

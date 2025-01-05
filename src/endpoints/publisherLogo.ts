@@ -32,7 +32,7 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 
 		// Check if content type is supported
 		const contentType = req.headers["content-type"]
-		validateImageContentType(contentType)
+		throwEndpointError(validateImageContentType(contentType))
 
 		let publisher: Publisher = null
 

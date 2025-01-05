@@ -32,7 +32,7 @@ async function uploadAuthorProfileImage(req: Request, res: Response) {
 
 		// Check if content type is supported
 		const contentType = req.headers["content-type"]
-		validateImageContentType(contentType)
+		throwEndpointError(validateImageContentType(contentType))
 
 		let author: Author = null
 
