@@ -10,7 +10,7 @@
 		"build": "tsc",
 		"build:watch": "tsc -w",
 		"serve:watch": "nodemon dist/server.js",
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"generateSitemaps": "tsc && node dist/src/scripts/generateSitemaps.js"
 	},
 	"license": "MIT",
 	"dependencies": {

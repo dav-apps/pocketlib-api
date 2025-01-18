@@ -8,6 +8,10 @@ export const newApiBaseUrlStaging =
 	"https://dav-api-staging-kb5tf.ondigitalocean.app"
 export const newApiBaseUrlProduction =
 	"https://dav-api-ax6gp.ondigitalocean.app"
+export const websiteBaseUrlDevelopment = "http://localhost:3001"
+export const websiteBaseUrlStaging =
+	"https://pocketlib-staging-oo6cn.ondigitalocean.app"
+export const websiteBaseUrlProduction = "https://pocketlib.app"
 export const luluApiBaseUrlStaging = "https://api.sandbox.lulu.com"
 export const luluApiBaseUrlProduction = "https://api.lulu.com"
 export const vlbApiBaseUrl = "https://api.vlb.de/api/v2"
