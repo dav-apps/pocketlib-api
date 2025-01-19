@@ -125,7 +125,24 @@ async function generateSitemaps(prisma: PrismaClient) {
 	sitemaps.push(currentSitemap)
 
 	// Write the sitemaps to the file system
+	let sitemapUrls: string[] = []
+
 	for (let i = 0; i < sitemaps.length; i++) {
-		fs.writeFileSync(`./sitemaps/sitemap-${i}.txt`, sitemaps[i])
+		const sitemapName = `sitemap-${i}.txt`
+		fs.writeFileSync(`./sitemaps/${sitemapName}`, sitemaps[i])
+		sitemapUrls.push(`${websiteUrl}/${sitemapName}`)
 	}
+
+	// Write the sitemap index to the file system
+	const sitemapIndexBase = `<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{0}</sitemapindex>`
+	let sitemapIndex = ""
+
+	for (let sitemapUrl of sitemapUrls) {
+		sitemapIndex += `<sitemap><loc>${sitemapUrl}</loc></sitemap>`
+	}
+
+	fs.writeFileSync(
+		`./sitemaps/sitemap-index.xml`,
+		sitemapIndexBase.replace("{0}", sitemapIndex)
+	)
 }
