@@ -23,9 +23,9 @@ export const apiErrors = {
 		message: "Validation failed",
 		status: 400
 	},
-	sessionEnded: {
-		code: "SESSION_ENDED",
-		message: "Session has ended and must be renewed",
+	sessionExpired: {
+		code: "SESSION_EXPIRED",
+		message: "Session has expired and must be renewed",
 		status: 403
 	},
 	orderDoesNotExist: {

@@ -249,7 +249,7 @@ export async function getUserForEndpoint(accessToken: string): Promise<User> {
 		userResponse.errors.length > 0 &&
 		userResponse.errors[0].code == 3101
 	) {
-		throwEndpointError(apiErrors.sessionEnded)
+		throwEndpointError(apiErrors.sessionExpired)
 	}
 
 	return null
