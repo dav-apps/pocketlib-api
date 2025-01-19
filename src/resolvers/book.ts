@@ -1,7 +1,8 @@
 import {
 	isSuccessStatusCode,
 	ApiResponse,
-	TableObjectsController
+	TableObjectsController,
+	PurchasesController
 } from "dav-js"
 import { ResolverContext, StoreBook, Book } from "../types.js"
 import { throwApiError, getLastReleaseOfStoreBook } from "../utils.js"
@@ -81,13 +82,20 @@ export async function createBook(
 			let storeBookPrice = storeBook.price || 0
 
 			if (storeBookPrice == 0) {
-				throwApiError(
-					apiErrors.cannotAddFreeStoreBookToLibraryWithoutPurchase
-				)
-			}
+				// Create a purchase for the store book
+				let createPurchaseResponse =
+					await PurchasesController.createPurchase(`uuid`, {
+						accessToken,
+						tableObjectUuid: storeBook.uuid
+					})
 
-			// Check if the user is on the Pro plan
-			if (user.plan < 2) {
+				if (
+					Array.isArray(createPurchaseResponse) &&
+					createPurchaseResponse.includes("SESSION_EXPIRED")
+				) {
+					throwApiError(apiErrors.unexpectedError)
+				}
+			} else if (user.plan < 2) {
 				throwApiError(apiErrors.davProRequired)
 			}
 		}

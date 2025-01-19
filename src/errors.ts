@@ -89,11 +89,6 @@ export const apiErrors = {
 			"The language of the StoreBook does not match the given language",
 		status: 400
 	},
-	cannotAddFreeStoreBookToLibraryWithoutPurchase: {
-		code: "CANNOT_ADD_FREE_STORE_BOOK_TO_LIBRARY_WITHOUT_PURCHASE",
-		message: "Can't add free store book to library without purchase",
-		status: 422
-	},
 	davProRequired: {
 		code: "DAV_PRO_REQUIRED",
 		message: "You need dav Pro to do this action",
