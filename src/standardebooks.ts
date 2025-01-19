@@ -71,26 +71,25 @@ const password = await new Promise<string>(resolve => {
 })
 
 // Create the session
-let createSessionResponse = await SessionsController.CreateSession({
-	auth: new Auth({
-		apiKey: process.env.DAV_API_KEY,
-		secretKey: process.env.DAV_SECRET_KEY,
-		uuid: process.env.DAV_UUID
-	}),
-	email,
-	password,
-	appId,
-	apiKey: process.env.DAV_API_KEY
-})
+let createSessionResponse = await SessionsController.createSession(
+	`accessToken`,
+	{
+		auth: new Auth({
+			apiKey: process.env.DAV_API_KEY,
+			secretKey: process.env.DAV_SECRET_KEY,
+			uuid: process.env.DAV_UUID
+		}),
+		email,
+		password,
+		appId,
+		apiKey: process.env.DAV_API_KEY
+	}
+)
 
 let accessToken = ""
 
-if (isSuccessStatusCode(createSessionResponse.status)) {
-	let createSessionResponseData = (
-		createSessionResponse as ApiResponse<SessionsController.SessionResponseData>
-	).data
-
-	accessToken = createSessionResponseData.accessToken
+if (!Array.isArray(createSessionResponse)) {
+	accessToken = createSessionResponse.accessToken
 }
 
 let userResponse = await getUser(accessToken)
