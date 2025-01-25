@@ -2,7 +2,6 @@ import axios, { AxiosRequestConfig } from "axios"
 import { request, gql } from "graphql-request"
 import {
 	List,
-	TableObject,
 	TableObjectPrice,
 	Collection,
 	Purchase,
@@ -41,65 +40,6 @@ function getNewApiBaseUrl() {
 			return newApiBaseUrlProduction
 		default:
 			return newApiBaseUrlDevelopment
-	}
-}
-
-export async function listTableObjects(params: {
-	caching?: boolean
-	limit?: number
-	offset?: number
-	collectionName?: string
-	tableName?: string
-	userId?: number
-	propertyName?: string
-	propertyValue?: string
-	exact?: boolean
-}): Promise<List<TableObject>> {
-	try {
-		let requestParams: AxiosRequestConfig = {}
-
-		requestParams["app_id"] = appId
-		if (params.limit != null) requestParams["limit"] = params.limit
-		if (params.offset != null) requestParams["offset"] = params.offset
-		if (params.collectionName != null)
-			requestParams["collection_name"] = params.collectionName
-		if (params.tableName != null)
-			requestParams["table_name"] = params.tableName
-		if (params.userId != null) requestParams["user_id"] = params.userId
-		if (params.propertyName != null)
-			requestParams["property_name"] = params.propertyName
-		if (params.propertyValue != null)
-			requestParams["property_value"] = params.propertyValue
-		if (params.exact != null) requestParams["exact"] = params.exact
-		if (params.caching != null) requestParams["caching"] = params.caching
-
-		let response = await axios({
-			method: "get",
-			url: `${getApiBaseUrl()}/v2/table_objects`,
-			headers: {
-				Authorization: process.env.DAV_AUTH
-			},
-			params: requestParams
-		})
-
-		let result: TableObject[] = []
-
-		for (let obj of response.data.items) {
-			result.push({
-				uuid: obj.uuid,
-				userId: obj.user_id,
-				tableId: obj.table_id,
-				properties: obj.properties
-			})
-		}
-
-		return {
-			total: response.data.total,
-			items: result
-		}
-	} catch (error) {
-		console.error(error.response?.data || error)
-		return { total: 0, items: [] }
 	}
 }
 

@@ -4,14 +4,14 @@ import {
 	TableObjectsController,
 	PurchasesController,
 	Plan,
-	TableObject
+	TableObject,
+	Auth
 } from "dav-js"
 import { ResolverContext, StoreBook, Book } from "../types.js"
 import { throwApiError, getLastReleaseOfStoreBook } from "../utils.js"
 import { apiErrors } from "../errors.js"
-import { admins, bookTableId, bookFileTableId } from "../constants.js"
+import { appId, admins, bookTableId, bookFileTableId } from "../constants.js"
 import {
-	listTableObjects,
 	listPurchasesOfTableObject,
 	addTableObject
 } from "../services/apiService.js"
@@ -104,17 +104,33 @@ export async function createBook(
 
 	// The user can add the store book to the library
 	// Check if the store book is already in the library of the user
-	let tableObjectsInLibrary = await listTableObjects({
-		caching: false,
-		limit: 1,
-		tableName: "Book",
-		userId: user.Id,
-		propertyName: "store_book",
-		propertyValue: storeBook.uuid,
-		exact: true
-	})
+	let listTableObjectsResponse =
+		await TableObjectsController.listTableObjectsByProperty(
+			`
+				items {
+					uuid
+				}
+			`,
+			{
+				auth: new Auth({
+					apiKey: process.env.DAV_API_KEY,
+					secretKey: process.env.DAV_SECRET_KEY,
+					uuid: process.env.DAV_UUID
+				}),
+				userId: user.Id,
+				appId,
+				tableName: "Book",
+				propertyName: "store_book",
+				propertyValue: storeBook.uuid,
+				exact: true,
+				limit: 1
+			}
+		)
 
-	if (tableObjectsInLibrary.items.length > 0) {
+	if (
+		listTableObjectsResponse.length > 0 &&
+		typeof listTableObjectsResponse[0] != "string"
+	) {
 		throwApiError(apiErrors.storeBookAlreadyInLibrary)
 	}
 
@@ -129,7 +145,13 @@ export async function createBook(
 
 	// Get the store book file table object
 	let retrieveStoreBookFileTableObjectResponse =
-		await TableObjectsController.retrieveTableObject(``, { uuid: file.uuid })
+		await TableObjectsController.retrieveTableObject(
+			`
+				uuid
+				properties
+			`,
+			{ uuid: file.uuid }
+		)
 
 	if (Array.isArray(retrieveStoreBookFileTableObjectResponse)) {
 		throwApiError(apiErrors.unexpectedError)

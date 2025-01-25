@@ -12,7 +12,7 @@ import {
 } from "@prisma/client"
 import * as crypto from "crypto"
 import validator from "validator"
-import { isSuccessStatusCode, TableObjectsController } from "dav-js"
+import { Auth, isSuccessStatusCode, TableObjectsController } from "dav-js"
 import {
 	ResolverContext,
 	QueryResult,
@@ -31,9 +31,8 @@ import {
 	stringToSlug
 } from "../utils.js"
 import { apiErrors, validationErrors } from "../errors.js"
-import { admins, storeBookTableId } from "../constants.js"
+import { appId, admins, storeBookTableId } from "../constants.js"
 import {
-	listTableObjects,
 	listPurchasesOfTableObject,
 	setTableObjectPrice
 } from "../services/apiService.js"
@@ -468,7 +467,9 @@ export async function createStoreBook(
 					id: storeBookCollection.id
 				}
 			},
-			slug: stringToSlug(`${author.firstName} ${author.lastName} ${args.title} ${uuid}`),
+			slug: stringToSlug(
+				`${author.firstName} ${author.lastName} ${args.title} ${uuid}`
+			),
 			language: args.language,
 			status: "unpublished"
 		}
@@ -1051,16 +1052,28 @@ export async function inLibrary(
 		return null
 	}
 
-	let response = await listTableObjects({
-		caching: false,
-		userId: context.user.Id,
-		tableName: "Book",
-		propertyName: "store_book",
-		propertyValue: storeBook.uuid,
-		exact: true
-	})
+	let response = await TableObjectsController.listTableObjectsByProperty(
+		`
+			items {
+				uuid
+			}
+		`,
+		{
+			auth: new Auth({
+				apiKey: process.env.DAV_API_KEY,
+				secretKey: process.env.DAV_SECRET_KEY,
+				uuid: process.env.DAV_UUID
+			}),
+			appId,
+			userId: context.user.Id,
+			tableName: "Book",
+			propertyName: "store_book",
+			propertyValue: storeBook.uuid,
+			exact: true
+		}
+	)
 
-	return response.items.length > 0
+	return response.length > 0 && typeof response[0] != "string"
 }
 
 export async function purchased(
