@@ -24,13 +24,13 @@ export async function setAuthorBio(
 		// Check if the user is an author
 		if (user == null) {
 			throwApiError(apiErrors.notAuthenticated)
-		} else if (admins.includes(user.id)) {
+		} else if (admins.includes(user.Id)) {
 			throwApiError(apiErrors.actionNotAllowed)
 		}
 
 		// Get the author of the user
 		author = await context.prisma.author.findFirst({
-			where: { userId: user.id }
+			where: { userId: user.Id }
 		})
 
 		if (author == null) {
@@ -40,7 +40,7 @@ export async function setAuthorBio(
 		// Check if the user is an admin
 		if (user == null) {
 			throwApiError(apiErrors.notAuthenticated)
-		} else if (!admins.includes(user.id)) {
+		} else if (!admins.includes(user.Id)) {
 			throwApiError(apiErrors.actionNotAllowed)
 		}
 
@@ -68,7 +68,7 @@ export async function setAuthorBio(
 		return await context.prisma.authorBio.create({
 			data: {
 				uuid: crypto.randomUUID(),
-				userId: user.id,
+				userId: user.Id,
 				author: {
 					connect: {
 						id: author.id

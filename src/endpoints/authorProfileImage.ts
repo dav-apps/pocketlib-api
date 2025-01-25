@@ -28,7 +28,7 @@ async function uploadAuthorProfileImage(req: Request, res: Response) {
 			throwEndpointError(apiErrors.notAuthenticated)
 		}
 
-		const isAdmin = admins.includes(user.id)
+		const isAdmin = admins.includes(user.Id)
 
 		// Check if content type is supported
 		const contentType = req.headers["content-type"]
@@ -43,7 +43,7 @@ async function uploadAuthorProfileImage(req: Request, res: Response) {
 
 			// Get the author of the user
 			author = await prisma.author.findFirst({
-				where: { userId: user.id }
+				where: { userId: user.Id }
 			})
 
 			if (author == null) {
@@ -100,7 +100,7 @@ async function uploadAuthorProfileImage(req: Request, res: Response) {
 			await prisma.authorProfileImage.create({
 				data: {
 					uuid: profileImageUuid,
-					userId: user.id,
+					userId: user.Id,
 					author: {
 						connect: {
 							id: author.id

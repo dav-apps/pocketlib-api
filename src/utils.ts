@@ -11,11 +11,15 @@ import {
 	VlbAuthor,
 	VlbCollection
 } from "@prisma/client"
-import { TableObjectsController, isSuccessStatusCode } from "dav-js"
+import {
+	UsersController,
+	TableObjectsController,
+	isSuccessStatusCode,
+	User
+} from "dav-js"
 import {
 	RegexResult,
 	ApiError,
-	User,
 	StoreBook,
 	VlbItem,
 	VlbGetProductsResponseDataItem,
@@ -31,7 +35,6 @@ import {
 	filenameRegex
 } from "./constants.js"
 import { apiErrors } from "./errors.js"
-import { getUser } from "./services/apiService.js"
 import { getProduct } from "./services/vlbApiService.js"
 
 export function throwApiError(error: ApiError) {
@@ -240,15 +243,19 @@ export async function getUserForEndpoint(accessToken: string): Promise<User> {
 		return null
 	}
 
-	let userResponse = await getUser(accessToken)
+	let userResponse = await UsersController.retrieveUser(
+		`
+			id
+			email
+			firstName
+			plan
+		`,
+		{ accessToken }
+	)
 
-	if (isSuccessStatusCode(userResponse.status)) {
-		return userResponse.data
-	} else if (
-		userResponse.errors != null &&
-		userResponse.errors.length > 0 &&
-		userResponse.errors[0].code == 3101
-	) {
+	if (!Array.isArray(userResponse)) {
+		return userResponse
+	} else if (userResponse.includes("SESSION_EXPIRED")) {
 		throwEndpointError(apiErrors.sessionExpired)
 	}
 

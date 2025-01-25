@@ -89,7 +89,7 @@ async function davWebhook(req: Request, res: Response) {
 
 		resend.emails.send({
 			from: noReplyEmailAddress,
-			to: order.user.email,
+			to: order.user.Email,
 			subject: "Vielen Dank für deine Bestellung bei PocketLib",
 			react: (
 				<OrderConfirmationEmail

@@ -44,7 +44,7 @@ export async function retrieveAuthor(
 
 		if (user == null) {
 			throwApiError(apiErrors.notAuthenticated)
-		} else if (admins.includes(user.id)) {
+		} else if (admins.includes(user.Id)) {
 			throwApiError(apiErrors.actionNotAllowed)
 		}
 
@@ -52,7 +52,7 @@ export async function retrieveAuthor(
 		return {
 			caching: false,
 			data: await context.prisma.author.findFirst({
-				where: { userId: user.id }
+				where: { userId: user.Id }
 			})
 		}
 	}
@@ -99,12 +99,12 @@ export async function listAuthors(
 
 		if (user == null) {
 			throwApiError(apiErrors.notAuthenticated)
-		} else if (!admins.includes(user.id)) {
+		} else if (!admins.includes(user.Id)) {
 			throwApiError(apiErrors.actionNotAllowed)
 		}
 
 		// Get the authors of the user
-		where = { userId: user.id, publisher: null }
+		where = { userId: user.Id, publisher: null }
 		caching = false
 	} else if (random) {
 		let total = await context.prisma.author.count()
@@ -167,7 +167,7 @@ export async function createAuthor(
 		throwApiError(apiErrors.notAuthenticated)
 	}
 
-	let isAdmin = admins.includes(user.id)
+	let isAdmin = admins.includes(user.Id)
 	let publisher: Publisher = null
 
 	if (isAdmin && args.publisher != null) {
@@ -182,7 +182,7 @@ export async function createAuthor(
 	} else if (!isAdmin) {
 		// Check if the user already is an author
 		let author = await context.prisma.author.findFirst({
-			where: { userId: user.id }
+			where: { userId: user.Id }
 		})
 
 		if (author != null) {
@@ -203,7 +203,7 @@ export async function createAuthor(
 
 	let data = {
 		uuid,
-		userId: user.id,
+		userId: user.Id,
 		slug: stringToSlug(`${firstName} ${lastName} ${uuid}`),
 		firstName,
 		lastName
@@ -244,19 +244,19 @@ export async function updateAuthor(
 		// Check if the user is an author
 		if (user == null) {
 			throwApiError(apiErrors.notAuthenticated)
-		} else if (admins.includes(user.id)) {
+		} else if (admins.includes(user.Id)) {
 			throwApiError(apiErrors.actionNotAllowed)
 		}
 
 		// Get the author of the user
 		author = await context.prisma.author.findFirst({
-			where: { userId: user.id }
+			where: { userId: user.Id }
 		})
 	} else {
 		// Check if the user is an admin
 		if (user == null) {
 			throwApiError(apiErrors.notAuthenticated)
-		} else if (!admins.includes(user.id)) {
+		} else if (!admins.includes(user.Id)) {
 			throwApiError(apiErrors.actionNotAllowed)
 		}
 

@@ -41,7 +41,7 @@ export async function setStoreBookCollectionName(
 	})
 
 	// Check if the collection belongs to the user
-	if (collection.userId != BigInt(user.id)) {
+	if (collection.userId != BigInt(user.Id)) {
 		throwApiError(apiErrors.actionNotAllowed)
 	}
 
@@ -61,7 +61,7 @@ export async function setStoreBookCollectionName(
 		name = await context.prisma.storeBookCollectionName.create({
 			data: {
 				uuid: crypto.randomUUID(),
-				userId: user.id,
+				userId: user.Id,
 				collection: {
 					connect: {
 						id: collection.id

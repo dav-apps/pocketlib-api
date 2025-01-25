@@ -114,7 +114,7 @@ export async function createStoreBookSeries(
 		throwApiError(apiErrors.notAuthenticated)
 	}
 
-	const isAdmin = admins.includes(user.id)
+	const isAdmin = admins.includes(user.Id)
 
 	// Validate the args
 	throwValidationError(
@@ -139,7 +139,7 @@ export async function createStoreBookSeries(
 	} else {
 		// Get the author of the user
 		author = await context.prisma.author.findFirst({
-			where: { userId: user.id }
+			where: { userId: user.Id }
 		})
 
 		if (author == null) {
@@ -156,7 +156,7 @@ export async function createStoreBookSeries(
 	// Create the store book series
 	let seriesData = {
 		uuid: crypto.randomUUID(),
-		userId: user.id,
+		userId: user.Id,
 		author: {
 			connect: {
 				id: author.id
@@ -196,7 +196,7 @@ export async function updateStoreBookSeries(
 		throwApiError(apiErrors.notAuthenticated)
 	}
 
-	const isAdmin = admins.includes(user.id)
+	const isAdmin = admins.includes(user.Id)
 
 	// Get the store book series
 	let storeBookSeries = await context.prisma.storeBookSeries.findFirst({
@@ -208,7 +208,7 @@ export async function updateStoreBookSeries(
 	}
 
 	// Check if the store book series belongs to the user
-	if (!isAdmin && storeBookSeries.userId != BigInt(user.id)) {
+	if (!isAdmin && storeBookSeries.userId != BigInt(user.Id)) {
 		throwApiError(apiErrors.actionNotAllowed)
 	}
 

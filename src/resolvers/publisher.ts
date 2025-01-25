@@ -32,7 +32,7 @@ export async function retrievePublisher(
 
 		if (user == null) {
 			throwApiError(apiErrors.notAuthenticated)
-		} else if (admins.includes(user.id)) {
+		} else if (admins.includes(user.Id)) {
 			throwApiError(apiErrors.actionNotAllowed)
 		}
 
@@ -40,7 +40,7 @@ export async function retrievePublisher(
 		return {
 			caching: false,
 			data: await context.prisma.publisher.findFirst({
-				where: { userId: user.id }
+				where: { userId: user.Id }
 			})
 		}
 	}
@@ -97,13 +97,13 @@ export async function createPublisher(
 		throwApiError(apiErrors.notAuthenticated)
 	}
 
-	let isAdmin = admins.includes(user.id)
+	let isAdmin = admins.includes(user.Id)
 	let publisher: Publisher = null
 
 	if (!isAdmin) {
 		// Check if the user is already a publisher
 		publisher = await context.prisma.publisher.findFirst({
-			where: { userId: user.id }
+			where: { userId: user.Id }
 		})
 
 		if (publisher != null) {
@@ -121,7 +121,7 @@ export async function createPublisher(
 	return await context.prisma.publisher.create({
 		data: {
 			uuid,
-			userId: user.id,
+			userId: user.Id,
 			slug: stringToSlug(`${name} ${uuid}`),
 			name
 		}
@@ -155,19 +155,19 @@ export async function updatePublisher(
 		// Check if the user is a publisher
 		if (user == null) {
 			throwApiError(apiErrors.notAuthenticated)
-		} else if (admins.includes(user.id)) {
+		} else if (admins.includes(user.Id)) {
 			throwApiError(apiErrors.actionNotAllowed)
 		}
 
 		// Get the publisher of the user
 		publisher = await context.prisma.publisher.findFirst({
-			where: { userId: user.id }
+			where: { userId: user.Id }
 		})
 	} else {
 		// Check if the user is an admin
 		if (user == null) {
 			throwApiError(apiErrors.notAuthenticated)
-		} else if (!admins.includes(user.id)) {
+		} else if (!admins.includes(user.Id)) {
 			throwApiError(apiErrors.actionNotAllowed)
 		}
 

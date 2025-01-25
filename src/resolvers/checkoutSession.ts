@@ -1,3 +1,4 @@
+import { Plan } from "dav-js"
 import { ResolverContext, StoreBook } from "../types.js"
 import {
 	throwApiError,
@@ -37,7 +38,7 @@ export async function createCheckoutSessionForStoreBook(
 		throwApiError(apiErrors.storeBookDoesNotExist)
 	}
 
-	const userIsAuthor = storeBook.userId == BigInt(user.id)
+	const userIsAuthor = storeBook.userId == BigInt(user.Id)
 
 	// Get the latest release of the store book
 	let storeBookRelease = await getLastReleaseOfStoreBook(
@@ -74,7 +75,7 @@ export async function createCheckoutSessionForStoreBook(
 
 		let shippingAddresses = await apiService.listShippingAddresses(
 			listShippingAddressesQueryData,
-			{ userId: user.id, limit: 1 }
+			{ userId: user.Id, limit: 1 }
 		)
 
 		if (shippingAddresses.total == 0) {
@@ -190,7 +191,7 @@ export async function createCheckoutSessionForVlbItem(
 
 	let shippingRate = null
 
-	if (user.plan < 2) {
+	if (user.Plan != Plan.Pro) {
 		// Add shipping rate
 		shippingRate = {
 			name: "Standard-Versand",

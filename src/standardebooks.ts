@@ -5,13 +5,13 @@ import axios from "axios"
 import { parse, HTMLElement } from "node-html-parser"
 import {
 	Dav,
+	UsersController,
 	SessionsController,
+	User,
 	Auth,
 	Environment,
-	isSuccessStatusCode,
-	ApiResponse
+	isSuccessStatusCode
 } from "dav-js"
-import { getUser } from "./services/apiService.js"
 import { createStoreBook, updateStoreBook } from "./resolvers/storeBook.js"
 import { publishStoreBookRelease } from "./resolvers/storeBookRelease.js"
 import {
@@ -19,7 +19,6 @@ import {
 	getTableObjectFileCdnUrl,
 	downloadFile
 } from "./utils.js"
-import { User } from "./types.js"
 import { appId } from "./constants.js"
 
 //#region Constants
@@ -92,11 +91,19 @@ if (!Array.isArray(createSessionResponse)) {
 	accessToken = createSessionResponse.accessToken
 }
 
-let userResponse = await getUser(accessToken)
 let user: User
+let userResponse = await UsersController.retrieveUser(
+	`
+		id
+		email
+		firstName
+		plan
+	`,
+	{ accessToken }
+)
 
-if (isSuccessStatusCode(userResponse.status)) {
-	user = userResponse.data
+if (!Array.isArray(userResponse)) {
+	user = userResponse
 }
 
 let initialResponse = await axios({

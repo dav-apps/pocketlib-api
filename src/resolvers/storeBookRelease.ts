@@ -66,7 +66,7 @@ export async function publishStoreBookRelease(
 		throwApiError(apiErrors.notAuthenticated)
 	}
 
-	const isAdmin = admins.includes(user.id)
+	const isAdmin = admins.includes(user.Id)
 
 	// Get the store book release
 	let storeBookRelease = await context.prisma.storeBookRelease.findFirst({
@@ -79,7 +79,7 @@ export async function publishStoreBookRelease(
 	}
 
 	// Check if the release belongs to the user
-	if (!isAdmin && storeBookRelease.userId != BigInt(user.id)) {
+	if (!isAdmin && storeBookRelease.userId != BigInt(user.Id)) {
 		throwApiError(apiErrors.actionNotAllowed)
 	}
 

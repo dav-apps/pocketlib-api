@@ -75,7 +75,7 @@ export async function retrieveStoreBook(
 	await loadStoreBookData(
 		context.prisma,
 		storeBook,
-		context.user == null || BigInt(context.user.id) != storeBook.userId
+		context.user == null || BigInt(context.user.Id) != storeBook.userId
 	)
 
 	return {
@@ -154,12 +154,12 @@ export async function listStoreBooks(
 
 		if (user == null) {
 			throwApiError(apiErrors.notAuthenticated)
-		} else if (!admins.includes(user.id)) {
+		} else if (!admins.includes(user.Id)) {
 			throwApiError(apiErrors.actionNotAllowed)
 		}
 
 		// Get the StoreBooks in review
-		let where = { userId: user.id, status: "review" }
+		let where = { userId: user.Id, status: "review" }
 
 		let total = await context.prisma.storeBook.count({ where })
 
@@ -336,7 +336,7 @@ export async function createStoreBook(
 		throwApiError(apiErrors.notAuthenticated)
 	}
 
-	let isAdmin = admins.includes(user.id)
+	let isAdmin = admins.includes(user.Id)
 	let author: Author = null
 
 	if (isAdmin) {
@@ -355,7 +355,7 @@ export async function createStoreBook(
 	} else {
 		// Check if the user is an author
 		author = await context.prisma.author.findFirst({
-			where: { userId: user.id }
+			where: { userId: user.Id }
 		})
 
 		if (author == null) {
@@ -397,7 +397,7 @@ export async function createStoreBook(
 		storeBookCollection = await context.prisma.storeBookCollection.create({
 			data: {
 				uuid: crypto.randomUUID(),
-				userId: user.id,
+				userId: user.Id,
 				author: {
 					connect: {
 						id: author.id
@@ -410,7 +410,7 @@ export async function createStoreBook(
 		await context.prisma.storeBookCollectionName.create({
 			data: {
 				uuid: crypto.randomUUID(),
-				userId: user.id,
+				userId: user.Id,
 				collection: {
 					connect: {
 						id: storeBookCollection.id
@@ -443,7 +443,7 @@ export async function createStoreBook(
 			await context.prisma.storeBookCollectionName.create({
 				data: {
 					uuid: crypto.randomUUID(),
-					userId: user.id,
+					userId: user.Id,
 					collection: {
 						connect: {
 							id: storeBookCollection.id
@@ -462,7 +462,7 @@ export async function createStoreBook(
 	let storeBook = await context.prisma.storeBook.create({
 		data: {
 			uuid,
-			userId: user.id,
+			userId: user.Id,
 			collection: {
 				connect: {
 					id: storeBookCollection.id
@@ -477,7 +477,7 @@ export async function createStoreBook(
 	// Create the store book release
 	let storeBookReleaseProperties = {
 		uuid: crypto.randomUUID(),
-		userId: user.id,
+		userId: user.Id,
 		storeBook: {
 			connect: {
 				id: storeBook.id
@@ -592,7 +592,7 @@ export async function updateStoreBook(
 		throwApiError(apiErrors.notAuthenticated)
 	}
 
-	const isAdmin = admins.includes(user.id)
+	const isAdmin = admins.includes(user.Id)
 
 	// Get the store book
 	let storeBook = (await context.prisma.storeBook.findFirst({
@@ -600,7 +600,7 @@ export async function updateStoreBook(
 	})) as StoreBook
 
 	// Check if the store book belongs to the user
-	if (!isAdmin && storeBook.userId != BigInt(user.id)) {
+	if (!isAdmin && storeBook.userId != BigInt(user.Id)) {
 		throwApiError(apiErrors.actionNotAllowed)
 	}
 
@@ -682,7 +682,7 @@ export async function updateStoreBook(
 			context.accessToken,
 			storeBook,
 			storeBookRelease,
-			user.id
+			user.Id
 		)
 	}
 
@@ -856,7 +856,7 @@ export async function cover(
 	let release = await getLastReleaseOfStoreBook(
 		context.prisma,
 		storeBook.id,
-		context.user == null || BigInt(context.user.id) != storeBook.userId
+		context.user == null || BigInt(context.user.Id) != storeBook.userId
 	)
 
 	if (release.coverId == null) {
@@ -887,7 +887,7 @@ export async function file(
 	let release = await getLastReleaseOfStoreBook(
 		context.prisma,
 		storeBook.id,
-		context.user == null || BigInt(context.user.id) != storeBook.userId
+		context.user == null || BigInt(context.user.Id) != storeBook.userId
 	)
 
 	if (release.fileId == null) {
@@ -913,7 +913,7 @@ export async function printCover(
 	let release = await getLastReleaseOfStoreBook(
 		context.prisma,
 		storeBook.id,
-		context.user == null || BigInt(context.user.id) != storeBook.userId
+		context.user == null || BigInt(context.user.Id) != storeBook.userId
 	)
 
 	if (release.printCoverId == null) {
@@ -939,7 +939,7 @@ export async function printFile(
 	let release = await getLastReleaseOfStoreBook(
 		context.prisma,
 		storeBook.id,
-		context.user == null || BigInt(context.user.id) != storeBook.userId
+		context.user == null || BigInt(context.user.Id) != storeBook.userId
 	)
 
 	if (release.printFileId == null) {
@@ -1053,7 +1053,7 @@ export async function inLibrary(
 
 	let response = await listTableObjects({
 		caching: false,
-		userId: context.user.id,
+		userId: context.user.Id,
 		tableName: "Book",
 		propertyName: "store_book",
 		propertyValue: storeBook.uuid,
@@ -1074,7 +1074,7 @@ export async function purchased(
 
 	let purchases = await listPurchasesOfTableObject({
 		uuid: storeBook.uuid,
-		userId: context.user.id
+		userId: context.user.Id
 	})
 
 	return purchases.length > 0

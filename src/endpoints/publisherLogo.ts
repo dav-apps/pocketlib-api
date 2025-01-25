@@ -28,7 +28,7 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 			throwEndpointError(apiErrors.notAuthenticated)
 		}
 
-		const isAdmin = admins.includes(user.id)
+		const isAdmin = admins.includes(user.Id)
 
 		// Check if content type is supported
 		const contentType = req.headers["content-type"]
@@ -43,7 +43,7 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 
 			// Get the publisher of the user
 			publisher = await prisma.publisher.findFirst({
-				where: { userId: user.id }
+				where: { userId: user.Id }
 			})
 
 			if (publisher == null) {
@@ -100,7 +100,7 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 			await prisma.publisherLogo.create({
 				data: {
 					uuid: logoUuid,
-					userId: user.id,
+					userId: user.Id,
 					publisher: {
 						connect: {
 							id: publisher.id

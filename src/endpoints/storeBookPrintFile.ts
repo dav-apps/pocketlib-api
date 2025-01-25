@@ -41,7 +41,7 @@ async function uploadStoreBookPrintFile(req: Request, res: Response) {
 		})) as StoreBook
 
 		// Check if the store book belongs to the user
-		if (storeBook.userId != BigInt(user.id)) {
+		if (storeBook.userId != BigInt(user.Id)) {
 			throwEndpointError(apiErrors.actionNotAllowed)
 		}
 
@@ -68,14 +68,14 @@ async function uploadStoreBookPrintFile(req: Request, res: Response) {
 				accessToken,
 				storeBook,
 				release,
-				user.id
+				user.Id
 			)
 
 			// Create a new StoreBookPrintFile & update the release
 			printFileUuid = await createPrintFile(
 				prisma,
 				accessToken,
-				BigInt(user.id),
+				BigInt(user.Id),
 				newRelease.id,
 				req.body,
 				pages,
@@ -98,7 +98,7 @@ async function uploadStoreBookPrintFile(req: Request, res: Response) {
 				printFileUuid = await createPrintFile(
 					prisma,
 					accessToken,
-					BigInt(user.id),
+					BigInt(user.Id),
 					release.id,
 					req.body,
 					pages,

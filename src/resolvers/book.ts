@@ -2,7 +2,8 @@ import {
 	isSuccessStatusCode,
 	ApiResponse,
 	TableObjectsController,
-	PurchasesController
+	PurchasesController,
+	Plan
 } from "dav-js"
 import { ResolverContext, StoreBook, Book } from "../types.js"
 import { throwApiError, getLastReleaseOfStoreBook } from "../utils.js"
@@ -28,7 +29,7 @@ export async function createBook(
 		throwApiError(apiErrors.notAuthenticated)
 	}
 
-	const isAdmin = admins.includes(user.id)
+	const isAdmin = admins.includes(user.Id)
 
 	// Copy the store book into the library by creating a book with the file of the store book
 	// Get the store book
@@ -59,12 +60,12 @@ export async function createBook(
 	// Check if the user has purchased the table object
 	let purchases = await listPurchasesOfTableObject({
 		uuid: storeBook.uuid,
-		userId: user.id
+		userId: user.Id
 	})
 
 	if (purchases.length == 0) {
 		// Check if the user is an admin or the author of the store book
-		const isAuthor = storeBook.userId == BigInt(user.id)
+		const isAuthor = storeBook.userId == BigInt(user.Id)
 
 		if (!isAdmin && !isAuthor) {
 			let storeBookStatus = storeBook.status || "unpublished"
@@ -95,7 +96,7 @@ export async function createBook(
 				) {
 					throwApiError(apiErrors.unexpectedError)
 				}
-			} else if (user.plan < 2) {
+			} else if (user.Plan != Plan.Pro) {
 				throwApiError(apiErrors.davProRequired)
 			}
 		}
@@ -107,7 +108,7 @@ export async function createBook(
 		caching: false,
 		limit: 1,
 		tableName: "Book",
-		userId: user.id,
+		userId: user.Id,
 		propertyName: "store_book",
 		propertyValue: storeBook.uuid,
 		exact: true

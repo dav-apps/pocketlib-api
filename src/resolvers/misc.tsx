@@ -65,7 +65,7 @@ export async function completeOrder(
 	// Check if the user is an admin
 	if (context.user == null) {
 		throwApiError(apiErrors.notAuthenticated)
-	} else if (!admins.includes(context.user.id)) {
+	} else if (!admins.includes(context.user.Id)) {
 		throwApiError(apiErrors.actionNotAllowed)
 	}
 
@@ -131,7 +131,7 @@ export async function completeOrder(
 
 	context.resend.emails.send({
 		from: noReplyEmailAddress,
-		to: updatedOrder.user.email,
+		to: updatedOrder.user.Email,
 		subject: "Versandbestätigung - PocketLib",
 		react: <OrderSentEmail name={name} product={product} />
 	})

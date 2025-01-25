@@ -10,6 +10,7 @@ import {
 } from "@prisma/client"
 import { RedisClientType } from "redis"
 import { Resend } from "resend"
+import { User } from "dav-js"
 
 export interface ResolverContext {
 	prisma: PrismaClient
@@ -47,20 +48,6 @@ export interface UserApiResponse {
 }
 
 //#region Platform models
-export interface User {
-	id: number
-	email: string
-	firstName: string
-	confirmed: boolean
-	totalStorage: number
-	usedStorage: number
-	plan: number
-	dev: boolean
-	provider: boolean
-	profileImage: string
-	profileImageEtag: string
-}
-
 export interface TableObject {
 	uuid: string
 	userId: number
