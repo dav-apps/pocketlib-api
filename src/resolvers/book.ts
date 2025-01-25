@@ -3,14 +3,14 @@ import {
 	ApiResponse,
 	TableObjectsController,
 	PurchasesController,
-	Plan
+	Plan,
+	TableObject
 } from "dav-js"
 import { ResolverContext, StoreBook, Book } from "../types.js"
 import { throwApiError, getLastReleaseOfStoreBook } from "../utils.js"
 import { apiErrors } from "../errors.js"
 import { admins, bookTableId, bookFileTableId } from "../constants.js"
 import {
-	getTableObject,
 	listTableObjects,
 	listPurchasesOfTableObject,
 	addTableObject
@@ -128,18 +128,21 @@ export async function createBook(
 	}
 
 	// Get the store book file table object
-	let storeBookFileTableObject = await getTableObject(file.uuid)
+	let retrieveStoreBookFileTableObjectResponse =
+		await TableObjectsController.retrieveTableObject(``, { uuid: file.uuid })
 
-	if (storeBookFileTableObject == null) {
+	if (Array.isArray(retrieveStoreBookFileTableObjectResponse)) {
 		throwApiError(apiErrors.unexpectedError)
 	}
 
-	let bookType = storeBookFileTableObject.properties.type as string
+	let storeBookFileTableObject =
+		retrieveStoreBookFileTableObjectResponse as TableObject
+	let bookType = storeBookFileTableObject.Properties.type.value as string
 
 	// Create the book
 	let bookProperties = {
 		store_book: storeBook.uuid,
-		file: storeBookFileTableObject.uuid
+		file: storeBookFileTableObject.Uuid
 	}
 
 	if (bookType == "application/pdf") {

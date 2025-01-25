@@ -1,4 +1,4 @@
-import { Plan } from "dav-js"
+import { TableObject, TableObjectsController, Plan } from "dav-js"
 import { ResolverContext, StoreBook } from "../types.js"
 import {
 	throwApiError,
@@ -168,14 +168,26 @@ export async function createCheckoutSessionForVlbItem(
 	}
 
 	// Check if the table object of the VlbItem already exists
-	let tableObject = await apiService.getTableObject(vlbItem.uuid, false)
+	let tableObject: TableObject = null
+	let retrieveTableObjectResponse =
+		await TableObjectsController.retrieveTableObject(`uuid`, {
+			uuid: vlbItem.uuid
+		})
 
-	if (tableObject == null) {
+	if (
+		!Array.isArray(retrieveTableObjectResponse) &&
+		retrieveTableObjectResponse == null
+	) {
 		// Create the table object
-		tableObject = await apiService.createTableObject(
-			vlbItem.uuid,
-			vlbItemTableId
-		)
+		let createTableObjectResponse =
+			await TableObjectsController.createTableObject(`uuid`, {
+				uuid: vlbItem.uuid,
+				tableId: vlbItemTableId
+			})
+
+		if (!Array.isArray(createTableObjectResponse)) {
+			tableObject = createTableObjectResponse
+		}
 	}
 
 	if (tableObject == null) {

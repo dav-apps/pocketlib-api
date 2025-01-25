@@ -1,10 +1,9 @@
 import { defaultFieldResolver } from "graphql"
 import { mapSchema, getDirective, MapperKind } from "@graphql-tools/utils"
-import { User } from "dav-js"
+import { User, TableObjectsController, TableObject } from "dav-js"
 import { throwApiError } from "./utils.js"
 import { apiErrors } from "./errors.js"
 import { admins } from "./constants.js"
-import { getTableObject } from "./services/apiService.js"
 
 export const authDirectiveTransformer = (schema, directiveName) => {
 	return mapSchema(schema, {
@@ -30,23 +29,25 @@ export const authDirectiveTransformer = (schema, directiveName) => {
 					}
 
 					if (user != null && authorRole && !admins.includes(user.Id)) {
-						let throwError = false
-
 						// Get the parent table object
-						let tableObject = await getTableObject(parent.uuid)
+						let retrieveTableObjectResponse =
+							await TableObjectsController.retrieveTableObject(
+								`
+								user {
+									id
+								}
+							`,
+								{ uuid: parent.uuid }
+							)
 
-						if (tableObject == null) {
-							throwError = true
+						if (Array.isArray(retrieveTableObjectResponse)) {
+							throwApiError(apiErrors.actionNotAllowed)
 						}
 
-						if (tableObject != null) {
-							// Check if the table object belongs to the user
-							if (user.Id != tableObject.userId) {
-								throwError = true
-							}
-						}
+						let tableObject = retrieveTableObjectResponse as TableObject
 
-						if (throwError) {
+						// Check if the table object belongs to the user
+						if (tableObject != null && user.Id != tableObject.User.Id) {
 							throwApiError(apiErrors.actionNotAllowed)
 						}
 					}

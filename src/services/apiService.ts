@@ -2,7 +2,6 @@ import axios, { AxiosRequestConfig } from "axios"
 import { request, gql } from "graphql-request"
 import {
 	List,
-	UserApiResponse,
 	TableObject,
 	TableObjectPrice,
 	Collection,
@@ -42,64 +41,6 @@ function getNewApiBaseUrl() {
 			return newApiBaseUrlProduction
 		default:
 			return newApiBaseUrlDevelopment
-	}
-}
-
-export async function createTableObject(
-	uuid: string,
-	tableId: number
-): Promise<TableObject> {
-	try {
-		let response = await axios({
-			method: "post",
-			url: `${getApiBaseUrl()}/v2/table_objects`,
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: process.env.DAV_AUTH
-			},
-			data: {
-				uuid,
-				table_id: tableId
-			}
-		})
-
-		return {
-			uuid: response.data.uuid,
-			userId: response.data.user_id,
-			tableId: response.data.table_id,
-			properties: {}
-		}
-	} catch (error) {
-		console.error(error.response?.data || error)
-		return null
-	}
-}
-
-export async function getTableObject(
-	uuid: string,
-	caching = true
-): Promise<TableObject> {
-	try {
-		let response = await axios({
-			method: "get",
-			url: `${getApiBaseUrl()}/v2/table_objects/${uuid}`,
-			headers: {
-				Authorization: process.env.DAV_AUTH
-			},
-			params: {
-				caching
-			}
-		})
-
-		return {
-			uuid: response.data.uuid,
-			userId: response.data.user_id,
-			tableId: response.data.table_id,
-			properties: response.data.properties
-		}
-	} catch (error) {
-		console.error(error.response?.data || error)
-		return null
 	}
 }
 
