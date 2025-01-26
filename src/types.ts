@@ -41,53 +41,6 @@ export interface ApiError {
 	status?: number
 }
 
-export interface UserApiResponse {
-	status: number
-	data?: User
-	errors?: { code: number; message: string }[]
-}
-
-//#region Platform models
-export interface TableObject {
-	uuid: string
-	userId: number
-	tableId: number
-	properties: { [key: string]: string | number | boolean }
-}
-
-export interface TableObjectPrice {
-	id: BigInt
-	tableObjectUuid: string
-	price: number
-	currency: Currency
-	type: TableObjectPriceType
-}
-
-export interface Collection {
-	id: number
-	tableId: number
-	name: string
-}
-
-export interface Purchase {
-	id: number
-	userId: number
-	uuid: string
-	paymentIntentId: string
-	providerName: string
-	providerImage: string
-	productName: string
-	productImage: string
-	price: number
-	currency: string
-	completed: boolean
-}
-
-export type Currency = "EUR"
-export type TableObjectPriceType = "PURCHASE" | "ORDER"
-export type OrderStatus = "CREATED" | "PREPARATION" | "SHIPPED"
-//#endregion
-
 //#region PocketLib models
 export interface PublisherLogo extends PublisherLogoModel {
 	url: string

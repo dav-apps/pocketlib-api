@@ -3,6 +3,7 @@ import {
 	ApiResponse,
 	TableObjectsController,
 	PurchasesController,
+	TableObjectUserAccessesController,
 	Plan,
 	TableObject,
 	Auth
@@ -11,7 +12,6 @@ import { ResolverContext, StoreBook, Book } from "../types.js"
 import { throwApiError, getLastReleaseOfStoreBook } from "../utils.js"
 import { apiErrors } from "../errors.js"
 import { appId, admins, bookTableId, bookFileTableId } from "../constants.js"
-import { addTableObject } from "../services/apiService.js"
 
 export async function createBook(
 	parent: any,
@@ -199,13 +199,17 @@ export async function createBook(
 	).data
 
 	// Create a TableObjectUserAccess for the file
-	let addTableObjectResponse = await addTableObject({
-		accessToken,
-		uuid: file.uuid,
-		tableAlias: bookFileTableId
-	})
+	let createTableObjectUserAccessResponse =
+		await TableObjectUserAccessesController.createTableObjectUserAccess(
+			`tableAlias`,
+			{
+				accessToken,
+				tableObjectUuid: file.uuid,
+				tableAlias: bookFileTableId
+			}
+		)
 
-	if (addTableObjectResponse == null) {
+	if (Array.isArray(createTableObjectUserAccessResponse)) {
 		throwApiError(apiErrors.unexpectedError)
 	}
 

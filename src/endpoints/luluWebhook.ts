@@ -1,7 +1,6 @@
 import { Express, Request, Response, json } from "express"
 import cors from "cors"
-import { Auth, OrdersController, OrderResource } from "dav-js"
-import { OrderStatus } from "../types.js"
+import { Auth, OrdersController, OrderResource, OrderStatus } from "dav-js"
 import { prisma } from "../../server.js"
 
 async function luluWebhook(req: Request, res: Response) {

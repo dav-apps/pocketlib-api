@@ -1,13 +1,3 @@
-export const apiBaseUrlDevelopment = "http://localhost:3111"
-export const apiBaseUrlStaging =
-	"https://dav-backend-tfpik.ondigitalocean.app/staging"
-export const apiBaseUrlProduction =
-	"https://dav-backend-tfpik.ondigitalocean.app"
-export const newApiBaseUrlDevelopment = "http://localhost:4000"
-export const newApiBaseUrlStaging =
-	"https://dav-api-staging-kb5tf.ondigitalocean.app"
-export const newApiBaseUrlProduction =
-	"https://dav-api-ax6gp.ondigitalocean.app"
 export const websiteBaseUrlDevelopment = "http://localhost:3001"
 export const websiteBaseUrlStaging =
 	"https://pocketlib-staging-oo6cn.ondigitalocean.app"
