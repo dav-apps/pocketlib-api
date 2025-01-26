@@ -1,8 +1,10 @@
 import {
 	TableObject,
 	TableObjectsController,
+	CheckoutSessionsController,
 	ShippingAddressesController,
 	Plan,
+	TableObjectPriceType,
 	Auth,
 	ShippingAddressResource
 } from "dav-js"
@@ -15,7 +17,6 @@ import {
 } from "../utils.js"
 import { apiErrors } from "../errors.js"
 import { vlbItemTableId } from "../constants.js"
-import * as apiService from "../services/apiService.js"
 import {
 	authenticate,
 	createPrintJobCostCalculation
@@ -137,9 +138,10 @@ export async function createCheckoutSessionForStoreBook(
 	}
 
 	let createCheckoutSessionResponse =
-		await apiService.createPaymentCheckoutSession(`url`, accessToken, {
+		await CheckoutSessionsController.createPaymentCheckoutSession(`url`, {
+			accessToken,
 			tableObjectUuid: storeBook.uuid,
-			type: "ORDER",
+			type: TableObjectPriceType.Order,
 			price,
 			currency: "EUR",
 			productName: storeBookRelease.title,
@@ -148,7 +150,11 @@ export async function createCheckoutSessionForStoreBook(
 			cancelUrl: args.cancelUrl
 		})
 
-	return { url: createCheckoutSessionResponse }
+	if (Array.isArray(createCheckoutSessionResponse)) {
+		throwApiError(apiErrors.unexpectedError)
+	} else {
+		return { url: createCheckoutSessionResponse.url }
+	}
 }
 
 export async function createCheckoutSessionForVlbItem(
@@ -244,9 +250,10 @@ export async function createCheckoutSessionForVlbItem(
 	}
 
 	let createCheckoutSessionResponse =
-		await apiService.createPaymentCheckoutSession(`url`, accessToken, {
+		await CheckoutSessionsController.createPaymentCheckoutSession(`url`, {
+			accessToken,
 			tableObjectUuid: vlbItem.uuid,
-			type: "ORDER",
+			type: TableObjectPriceType.Order,
 			price: Math.round(price.priceAmount * 100),
 			currency: "EUR",
 			productName: title.title,
@@ -255,6 +262,10 @@ export async function createCheckoutSessionForVlbItem(
 			successUrl: args.successUrl,
 			cancelUrl: args.cancelUrl
 		})
-
-	return { url: createCheckoutSessionResponse }
+	
+	if (Array.isArray(createCheckoutSessionResponse)) {
+		throwApiError(apiErrors.unexpectedError)
+	} else {
+		return { url: createCheckoutSessionResponse.url }
+	}
 }
