@@ -41,45 +41,6 @@ function getNewApiBaseUrl() {
 	}
 }
 
-export async function setTableObjectPrice(params: {
-	tableObjectUuid: string
-	price: number
-	currency: Currency
-	type: TableObjectPriceType
-}): Promise<TableObjectPrice> {
-	let response = await request<{ setTableObjectPrice: TableObjectPrice }>(
-		getNewApiBaseUrl(),
-		gql`
-			mutation SetTableObjectPrice(
-				$tableObjectUuid: String!
-				$price: Int!
-				$currency: Currency!
-				$type: TableObjectPriceType!
-			) {
-				setTableObjectPrice(
-					tableObjectUuid: $tableObjectUuid
-					price: $price
-					currency: $currency
-					type: $type
-				) {
-					price
-				}
-			}
-		`,
-		{
-			tableObjectUuid: params.tableObjectUuid,
-			price: params.price,
-			currency: params.currency,
-			type: params.type
-		},
-		{
-			Authorization: process.env.DAV_AUTH
-		}
-	)
-
-	return response.setTableObjectPrice
-}
-
 export async function addTableObjectToCollection(params: {
 	name: string
 	uuid: string

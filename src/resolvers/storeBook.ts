@@ -12,7 +12,13 @@ import {
 } from "@prisma/client"
 import * as crypto from "crypto"
 import validator from "validator"
-import { Auth, isSuccessStatusCode, TableObjectsController } from "dav-js"
+import {
+	Auth,
+	isSuccessStatusCode,
+	TableObjectsController,
+	TableObjectPricesController,
+	TableObjectPriceType
+} from "dav-js"
 import {
 	ResolverContext,
 	QueryResult,
@@ -32,7 +38,6 @@ import {
 } from "../utils.js"
 import { apiErrors, validationErrors } from "../errors.js"
 import { appId, admins, storeBookTableId } from "../constants.js"
-import { setTableObjectPrice } from "../services/apiService.js"
 import {
 	validateTitleLength,
 	validateDescriptionLength,
@@ -531,28 +536,38 @@ export async function createStoreBook(
 		throwApiError(apiErrors.unexpectedError)
 	}
 
-	// Set the price of the table object
-	let storeBookPrice = await setTableObjectPrice({
-		tableObjectUuid: storeBook.uuid,
-		price: args.price || 0,
-		currency: "EUR",
-		type: "PURCHASE"
+	const auth = new Auth({
+		apiKey: process.env.DAV_API_KEY,
+		secretKey: process.env.DAV_SECRET_KEY,
+		uuid: process.env.DAV_UUID
 	})
 
-	if (storeBookPrice == null) {
+	// Set the price of the table object
+	let setStoreBookPriceResponse =
+		await TableObjectPricesController.setTableObjectPrice(`price`, {
+			auth,
+			tableObjectUuid: storeBook.uuid,
+			price: args.price ?? 0,
+			currency: "EUR",
+			type: TableObjectPriceType.Purchase
+		})
+
+	if (Array.isArray(setStoreBookPriceResponse)) {
 		throwApiError(apiErrors.unexpectedError)
 	}
 
 	if (args.printPrice != null) {
 		// Set the price of the store book release
-		let storeBookPrice = await setTableObjectPrice({
-			tableObjectUuid: storeBook.uuid,
-			price: args.printPrice,
-			currency: "EUR",
-			type: "ORDER"
-		})
+		setStoreBookPriceResponse =
+			await TableObjectPricesController.setTableObjectPrice(`price`, {
+				auth,
+				tableObjectUuid: storeBook.uuid,
+				price: args.printPrice,
+				currency: "EUR",
+				type: TableObjectPriceType.Order
+			})
 
-		if (storeBookPrice == null) {
+		if (Array.isArray(setStoreBookPriceResponse)) {
 			throwApiError(apiErrors.unexpectedError)
 		}
 	}
@@ -801,30 +816,40 @@ export async function updateStoreBook(
 		data: newReleaseProperties
 	})
 
+	const auth = new Auth({
+		apiKey: process.env.DAV_API_KEY,
+		secretKey: process.env.DAV_SECRET_KEY,
+		uuid: process.env.DAV_UUID
+	})
+
 	if (args.price != null) {
 		// Set the store book price
-		let updateStoreBookPrice = await setTableObjectPrice({
-			tableObjectUuid: storeBook.uuid,
-			price: args.price,
-			currency: "EUR",
-			type: "PURCHASE"
-		})
+		let updateStoreBookPriceResponse =
+			await TableObjectPricesController.setTableObjectPrice(`price`, {
+				auth,
+				tableObjectUuid: storeBook.uuid,
+				price: args.price,
+				currency: "EUR",
+				type: TableObjectPriceType.Purchase
+			})
 
-		if (updateStoreBookPrice == null) {
+		if (Array.isArray(updateStoreBookPriceResponse)) {
 			throwApiError(apiErrors.unexpectedError)
 		}
 	}
 
 	if (args.printPrice != null) {
 		// Set the store book release print price
-		let updateStoreBookPrice = await setTableObjectPrice({
-			tableObjectUuid: storeBook.uuid,
-			price: args.printPrice,
-			currency: "EUR",
-			type: "ORDER"
-		})
+		let updateStoreBookPriceResponse =
+			await TableObjectPricesController.setTableObjectPrice(`price`, {
+				auth,
+				tableObjectUuid: storeBook.uuid,
+				price: args.printPrice,
+				currency: "EUR",
+				type: TableObjectPriceType.Order
+			})
 
-		if (updateStoreBookPrice == null) {
+		if (Array.isArray(updateStoreBookPriceResponse)) {
 			throwApiError(apiErrors.unexpectedError)
 		}
 	}
