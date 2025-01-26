@@ -11,10 +11,7 @@ import { ResolverContext, StoreBook, Book } from "../types.js"
 import { throwApiError, getLastReleaseOfStoreBook } from "../utils.js"
 import { apiErrors } from "../errors.js"
 import { appId, admins, bookTableId, bookFileTableId } from "../constants.js"
-import {
-	listPurchasesOfTableObject,
-	addTableObject
-} from "../services/apiService.js"
+import { addTableObject } from "../services/apiService.js"
 
 export async function createBook(
 	parent: any,
@@ -58,10 +55,26 @@ export async function createBook(
 	}
 
 	// Check if the user has purchased the table object
-	let purchases = await listPurchasesOfTableObject({
-		uuid: storeBook.uuid,
-		userId: user.Id
-	})
+	let retrieveTableObjectResponse =
+		await TableObjectsController.retrieveTableObject(
+			`
+				purchases {
+					items {
+						uuid
+					}
+				}
+			`,
+			{
+				accessToken: context.accessToken,
+				uuid: storeBook.uuid
+			}
+		)
+
+	if (Array.isArray(retrieveTableObjectResponse)) {
+		throwApiError(apiErrors.unexpectedError)
+	}
+
+	let purchases = (retrieveTableObjectResponse as TableObject).Purchases
 
 	if (purchases.length == 0) {
 		// Check if the user is an admin or the author of the store book

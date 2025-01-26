@@ -1,10 +1,9 @@
-import axios, { AxiosRequestConfig } from "axios"
+import axios from "axios"
 import { request, gql } from "graphql-request"
 import {
 	List,
 	TableObjectPrice,
 	Collection,
-	Purchase,
 	Order,
 	ShippingAddress,
 	Currency,
@@ -17,8 +16,7 @@ import {
 	apiBaseUrlProduction,
 	newApiBaseUrlDevelopment,
 	newApiBaseUrlStaging,
-	newApiBaseUrlProduction,
-	appId
+	newApiBaseUrlProduction
 } from "../constants.js"
 
 function getApiBaseUrl() {
@@ -40,49 +38,6 @@ function getNewApiBaseUrl() {
 			return newApiBaseUrlProduction
 		default:
 			return newApiBaseUrlDevelopment
-	}
-}
-
-export async function listPurchasesOfTableObject(params: {
-	uuid: string
-	userId?: number
-}): Promise<Purchase[]> {
-	try {
-		let requestParams: AxiosRequestConfig = {}
-
-		if (params.userId != null) requestParams["user_id"] = params.userId
-
-		let response = await axios({
-			method: "get",
-			url: `${getApiBaseUrl()}/v2/table_objects/${params.uuid}/purchases`,
-			headers: {
-				Authorization: process.env.DAV_AUTH
-			},
-			params: requestParams
-		})
-
-		let result: Purchase[] = []
-
-		for (let purchase of response.data.purchases) {
-			result.push({
-				id: purchase.id,
-				userId: purchase.user_id,
-				uuid: purchase.uuid,
-				paymentIntentId: purchase.payment_intent_id,
-				providerName: purchase.provider_name,
-				providerImage: purchase.provider_image,
-				productName: purchase.product_name,
-				productImage: purchase.product_image,
-				price: purchase.price,
-				currency: purchase.currency,
-				completed: purchase.completed
-			})
-		}
-
-		return result
-	} catch (error) {
-		console.error(error.response?.data || error)
-		return []
 	}
 }
 

@@ -32,10 +32,7 @@ import {
 } from "../utils.js"
 import { apiErrors, validationErrors } from "../errors.js"
 import { appId, admins, storeBookTableId } from "../constants.js"
-import {
-	listPurchasesOfTableObject,
-	setTableObjectPrice
-} from "../services/apiService.js"
+import { setTableObjectPrice } from "../services/apiService.js"
 import {
 	validateTitleLength,
 	validateDescriptionLength,
@@ -1085,12 +1082,25 @@ export async function purchased(
 		return null
 	}
 
-	let purchases = await listPurchasesOfTableObject({
-		uuid: storeBook.uuid,
-		userId: context.user.Id
-	})
+	let retrieveTableObjectResponse =
+		await TableObjectsController.retrieveTableObject(
+			`
+				purchases {
+					items {
+						uuid
+					}
+				}
+			`,
+			{
+				accessToken: context.accessToken,
+				uuid: storeBook.uuid
+			}
+		)
 
-	return purchases.length > 0
+	return (
+		!Array.isArray(retrieveTableObjectResponse) &&
+		retrieveTableObjectResponse.Purchases.length > 0
+	)
 }
 
 //#region Helper functions
