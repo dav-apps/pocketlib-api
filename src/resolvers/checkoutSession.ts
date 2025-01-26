@@ -1,4 +1,11 @@
-import { TableObject, TableObjectsController, Plan } from "dav-js"
+import {
+	TableObject,
+	TableObjectsController,
+	ShippingAddressesController,
+	Plan,
+	Auth,
+	ShippingAddressResource
+} from "dav-js"
 import { ResolverContext, StoreBook } from "../types.js"
 import {
 	throwApiError,
@@ -58,6 +65,12 @@ export async function createCheckoutSessionForStoreBook(
 			where: { id: storeBookRelease.printFileId }
 		})
 
+		const auth = new Auth({
+			apiKey: process.env.DAV_API_KEY,
+			secretKey: process.env.DAV_SECRET_KEY,
+			uuid: process.env.DAV_UUID
+		})
+
 		const listShippingAddressesQueryData = `
 			total
 			items {
@@ -73,18 +86,37 @@ export async function createCheckoutSessionForStoreBook(
 			}
 		`
 
-		let shippingAddresses = await apiService.listShippingAddresses(
-			listShippingAddressesQueryData,
-			{ userId: user.Id, limit: 1 }
-		)
-
-		if (shippingAddresses.total == 0) {
-			// Get the shipping address of the first user
-			shippingAddresses = await apiService.listShippingAddresses(
+		let listShippingAddressesResponse =
+			await ShippingAddressesController.listShippingAddresses(
 				listShippingAddressesQueryData,
-				{ userId: 1, limit: 1 }
+				{
+					auth,
+					userId: user.Id,
+					limit: 1
+				}
 			)
+
+		if (
+			listShippingAddressesResponse.length == 0 ||
+			typeof listShippingAddressesResponse[0] == "string"
+		) {
+			// Get the shipping address of the first user
+			listShippingAddressesResponse =
+				await ShippingAddressesController.listShippingAddresses(
+					listShippingAddressesQueryData,
+					{ auth, userId: 1, limit: 1 }
+				)
+
+			if (
+				listShippingAddressesResponse.length == 0 ||
+				typeof listShippingAddressesResponse[0] == "string"
+			) {
+				throwApiError(apiErrors.unexpectedError)
+			}
 		}
+
+		const shippingAddresses =
+			listShippingAddressesResponse as ShippingAddressResource[]
 
 		// Get the cost for printing the book & charge that instead of the given price
 		let luluAuthenticationResponse = await authenticate()
@@ -93,7 +125,7 @@ export async function createCheckoutSessionForStoreBook(
 			luluAuthenticationResponse.access_token,
 			{
 				pageCount: printFile.pages,
-				shippingAddress: shippingAddresses.items[0]
+				shippingAddress: shippingAddresses[0]
 			}
 		)
 

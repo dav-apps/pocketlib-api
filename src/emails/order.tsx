@@ -1,12 +1,15 @@
 import { Html, Body, Heading } from "@react-email/components"
 import { VlbItem } from "@prisma/client"
-import { Order } from "../types.js"
+import { OrderResource } from "dav-js"
 
 const pStyles = {
 	margin: "0"
 }
 
-export default function Email(props: { order: Order; vlbItem: VlbItem }) {
+export default function Email(props: {
+	order: OrderResource
+	vlbItem: VlbItem
+}) {
 	const shippingAddress = props.order?.shippingAddress
 	const price = props.order?.price
 	let formattedPrice = ""

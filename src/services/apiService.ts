@@ -1,6 +1,6 @@
 import axios from "axios"
 import { request, gql } from "graphql-request"
-import { List, Collection, Currency, TableObjectPriceType } from "../types.js"
+import { Collection, Currency, TableObjectPriceType } from "../types.js"
 import {
 	apiBaseUrlDevelopment,
 	apiBaseUrlStaging,
@@ -91,38 +91,6 @@ export async function addTableObject(params: {
 		console.error(error.response?.data || error)
 		return null
 	}
-}
-
-export async function listShippingAddresses(
-	queryData: string,
-	variables: { userId: number; limit?: number; offset?: number }
-): Promise<List<ShippingAddress>> {
-	let result = await request<{
-		listShippingAddresses: List<ShippingAddress>
-	}>(
-		getNewApiBaseUrl(),
-		gql`
-			query ListShippingAddresses(
-				$userId: Int!
-				$limit: Int
-				$offset: Int
-			) {
-				listShippingAddresses(
-					userId: $userId
-					limit: $limit
-					offset: $offset
-				) {
-					${queryData}
-				}
-			}
-		`,
-		variables,
-		{
-			Authorization: process.env.DAV_AUTH
-		}
-	)
-
-	return result.listShippingAddresses
 }
 
 export async function createPaymentCheckoutSession(

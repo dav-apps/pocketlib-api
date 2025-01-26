@@ -1,9 +1,9 @@
 import axios from "axios"
+import { ShippingAddressResource } from "dav-js"
 import {
 	luluApiBaseUrlStaging,
 	luluApiBaseUrlProduction
 } from "../constants.js"
-import { ShippingAddress } from "../types.js"
 
 function getApiBaseUrl() {
 	if (process.env.ENV == "production") {
@@ -49,7 +49,7 @@ export async function createPrintJob(
 		lineItemExternalId: string
 		coverSourceUrl: string
 		interiorSourceUrl: string
-		shippingAddress: ShippingAddress
+		shippingAddress: ShippingAddressResource
 	}
 ): Promise<{ id: number }> {
 	try {
@@ -108,7 +108,7 @@ export async function createReprintJob(
 		printJobExternalId: string
 		lineItemExternalId: string
 		printableId: string
-		shippingAddress: ShippingAddress
+		shippingAddress: ShippingAddressResource
 	}
 ): Promise<{ id: number }> {
 	try {
@@ -156,7 +156,7 @@ export async function createPrintJobCostCalculation(
 	accessToken: string,
 	params: {
 		pageCount: number
-		shippingAddress: ShippingAddress
+		shippingAddress: ShippingAddressResource
 	}
 ): Promise<{ total_cost_incl_tax: string }> {
 	try {
