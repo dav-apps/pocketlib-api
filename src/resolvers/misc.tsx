@@ -1,4 +1,4 @@
-import { retrieveOrder, updateOrder } from "../services/apiService.js"
+import { Auth, OrdersController, OrderResource } from "dav-js"
 import { getProducts } from "../services/vlbApiService.js"
 import OrderSentEmail from "../emails/orderSent.js"
 import {
@@ -6,8 +6,7 @@ import {
 	QueryResult,
 	List,
 	StoreBook,
-	VlbItem,
-	Order
+	VlbItem
 } from "../types.js"
 import {
 	findVlbItemByVlbGetProductsResponseDataItem,
@@ -61,7 +60,7 @@ export async function completeOrder(
 		orderUuid: string
 	},
 	context: ResolverContext
-): Promise<Order> {
+): Promise<OrderResource> {
 	// Check if the user is an admin
 	if (context.user == null) {
 		throwApiError(apiErrors.notAuthenticated)
@@ -69,7 +68,7 @@ export async function completeOrder(
 		throwApiError(apiErrors.actionNotAllowed)
 	}
 
-	let order = await retrieveOrder(
+	let retrieveOrderResponse = await OrdersController.retrieveOrder(
 		`
 			uuid
 			status
@@ -77,12 +76,21 @@ export async function completeOrder(
 				uuid
 			}
 		`,
-		{ uuid: args.orderUuid }
+		{
+			auth: new Auth({
+				apiKey: process.env.DAV_API_KEY,
+				secretKey: process.env.DAV_SECRET_KEY,
+				uuid: process.env.DAV_UUID
+			}),
+			uuid: args.orderUuid
+		}
 	)
 
-	if (order == null) {
+	if (Array.isArray(retrieveOrderResponse)) {
 		throwApiError(apiErrors.orderDoesNotExist)
 	}
+
+	const order = retrieveOrderResponse as OrderResource
 
 	if (order.status == "SHIPPED") {
 		return order
@@ -100,7 +108,7 @@ export async function completeOrder(
 	}
 
 	// Update the order with status = SHIPPED
-	let updatedOrder = await updateOrder(
+	let updateOrderResponse = await OrdersController.updateOrder(
 		`
 			uuid
 			price
@@ -112,14 +120,21 @@ export async function completeOrder(
 			}
 		`,
 		{
+			auth: new Auth({
+				apiKey: process.env.DAV_API_KEY,
+				secretKey: process.env.DAV_SECRET_KEY,
+				uuid: process.env.DAV_UUID
+			}),
 			uuid: args.orderUuid,
 			status: "SHIPPED"
 		}
 	)
 
-	if (updatedOrder == null) {
+	if (Array.isArray(updateOrderResponse)) {
 		throwApiError(apiErrors.unexpectedError)
 	}
+
+	const updatedOrder = updateOrderResponse as OrderResource
 
 	// Send order sent email
 	let name = updatedOrder.shippingAddress.name?.split(" ")[0]
@@ -131,7 +146,7 @@ export async function completeOrder(
 
 	context.resend.emails.send({
 		from: noReplyEmailAddress,
-		to: updatedOrder.user.Email,
+		to: updatedOrder.user.email,
 		subject: "Versandbestätigung - PocketLib",
 		react: <OrderSentEmail name={name} product={product} />
 	})

@@ -1,7 +1,7 @@
 import { Express, Request, Response, json } from "express"
 import cors from "cors"
+import { Auth, OrdersController, OrderResource } from "dav-js"
 import { OrderStatus } from "../types.js"
-import { retrieveOrder, updateOrder } from "../services/apiService.js"
 import { prisma } from "../../server.js"
 
 async function luluWebhook(req: Request, res: Response) {
@@ -9,21 +9,38 @@ async function luluWebhook(req: Request, res: Response) {
 	const status = req.body.data.status.name
 	const lineItems = req.body.data.line_items
 
+	const auth = new Auth({
+		apiKey: process.env.DAV_API_KEY,
+		secretKey: process.env.DAV_SECRET_KEY,
+		uuid: process.env.DAV_UUID
+	})
+
 	// Get the order
-	let order = await retrieveOrder(
+	let retrieveOrderResponse = await OrdersController.retrieveOrder(
 		`
 			uuid
 			status
 		`,
-		{ uuid: externalId }
+		{
+			auth,
+			uuid: externalId
+		}
 	)
+
+	if (Array.isArray(retrieveOrderResponse)) {
+		res.status(400).send()
+		return
+	}
+
+	const order = retrieveOrderResponse as OrderResource
 
 	// Update the order status
 	let newOrderStatus: OrderStatus =
 		status == "SHIPPED" ? "SHIPPED" : "PREPARATION"
 
 	if (newOrderStatus != order.status) {
-		order = await updateOrder(`uuid`, {
+		await OrdersController.updateOrder(`uuid`, {
+			auth,
 			uuid: order.uuid,
 			status: newOrderStatus
 		})

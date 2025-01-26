@@ -1,8 +1,8 @@
 import { Express, Request, Response, json } from "express"
 import cors from "cors"
 import Stripe from "stripe"
+import { Auth, OrdersController, OrderResource } from "dav-js"
 import { prisma, stripe, resend } from "../../server.js"
-import { retrieveOrder } from "../services/apiService.js"
 import OrderEmail from "../emails/order.js"
 import OrderConfirmationEmail from "../emails/orderConfirmation.js"
 import { getVlbItemCoverUrl } from "../utils.js"
@@ -19,7 +19,7 @@ async function davWebhook(req: Request, res: Response) {
 	if (req.body.type == "order.completed") {
 		const orderUuid = req.body.uuid
 
-		let order = await retrieveOrder(
+		let retrieveOrderResponse = await OrdersController.retrieveOrder(
 			`
 				paymentIntentId
 				user {
@@ -43,12 +43,21 @@ async function davWebhook(req: Request, res: Response) {
 					state
 				}
 			`,
-			{ uuid: orderUuid }
+			{
+				auth: new Auth({
+					apiKey: process.env.DAV_API_KEY,
+					secretKey: process.env.DAV_SECRET_KEY,
+					uuid: process.env.DAV_UUID
+				}),
+				uuid: orderUuid
+			}
 		)
 
-		if (order == null) {
-			return res.sendStatus(404)
+		if (Array.isArray(retrieveOrderResponse)) {
+			return res.sendStatus(400)
 		}
+
+		const order = retrieveOrderResponse as OrderResource
 
 		// Get the VlbItem from the database
 		let vlbItem = await prisma.vlbItem.findFirst({
@@ -89,7 +98,7 @@ async function davWebhook(req: Request, res: Response) {
 
 		resend.emails.send({
 			from: noReplyEmailAddress,
-			to: order.user.Email,
+			to: order.user.email,
 			subject: "Vielen Dank für deine Bestellung bei PocketLib",
 			react: (
 				<OrderConfirmationEmail

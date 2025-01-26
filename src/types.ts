@@ -83,30 +83,6 @@ export interface Purchase {
 	completed: boolean
 }
 
-export interface Order {
-	uuid: string
-	user: User
-	tableObject: TableObject
-	shippingAddress: ShippingAddress
-	paymentIntentId: string
-	price: number
-	currency: Currency
-	status: OrderStatus
-}
-
-export interface ShippingAddress {
-	uuid: string
-	name: string
-	email: string
-	phone: string
-	city: string
-	country: string
-	line1: string
-	line2: string
-	postalCode: string
-	state: string
-}
-
 export type Currency = "EUR"
 export type TableObjectPriceType = "PURCHASE" | "ORDER"
 export type OrderStatus = "CREATED" | "PREPARATION" | "SHIPPED"

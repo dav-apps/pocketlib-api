@@ -1,15 +1,6 @@
 import axios from "axios"
 import { request, gql } from "graphql-request"
-import {
-	List,
-	TableObjectPrice,
-	Collection,
-	Order,
-	ShippingAddress,
-	Currency,
-	TableObjectPriceType,
-	OrderStatus
-} from "../types.js"
+import { List, Collection, Currency, TableObjectPriceType } from "../types.js"
 import {
 	apiBaseUrlDevelopment,
 	apiBaseUrlStaging,
@@ -100,56 +91,6 @@ export async function addTableObject(params: {
 		console.error(error.response?.data || error)
 		return null
 	}
-}
-
-export async function retrieveOrder(
-	queryData: string,
-	variables: { uuid: string }
-): Promise<Order> {
-	let result = await request<{ retrieveOrder: Order }>(
-		getNewApiBaseUrl(),
-		gql`
-			query RetrieveOrder($uuid: String!) {
-				retrieveOrder(uuid: $uuid) {
-					${queryData}
-				}
-			}
-		`,
-		variables,
-		{
-			Authorization: process.env.DAV_AUTH
-		}
-	)
-
-	return result.retrieveOrder
-}
-
-export async function updateOrder(
-	queryData: string,
-	variables: { uuid: string; status?: OrderStatus }
-): Promise<Order> {
-	let result = await request<{ updateOrder: Order }>(
-		getNewApiBaseUrl(),
-		gql`
-			mutation UpdateOrder(
-				$uuid: String!
-				$status: OrderStatus
-			) {
-				updateOrder(
-					uuid: $uuid
-					status: $status
-				) {
-					${queryData}
-				}
-			}
-		`,
-		variables,
-		{
-			Authorization: process.env.DAV_AUTH
-		}
-	)
-
-	return result.updateOrder
 }
 
 export async function listShippingAddresses(
