@@ -9,7 +9,13 @@ import { PrismaClient } from "@prisma/client"
 import { createClient } from "redis"
 import Stripe from "stripe"
 import { Resend } from "resend"
-import { Dav, Environment, User, UsersController } from "dav-js"
+import {
+	Dav,
+	Environment,
+	User,
+	UsersController,
+	convertUserResourceToUser
+} from "dav-js"
 import { throwApiError } from "./src/utils.js"
 import { apiErrors } from "./src/errors.js"
 import { typeDefs } from "./src/typeDefs.js"
@@ -105,7 +111,7 @@ app.use(
 				)
 
 				if (!Array.isArray(userResponse)) {
-					user = userResponse
+					user = convertUserResourceToUser(userResponse)
 				} else {
 					throwApiError(apiErrors.sessionExpired)
 				}

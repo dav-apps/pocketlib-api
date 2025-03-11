@@ -4,8 +4,8 @@ import { PrismaClient } from "@prisma/client"
 import { getDocument } from "pdfjs-dist"
 import {
 	isSuccessStatusCode,
-	ApiResponse,
-	TableObjectsController
+	TableObjectsController,
+	TableObjectResource
 } from "dav-js"
 import { StoreBook } from "../types.js"
 import {
@@ -117,27 +117,27 @@ async function uploadStoreBookPrintFile(req: Request, res: Response) {
 
 				// Update the existing printFile table object
 				let updateFileResponse =
-					await TableObjectsController.UpdateTableObject({
+					await TableObjectsController.updateTableObject(`uuid`, {
 						accessToken,
 						uuid: printFileUuid,
+						ext: "pdf",
 						properties: {
-							ext: "pdf",
 							pages,
 							file_name: fileName
 						}
 					})
 
-				if (!isSuccessStatusCode(updateFileResponse.status)) {
+				if (Array.isArray(updateFileResponse)) {
 					throwEndpointError(apiErrors.unexpectedError)
 				}
 
 				// Upload the data
 				let setTableObjectFileResponse =
-					await TableObjectsController.SetTableObjectFile({
+					await TableObjectsController.uploadTableObjectFile({
 						accessToken,
 						uuid: printFileUuid,
 						data: req.body,
-						type: "application/pdf"
+						contentType: "application/pdf"
 					})
 
 				if (!isSuccessStatusCode(setTableObjectFileResponse.status)) {
@@ -177,28 +177,27 @@ async function createPrintFile(
 	fileName: string
 ) {
 	// Create the printFile table object
-	let createPrintFileResponse = await TableObjectsController.CreateTableObject(
+	let createPrintFileResponse = await TableObjectsController.createTableObject(
+		`uuid`,
 		{
 			accessToken,
 			tableId: storeBookPrintFileTableId,
 			file: true,
+			ext: "pdf",
 			properties: {
-				ext: "pdf",
 				pages,
 				file_name: fileName
 			}
 		}
 	)
 
-	if (!isSuccessStatusCode(createPrintFileResponse.status)) {
+	if (Array.isArray(createPrintFileResponse)) {
 		throwEndpointError(apiErrors.unexpectedError)
 	}
 
-	let createPrintFileResponseData = (
-		createPrintFileResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
-	).data
-
-	const printFileUuid = createPrintFileResponseData.tableObject.Uuid
+	const createPrintFileResponseData =
+		createPrintFileResponse as TableObjectResource
+	const printFileUuid = createPrintFileResponseData.uuid
 
 	// Create the printFile
 	await prisma.storeBookPrintFile.create({
@@ -215,11 +214,11 @@ async function createPrintFile(
 
 	// Upload the data
 	let setTableObjectFileResponse =
-		await TableObjectsController.SetTableObjectFile({
+		await TableObjectsController.uploadTableObjectFile({
 			accessToken,
 			uuid: printFileUuid,
 			data,
-			type: "application/pdf"
+			contentType: "application/pdf"
 		})
 
 	if (!isSuccessStatusCode(setTableObjectFileResponse.status)) {

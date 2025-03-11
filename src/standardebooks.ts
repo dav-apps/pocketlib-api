@@ -10,7 +10,7 @@ import {
 	User,
 	Auth,
 	Environment,
-	isSuccessStatusCode
+	convertUserResourceToUser
 } from "dav-js"
 import { createStoreBook, updateStoreBook } from "./resolvers/storeBook.js"
 import { publishStoreBookRelease } from "./resolvers/storeBookRelease.js"
@@ -103,7 +103,7 @@ let userResponse = await UsersController.retrieveUser(
 )
 
 if (!Array.isArray(userResponse)) {
-	user = userResponse
+	user = convertUserResourceToUser(userResponse)
 }
 
 let initialResponse = await axios({

@@ -14,8 +14,8 @@ import {
 import {
 	UsersController,
 	TableObjectsController,
-	isSuccessStatusCode,
-	User
+	User,
+	convertUserResourceToUser
 } from "dav-js"
 import {
 	RegexResult,
@@ -207,7 +207,7 @@ export async function createNewStoreBookRelease(
 	})
 
 	// Create the StoreBookRelease table object
-	await TableObjectsController.CreateTableObject({
+	await TableObjectsController.createTableObject(`uuid`, {
 		accessToken,
 		uuid,
 		tableId: storeBookReleaseTableId
@@ -254,7 +254,7 @@ export async function getUserForEndpoint(accessToken: string): Promise<User> {
 	)
 
 	if (!Array.isArray(userResponse)) {
-		return userResponse
+		return convertUserResourceToUser(userResponse)
 	} else if (userResponse.includes("SESSION_EXPIRED")) {
 		throwEndpointError(apiErrors.sessionExpired)
 	}

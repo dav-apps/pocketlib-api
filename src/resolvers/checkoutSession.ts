@@ -1,5 +1,5 @@
 import {
-	TableObject,
+	TableObjectResource,
 	TableObjectsController,
 	CheckoutSessionsController,
 	ShippingAddressesController,
@@ -8,7 +8,7 @@ import {
 	Auth,
 	ShippingAddressResource
 } from "dav-js"
-import { ResolverContext, StoreBook } from "../types.js"
+import { ResolverContext, List, StoreBook } from "../types.js"
 import {
 	throwApiError,
 	getLastReleaseOfStoreBook,
@@ -97,10 +97,7 @@ export async function createCheckoutSessionForStoreBook(
 				}
 			)
 
-		if (
-			listShippingAddressesResponse.length == 0 ||
-			typeof listShippingAddressesResponse[0] == "string"
-		) {
+		if (Array.isArray(listShippingAddressesResponse)) {
 			// Get the shipping address of the first user
 			listShippingAddressesResponse =
 				await ShippingAddressesController.listShippingAddresses(
@@ -108,16 +105,14 @@ export async function createCheckoutSessionForStoreBook(
 					{ auth, userId: 1, limit: 1 }
 				)
 
-			if (
-				listShippingAddressesResponse.length == 0 ||
-				typeof listShippingAddressesResponse[0] == "string"
-			) {
+			if (Array.isArray(listShippingAddressesResponse)) {
 				throwApiError(apiErrors.unexpectedError)
 			}
 		}
 
-		const shippingAddresses =
-			listShippingAddressesResponse as ShippingAddressResource[]
+		const shippingAddresses = (
+			listShippingAddressesResponse as List<ShippingAddressResource>
+		).items
 
 		// Get the cost for printing the book & charge that instead of the given price
 		let luluAuthenticationResponse = await authenticate()
@@ -206,7 +201,7 @@ export async function createCheckoutSessionForVlbItem(
 	}
 
 	// Check if the table object of the VlbItem already exists
-	let tableObject: TableObject = null
+	let tableObject: TableObjectResource = null
 	let retrieveTableObjectResponse =
 		await TableObjectsController.retrieveTableObject(`uuid`, {
 			uuid: vlbItem.uuid
@@ -262,7 +257,7 @@ export async function createCheckoutSessionForVlbItem(
 			successUrl: args.successUrl,
 			cancelUrl: args.cancelUrl
 		})
-	
+
 	if (Array.isArray(createCheckoutSessionResponse)) {
 		throwApiError(apiErrors.unexpectedError)
 	} else {

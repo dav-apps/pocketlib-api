@@ -14,7 +14,6 @@ import * as crypto from "crypto"
 import validator from "validator"
 import {
 	Auth,
-	isSuccessStatusCode,
 	TableObjectsController,
 	TableObjectPricesController,
 	TableObjectPriceType
@@ -524,7 +523,8 @@ export async function createStoreBook(
 	})
 
 	// Create the store book table object
-	let createStoreBookResponse = await TableObjectsController.CreateTableObject(
+	let createStoreBookResponse = await TableObjectsController.createTableObject(
+		`uuid`,
 		{
 			accessToken,
 			uuid: storeBook.uuid,
@@ -532,7 +532,7 @@ export async function createStoreBook(
 		}
 	)
 
-	if (!isSuccessStatusCode(createStoreBookResponse.status)) {
+	if (Array.isArray(createStoreBookResponse)) {
 		throwApiError(apiErrors.unexpectedError)
 	}
 
@@ -1095,7 +1095,7 @@ export async function inLibrary(
 		}
 	)
 
-	return response.length > 0 && typeof response[0] != "string"
+	return !Array.isArray(response) && response.items.length > 0
 }
 
 export async function purchased(
@@ -1124,7 +1124,7 @@ export async function purchased(
 
 	return (
 		!Array.isArray(retrieveTableObjectResponse) &&
-		retrieveTableObjectResponse.Purchases.length > 0
+		retrieveTableObjectResponse.purchases.items.length > 0
 	)
 }
 

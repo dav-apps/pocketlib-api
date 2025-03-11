@@ -3,8 +3,8 @@ import cors from "cors"
 import { Publisher } from "@prisma/client"
 import {
 	isSuccessStatusCode,
-	ApiResponse,
-	TableObjectsController
+	TableObjectsController,
+	TableObjectResource
 } from "dav-js"
 import {
 	handleEndpointError,
@@ -76,25 +76,23 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 		if (logo == null) {
 			// Create the logo table object
 			let createLogoResponse =
-				await TableObjectsController.CreateTableObject({
+				await TableObjectsController.createTableObject(`uuid`, {
 					accessToken,
 					tableId: publisherLogoTableId,
 					file: true,
+					ext,
 					properties: {
-						ext,
 						blurhash
 					}
 				})
 
-			if (!isSuccessStatusCode(createLogoResponse.status)) {
+			if (Array.isArray(createLogoResponse)) {
 				throwEndpointError(apiErrors.unexpectedError)
 			}
 
-			let createLogoResponseData = (
-				createLogoResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
-			).data
-
-			logoUuid = createLogoResponseData.tableObject.Uuid
+			const createLogoResponseData =
+				createLogoResponse as TableObjectResource
+			logoUuid = createLogoResponseData.uuid
 
 			// Create the logo
 			await prisma.publisherLogo.create({
@@ -114,16 +112,16 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 
 			// Update the logo table object
 			let updateLogoResponse =
-				await TableObjectsController.UpdateTableObject({
+				await TableObjectsController.updateTableObject(`uuid`, {
 					accessToken,
 					uuid: logoUuid,
+					ext,
 					properties: {
-						ext,
 						blurhash
 					}
 				})
 
-			if (!isSuccessStatusCode(updateLogoResponse.status)) {
+			if (Array.isArray(updateLogoResponse)) {
 				throwEndpointError(apiErrors.unexpectedError)
 			}
 
@@ -138,11 +136,11 @@ async function uploadPublisherLogo(req: Request, res: Response) {
 
 		// Upload the data
 		let setTableObjectFileResponse =
-			await TableObjectsController.SetTableObjectFile({
+			await TableObjectsController.uploadTableObjectFile({
 				accessToken,
 				uuid: logoUuid,
 				data: req.body,
-				type: contentType
+				contentType
 			})
 
 		if (!isSuccessStatusCode(setTableObjectFileResponse.status)) {

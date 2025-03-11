@@ -3,8 +3,8 @@ import cors from "cors"
 import { PrismaClient } from "@prisma/client"
 import {
 	isSuccessStatusCode,
-	ApiResponse,
-	TableObjectsController
+	TableObjectsController,
+	TableObjectResource
 } from "dav-js"
 import { StoreBook } from "../types.js"
 import {
@@ -120,26 +120,26 @@ export async function uploadStoreBookFile(req: Request, res: Response) {
 
 				// Update the existing file table object
 				let updateFileResponse =
-					await TableObjectsController.UpdateTableObject({
+					await TableObjectsController.updateTableObject(`uuid`, {
 						accessToken,
 						uuid: fileUuid,
+						ext,
 						properties: {
-							ext,
 							file_name: fileName
 						}
 					})
 
-				if (!isSuccessStatusCode(updateFileResponse.status)) {
+				if (Array.isArray(updateFileResponse)) {
 					throwEndpointError(apiErrors.unexpectedError)
 				}
 
 				// Upload the data
 				let setTableObjectFileResponse =
-					await TableObjectsController.SetTableObjectFile({
+					await TableObjectsController.uploadTableObjectFile({
 						accessToken,
 						uuid: fileUuid,
 						data: req.body,
-						type: contentType
+						contentType
 					})
 
 				if (!isSuccessStatusCode(setTableObjectFileResponse.status)) {
@@ -180,25 +180,25 @@ async function createFile(
 	fileName: string
 ) {
 	// Create the file table object
-	let createFileResponse = await TableObjectsController.CreateTableObject({
-		accessToken,
-		tableId: storeBookFileTableId,
-		file: true,
-		properties: {
+	let createFileResponse = await TableObjectsController.createTableObject(
+		`uuid`,
+		{
+			accessToken,
+			tableId: storeBookFileTableId,
+			file: true,
 			ext,
-			file_name: fileName
+			properties: {
+				file_name: fileName
+			}
 		}
-	})
+	)
 
-	if (!isSuccessStatusCode(createFileResponse.status)) {
+	if (Array.isArray(createFileResponse)) {
 		throwEndpointError(apiErrors.unexpectedError)
 	}
 
-	let createFileResponseData = (
-		createFileResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
-	).data
-
-	const fileUuid = createFileResponseData.tableObject.Uuid
+	const createFileResponseData = createFileResponse as TableObjectResource
+	const fileUuid = createFileResponseData.uuid
 
 	// Create the file
 	await prisma.storeBookFile.create({
@@ -214,11 +214,11 @@ async function createFile(
 
 	// Upload the data
 	let setTableObjectFileResponse =
-		await TableObjectsController.SetTableObjectFile({
+		await TableObjectsController.uploadTableObjectFile({
 			accessToken,
 			uuid: fileUuid,
 			data,
-			type: contentType
+			contentType
 		})
 
 	if (!isSuccessStatusCode(setTableObjectFileResponse.status)) {

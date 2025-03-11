@@ -3,8 +3,8 @@ import cors from "cors"
 import { Author } from "@prisma/client"
 import {
 	isSuccessStatusCode,
-	ApiResponse,
-	TableObjectsController
+	TableObjectsController,
+	TableObjectResource
 } from "dav-js"
 import {
 	handleEndpointError,
@@ -76,25 +76,23 @@ async function uploadAuthorProfileImage(req: Request, res: Response) {
 		if (profileImage == null) {
 			// Create the profile image table object
 			let createProfileImageResponse =
-				await TableObjectsController.CreateTableObject({
+				await TableObjectsController.createTableObject(`uuid`, {
 					accessToken,
 					tableId: authorProfileImageTableId,
 					file: true,
+					ext,
 					properties: {
-						ext,
 						blurhash
 					}
 				})
 
-			if (!isSuccessStatusCode(createProfileImageResponse.status)) {
+			if (Array.isArray(createProfileImageResponse)) {
 				throwEndpointError(apiErrors.unexpectedError)
 			}
 
-			let createProfileImageResponseData = (
-				createProfileImageResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
-			).data
-
-			profileImageUuid = createProfileImageResponseData.tableObject.Uuid
+			const createProfileImageResponseData =
+				createProfileImageResponse as TableObjectResource
+			profileImageUuid = createProfileImageResponseData.uuid
 
 			// Create the profile image
 			await prisma.authorProfileImage.create({
@@ -114,16 +112,16 @@ async function uploadAuthorProfileImage(req: Request, res: Response) {
 
 			// Update the profile image table object
 			let updateProfileImageResponse =
-				await TableObjectsController.UpdateTableObject({
+				await TableObjectsController.updateTableObject(`uuid`, {
 					accessToken,
 					uuid: profileImageUuid,
+					ext,
 					properties: {
-						ext,
 						blurhash
 					}
 				})
 
-			if (!isSuccessStatusCode(updateProfileImageResponse.status)) {
+			if (Array.isArray(updateProfileImageResponse)) {
 				throwEndpointError(apiErrors.unexpectedError)
 			}
 
@@ -138,11 +136,11 @@ async function uploadAuthorProfileImage(req: Request, res: Response) {
 
 		// Upload the data
 		let setTableObjectFileResponse =
-			await TableObjectsController.SetTableObjectFile({
+			await TableObjectsController.uploadTableObjectFile({
 				accessToken,
 				uuid: profileImageUuid,
 				data: req.body,
-				type: contentType
+				contentType
 			})
 
 		if (!isSuccessStatusCode(setTableObjectFileResponse.status)) {

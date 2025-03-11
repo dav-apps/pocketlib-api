@@ -1,12 +1,11 @@
 import {
-	isSuccessStatusCode,
-	ApiResponse,
 	TableObjectsController,
 	PurchasesController,
 	TableObjectUserAccessesController,
 	Plan,
-	TableObject,
-	Auth
+	Auth,
+	List,
+	TableObjectResource
 } from "dav-js"
 import { ResolverContext, StoreBook, Book } from "../types.js"
 import { throwApiError, getLastReleaseOfStoreBook } from "../utils.js"
@@ -74,7 +73,8 @@ export async function createBook(
 		throwApiError(apiErrors.unexpectedError)
 	}
 
-	let purchases = (retrieveTableObjectResponse as TableObject).Purchases
+	let purchases = (retrieveTableObjectResponse as TableObjectResource)
+		.purchases.items
 
 	if (purchases.length == 0) {
 		// Check if the user is an admin or the author of the store book
@@ -140,9 +140,12 @@ export async function createBook(
 			}
 		)
 
+	let listTableObjectsResponseData =
+		listTableObjectsResponse as List<TableObjectResource>
+
 	if (
-		listTableObjectsResponse.length > 0 &&
-		typeof listTableObjectsResponse[0] != "string"
+		!Array.isArray(listTableObjectsResponseData) &&
+		listTableObjectsResponseData.items.length > 0
 	) {
 		throwApiError(apiErrors.storeBookAlreadyInLibrary)
 	}
@@ -171,32 +174,33 @@ export async function createBook(
 	}
 
 	let storeBookFileTableObject =
-		retrieveStoreBookFileTableObjectResponse as TableObject
-	let bookType = storeBookFileTableObject.Properties.type.value as string
+		retrieveStoreBookFileTableObjectResponse as TableObjectResource
+	let bookType = storeBookFileTableObject.properties.type as string
 
 	// Create the book
 	let bookProperties = {
 		store_book: storeBook.uuid,
-		file: storeBookFileTableObject.Uuid
+		file: storeBookFileTableObject.uuid
 	}
 
 	if (bookType == "application/pdf") {
 		bookProperties["title"] = storeBookRelease.title
 	}
 
-	let createBookResponse = await TableObjectsController.CreateTableObject({
-		accessToken,
-		tableId: bookTableId,
-		properties: bookProperties
-	})
+	let createBookResponse = await TableObjectsController.createTableObject(
+		`uuid`,
+		{
+			accessToken,
+			tableId: bookTableId,
+			properties: bookProperties
+		}
+	)
 
-	if (!isSuccessStatusCode(createBookResponse.status)) {
+	if (Array.isArray(createBookResponse)) {
 		throwApiError(apiErrors.unexpectedError)
 	}
 
-	let createBookResponseData = (
-		createBookResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
-	).data
+	let createBookResponseData = createBookResponse as TableObjectResource
 
 	// Create a TableObjectUserAccess for the file
 	let createTableObjectUserAccessResponse =
@@ -214,7 +218,7 @@ export async function createBook(
 	}
 
 	return {
-		uuid: createBookResponseData.tableObject.Uuid,
+		uuid: createBookResponseData.uuid,
 		storeBook: storeBook.uuid,
 		file: file.uuid
 	}

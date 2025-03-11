@@ -1,6 +1,6 @@
 import { defaultFieldResolver } from "graphql"
 import { mapSchema, getDirective, MapperKind } from "@graphql-tools/utils"
-import { User, TableObjectsController, TableObject } from "dav-js"
+import { User, TableObjectsController, TableObjectResource } from "dav-js"
 import { throwApiError } from "./utils.js"
 import { apiErrors } from "./errors.js"
 import { admins } from "./constants.js"
@@ -44,10 +44,11 @@ export const authDirectiveTransformer = (schema, directiveName) => {
 							throwApiError(apiErrors.actionNotAllowed)
 						}
 
-						let tableObject = retrieveTableObjectResponse as TableObject
+						let tableObject =
+							retrieveTableObjectResponse as TableObjectResource
 
 						// Check if the table object belongs to the user
-						if (tableObject != null && user.Id != tableObject.User.Id) {
+						if (tableObject != null && user.Id != tableObject.user.id) {
 							throwApiError(apiErrors.actionNotAllowed)
 						}
 					}

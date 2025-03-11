@@ -3,8 +3,8 @@ import cors from "cors"
 import { PrismaClient } from "@prisma/client"
 import {
 	isSuccessStatusCode,
-	ApiResponse,
-	TableObjectsController
+	TableObjectsController,
+	TableObjectResource
 } from "dav-js"
 import { StoreBook } from "../types.js"
 import {
@@ -127,27 +127,27 @@ export async function uploadStoreBookCover(req: Request, res: Response) {
 
 				// Update the existing cover table object
 				let updateCoverResponse =
-					await TableObjectsController.UpdateTableObject({
+					await TableObjectsController.updateTableObject(`uuid`, {
 						accessToken,
 						uuid: coverUuid,
+						ext,
 						properties: {
-							ext,
 							blurhash: encodeResult.blurhash,
 							aspect_ratio: aspectRatio
 						}
 					})
 
-				if (!isSuccessStatusCode(updateCoverResponse.status)) {
+				if (Array.isArray(updateCoverResponse)) {
 					throwEndpointError(apiErrors.unexpectedError)
 				}
 
 				// Upload the data
 				let setTableObjectFileResponse =
-					await TableObjectsController.SetTableObjectFile({
+					await TableObjectsController.uploadTableObjectFile({
 						accessToken,
 						uuid: coverUuid,
 						data: req.body,
-						type: contentType
+						contentType
 					})
 
 				if (!isSuccessStatusCode(setTableObjectFileResponse.status)) {
@@ -191,26 +191,26 @@ async function createCover(
 	aspectRatio: string
 ) {
 	// Create the cover table object
-	let createCoverResponse = await TableObjectsController.CreateTableObject({
-		accessToken,
-		tableId: storeBookCoverTableId,
-		file: true,
-		properties: {
+	let createCoverResponse = await TableObjectsController.createTableObject(
+		`uuid`,
+		{
+			accessToken,
+			tableId: storeBookCoverTableId,
+			file: true,
 			ext,
-			blurhash,
-			aspect_ratio: aspectRatio
+			properties: {
+				blurhash,
+				aspect_ratio: aspectRatio
+			}
 		}
-	})
+	)
 
-	if (!isSuccessStatusCode(createCoverResponse.status)) {
+	if (Array.isArray(createCoverResponse)) {
 		throwEndpointError(apiErrors.unexpectedError)
 	}
 
-	let createCoverResponseData = (
-		createCoverResponse as ApiResponse<TableObjectsController.TableObjectResponseData>
-	).data
-
-	const coverUuid = createCoverResponseData.tableObject.Uuid
+	const createCoverResponseData = createCoverResponse as TableObjectResource
+	const coverUuid = createCoverResponseData.uuid
 
 	// Create the cover
 	await prisma.storeBookCover.create({
@@ -227,11 +227,11 @@ async function createCover(
 
 	// Upload the data
 	let setTableObjectFileResponse =
-		await TableObjectsController.SetTableObjectFile({
+		await TableObjectsController.uploadTableObjectFile({
 			accessToken,
 			uuid: coverUuid,
 			data,
-			type: contentType
+			contentType
 		})
 
 	if (!isSuccessStatusCode(setTableObjectFileResponse.status)) {
