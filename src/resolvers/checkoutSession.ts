@@ -204,16 +204,18 @@ export async function createCheckoutSessionForVlbItem(
 	let tableObject: TableObjectResource = null
 	let retrieveTableObjectResponse =
 		await TableObjectsController.retrieveTableObject(`uuid`, {
+			accessToken,
 			uuid: vlbItem.uuid
 		})
 
 	if (
-		!Array.isArray(retrieveTableObjectResponse) &&
-		retrieveTableObjectResponse == null
+		retrieveTableObjectResponse == null ||
+		Array.isArray(retrieveTableObjectResponse)
 	) {
 		// Create the table object
 		let createTableObjectResponse =
 			await TableObjectsController.createTableObject(`uuid`, {
+				accessToken,
 				uuid: vlbItem.uuid,
 				tableId: vlbItemTableId
 			})
@@ -221,6 +223,8 @@ export async function createCheckoutSessionForVlbItem(
 		if (!Array.isArray(createTableObjectResponse)) {
 			tableObject = createTableObjectResponse
 		}
+	} else {
+		tableObject = retrieveTableObjectResponse
 	}
 
 	if (tableObject == null) {
