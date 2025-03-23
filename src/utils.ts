@@ -115,8 +115,7 @@ export async function getLastReleaseOfStoreBook(
 		let release = await prisma.storeBookRelease.findFirst({
 			where: {
 				storeBookId: storeBookId,
-				status: "published",
-				publishedAt: { not: null }
+				status: "published"
 			},
 			orderBy: {
 				publishedAt: "desc"
