@@ -5,7 +5,8 @@ import {
 	Plan,
 	Auth,
 	List,
-	TableObjectResource
+	TableObjectResource,
+	PurchaseResource
 } from "dav-js"
 import { ResolverContext, StoreBook, Book } from "../types.js"
 import { throwApiError, getLastReleaseOfStoreBook } from "../utils.js"
@@ -54,27 +55,19 @@ export async function createBook(
 	}
 
 	// Check if the user has purchased the table object
-	let retrieveTableObjectResponse =
-		await TableObjectsController.retrieveTableObject(
-			`
-				purchases {
-					items {
-						uuid
-					}
-				}
-			`,
-			{
-				accessToken: context.accessToken,
-				uuid: storeBook.uuid
-			}
-		)
+	let listPurchasesOfTableObjectResponse =
+		await PurchasesController.listPurchasesOfTableObject(`items { uuid }`, {
+			accessToken: context.accessToken,
+			uuid: storeBook.uuid
+		})
 
-	if (Array.isArray(retrieveTableObjectResponse)) {
+	if (Array.isArray(listPurchasesOfTableObjectResponse)) {
 		throwApiError(apiErrors.unexpectedError)
 	}
 
-	let purchases = (retrieveTableObjectResponse as TableObjectResource)
-		.purchases.items
+	let purchases = (
+		listPurchasesOfTableObjectResponse as List<PurchaseResource>
+	).items
 
 	if (purchases.length == 0) {
 		// Check if the user is an admin or the author of the store book
@@ -159,6 +152,21 @@ export async function createBook(
 		throwApiError(apiErrors.unexpectedError)
 	}
 
+	// Create a TableObjectUserAccess for the file
+	let createTableObjectUserAccessResponse =
+		await TableObjectUserAccessesController.createTableObjectUserAccess(
+			`tableAlias`,
+			{
+				accessToken,
+				tableObjectUuid: file.uuid,
+				tableAlias: bookFileTableId
+			}
+		)
+
+	if (Array.isArray(createTableObjectUserAccessResponse)) {
+		throwApiError(apiErrors.unexpectedError)
+	}
+
 	// Get the store book file table object
 	let retrieveStoreBookFileTableObjectResponse =
 		await TableObjectsController.retrieveTableObject(
@@ -166,7 +174,10 @@ export async function createBook(
 				uuid
 				properties
 			`,
-			{ uuid: file.uuid }
+			{
+				accessToken,
+				uuid: file.uuid
+			}
 		)
 
 	if (Array.isArray(retrieveStoreBookFileTableObjectResponse)) {
@@ -201,21 +212,6 @@ export async function createBook(
 	}
 
 	let createBookResponseData = createBookResponse as TableObjectResource
-
-	// Create a TableObjectUserAccess for the file
-	let createTableObjectUserAccessResponse =
-		await TableObjectUserAccessesController.createTableObjectUserAccess(
-			`tableAlias`,
-			{
-				accessToken,
-				tableObjectUuid: file.uuid,
-				tableAlias: bookFileTableId
-			}
-		)
-
-	if (Array.isArray(createTableObjectUserAccessResponse)) {
-		throwApiError(apiErrors.unexpectedError)
-	}
 
 	return {
 		uuid: createBookResponseData.uuid,
