@@ -25,7 +25,7 @@ async function generateSitemaps(prisma: PrismaClient) {
 	let currentSitemap = ""
 	let urlCount = 2
 
-	const maxUrlsPerSitemap = 2000
+	const maxUrlsPerSitemap = 50000
 	const websiteUrl = getWebsiteBaseUrl()
 
 	// Base urls
