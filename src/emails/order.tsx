@@ -23,6 +23,7 @@ export default function Email(props: {
 			<Body>
 				<p style={pStyles}>Order UUID: {props.order?.uuid}</p>
 				<p style={pStyles}>VlbItem UUID: {props.vlbItem?.uuid}</p>
+				<p style={pStyles}>MVB ID: {props.vlbItem?.mvbId}</p>
 				<p style={pStyles}>Title: {props.vlbItem?.title}</p>
 				<p style={pStyles}>Price: {formattedPrice}</p>
 

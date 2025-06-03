@@ -21,6 +21,7 @@ async function davWebhook(req: Request, res: Response) {
 
 		let retrieveOrderResponse = await OrdersController.retrieveOrder(
 			`
+				uuid
 				paymentIntentId
 				user {
 					id
