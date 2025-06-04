@@ -20,7 +20,7 @@ export default function Email(props: {
 
 	return (
 		<Html>
-			<Body>
+			<Body style={{ fontFamily: "Roboto, Arial, sans-serif" }}>
 				<p style={pStyles}>Order UUID: {props.order?.uuid}</p>
 				<p style={pStyles}>VlbItem UUID: {props.vlbItem?.uuid}</p>
 				<p style={pStyles}>MVB ID: {props.vlbItem?.mvbId}</p>

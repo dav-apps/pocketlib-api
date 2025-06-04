@@ -20,7 +20,7 @@ export default function Email(props: {
 
 	return (
 		<Html>
-			<Body>
+			<Body style={{ fontFamily: "Roboto, Arial, sans-serif" }}>
 				<Logo />
 
 				<Text style={{ marginBottom: "8px" }}>Hi {name},</Text>

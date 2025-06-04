@@ -152,7 +152,10 @@ export const typeDefs = `#graphql
 			cancelUrl: String!
 		): CheckoutSession
 		createBook(storeBook: String!): Book
-		completeOrder(orderUuid: String!): Order
+		completeOrder(
+			orderUuid: String!
+			dhlTrackingCode: String
+		): Order
 	}
 
 	type Publisher {

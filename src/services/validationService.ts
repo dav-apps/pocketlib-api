@@ -1,5 +1,10 @@
 import { roundUp, convertPtToInch } from "../utils.js"
-import { languages, urlRegex, isbnRegex } from "../constants.js"
+import {
+	languages,
+	urlRegex,
+	isbnRegex,
+	dhlTrackingCodeRegex
+} from "../constants.js"
 import { apiErrors, validationErrors } from "../errors.js"
 
 //#region Endpoint validations
@@ -177,6 +182,15 @@ export function validateStoreBookPrintFilePageSize(
 
 	if (widthInch != 5.5 || heightInch != 8.5) {
 		return validationErrors.storeBookPrintFilePageSizeInvalid
+	}
+}
+
+export function validateDhlTrackingCode(dhlTrackingCode: string) {
+	if (
+		dhlTrackingCode.length > 0 &&
+		!dhlTrackingCodeRegex.test(dhlTrackingCode)
+	) {
+		return validationErrors.dhlTrackingCodeInvalid
 	}
 }
 //#endregion

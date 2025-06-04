@@ -11,10 +11,12 @@ import {
 import {
 	findVlbItemByVlbGetProductsResponseDataItem,
 	throwApiError,
-	getVlbItemCoverUrl
+	getVlbItemCoverUrl,
+	throwValidationError
 } from "../utils.js"
-import { apiErrors } from "../errors.js"
+import { apiErrors, validationErrors } from "../errors.js"
 import { admins, noReplyEmailAddress } from "../constants.js"
+import { validateDhlTrackingCode } from "../services/validationService.js"
 
 export async function search(
 	parent: any,
@@ -58,6 +60,7 @@ export async function completeOrder(
 	parent: any,
 	args: {
 		orderUuid: string
+		dhlTrackingCode?: string
 	},
 	context: ResolverContext
 ): Promise<OrderResource> {
@@ -98,6 +101,13 @@ export async function completeOrder(
 		throwApiError(apiErrors.orderHasIncorrectState)
 	}
 
+	// Validate the dhlTrackingCode
+	if (args.dhlTrackingCode != null) {
+		throwValidationError(
+			validateDhlTrackingCode(validationErrors.dhlTrackingCodeInvalid)
+		)
+	}
+
 	// Get the VlbItem from the database
 	let vlbItem = await context.prisma.vlbItem.findFirst({
 		where: { uuid: order.tableObject.uuid }
@@ -126,7 +136,8 @@ export async function completeOrder(
 				uuid: process.env.DAV_UUID
 			}),
 			uuid: args.orderUuid,
-			status: "SHIPPED"
+			status: "SHIPPED",
+			dhlTrackingCode: args.dhlTrackingCode,
 		}
 	)
 

@@ -40,4 +40,5 @@ export const urlRegex =
 	/^(https?:\/\/)?(([\w.-]+(\.[\w.-]{2,4})+)|(localhost:[0-9]{3,4}))/
 export const isbnRegex = /^([0-9]{10}|[0-9]{13})$/
 export const filenameRegex = /filename=\"(?<filename>.*)\"/
+export const dhlTrackingCodeRegex = /^[0-9]{14,22}$/
 //#endregion
