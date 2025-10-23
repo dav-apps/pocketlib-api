@@ -30,15 +30,19 @@ export const vlbItemTableId = 46
 //#endregion
 
 //#region Regexes
-export const facebookUsernameRegex =
+export const facebookUsernameRegex = new RegExp(
 	/^((https?:\/\/)?(www.)?facebook.com\/)?@?(?<username>[a-zA-Z0-9\.]{5,})(\/)?$/
-export const instagramUsernameRegex =
+)
+export const instagramUsernameRegex = new RegExp(
 	/^((https?:\/\/)?(www.)?instagram.com\/)?@?(?<username>[a-zA-Z0-9\._\-]{3,})(\/)?$/
-export const twitterUsernameRegex =
+)
+export const twitterUsernameRegex = new RegExp(
 	/^((https?:\/\/)?(www.)?twitter.com\/)?@?(?<username>[a-zA-Z0-9\._\-]{3,})(\/)?$/
-export const urlRegex =
+)
+export const urlRegex = new RegExp(
 	/^(https?:\/\/)?(([\w.-]+(\.[\w.-]{2,4})+)|(localhost:[0-9]{3,4}))/
-export const isbnRegex = /^([0-9]{10}|[0-9]{13})$/
-export const filenameRegex = /filename=\"(?<filename>.*)\"/
-export const dhlTrackingCodeRegex = /^[0-9]{14,22}$/
+)
+export const isbnRegex = new RegExp(/^([0-9]{10}|[0-9]{13})$/)
+export const filenameRegex = new RegExp(/filename=\"(?<filename>.*)\"/)
+export const dhlTrackingCodeRegex = new RegExp(/^[0-9]{14,22}$/)
 //#endregion
