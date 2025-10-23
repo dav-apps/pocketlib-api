@@ -17,7 +17,7 @@ export default function Email(props: {
 	const coverUrl =
 		props.product?.coverUrl ??
 		"https://dav-misc.fra1.cdn.digitaloceanspaces.com/pocketlib-book-placeholder.png"
-	const dhlTrackingCode = props.product?.dhlTrackingCode ?? "123456789"
+	const dhlTrackingCode = props.product?.dhlTrackingCode
 
 	return (
 		<Html>

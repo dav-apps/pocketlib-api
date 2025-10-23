@@ -103,9 +103,7 @@ export async function completeOrder(
 
 	// Validate the dhlTrackingCode
 	if (args.dhlTrackingCode != null) {
-		throwValidationError(
-			validateDhlTrackingCode(validationErrors.dhlTrackingCodeInvalid)
-		)
+		throwValidationError(validateDhlTrackingCode(args.dhlTrackingCode))
 	}
 
 	// Get the VlbItem from the database
@@ -137,7 +135,7 @@ export async function completeOrder(
 			}),
 			uuid: args.orderUuid,
 			status: "SHIPPED",
-			dhlTrackingCode: args.dhlTrackingCode,
+			dhlTrackingCode: args.dhlTrackingCode
 		}
 	)
 
@@ -152,7 +150,8 @@ export async function completeOrder(
 	let product = {
 		title: vlbItem.title,
 		price: `${(updatedOrder.price / 100).toFixed(2)} €`.replace(".", ","),
-		coverUrl: getVlbItemCoverUrl(vlbItem.mvbId)
+		coverUrl: getVlbItemCoverUrl(vlbItem.mvbId),
+		dhlTrackingCode: args.dhlTrackingCode
 	}
 
 	context.resend.emails.send({
