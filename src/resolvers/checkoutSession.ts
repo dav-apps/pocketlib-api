@@ -244,7 +244,7 @@ export async function createCheckoutSessionForVlbItem(
 		// Add shipping rate
 		shippingRate = {
 			name: "Standard-Versand",
-			price: 250
+			price: 450
 		}
 	}
 
