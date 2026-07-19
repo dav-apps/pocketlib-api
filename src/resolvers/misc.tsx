@@ -14,7 +14,7 @@ import {
 	getVlbItemCoverUrl,
 	throwValidationError
 } from "../utils.js"
-import { apiErrors, validationErrors } from "../errors.js"
+import { apiErrors } from "../errors.js"
 import { admins, noReplyEmailAddress } from "../constants.js"
 import { validateDhlTrackingCode } from "../services/validationService.js"
 
