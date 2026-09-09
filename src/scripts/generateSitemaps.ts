@@ -1,3 +1,4 @@
+import "dotenv/config"
 import fs from "fs"
 import { PrismaClient } from "@prisma/client"
 import {
@@ -125,6 +126,7 @@ async function generateSitemaps(prisma: PrismaClient) {
 	sitemaps.push(currentSitemap)
 
 	// Write the sitemaps to the file system
+	fs.mkdirSync("./sitemaps")
 	let sitemapUrls: string[] = []
 
 	for (let i = 0; i < sitemaps.length; i++) {
