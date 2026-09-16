@@ -30,7 +30,13 @@ noch nicht. Vor einem Wechsel auf 17 müssen beide Pakete diese Version unterst�
 PDF.js 6 wird über den Node-kompatiblen Legacy-Build geladen. `withPdfDocument`
 verwendet die neue `{ data }`-/`{ url }`-API und gibt den Ladevorgang auch nach
 Parser- oder Validierungsfehlern frei. Die PDF.js-DOM-Typen benötigen TypeScript
-5.9; die Laufzeit wird weiterhin mit Node.js 24 getestet.
+mindestens 5.9; die Laufzeit wird weiterhin mit Node.js 24 getestet.
+
+Der Build verwendet TypeScript 7.0.2. `strict: false` hält das bisherige
+Prüfniveau ausdrücklich fest; `types: ["node"]` bindet die globalen Node-Typen
+ein, da TypeScript seit Version 6 andere Standardwerte verwendet.
+`concurrently` 10.0.5 benötigt Node.js 22 oder neuer und startet weiterhin
+die beiden Watch-Prozesse über die `npm:`-Kurzform.
 
 Der Redis-6-Client verwendet standardmäßig RESP3 und ein Befehlszeitlimit von
 5 Sekunden. Die Integrationstests prüfen ihn gegen Redis 7, einschließlich
