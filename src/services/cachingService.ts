@@ -62,7 +62,8 @@ export async function cachingResolver(
 			.digest("hex")
 		key = `${prefix}${revision}:${digest}`
 		const cached = await context.redis.get(key)
-		if (cached != null) return deserialize(Buffer.from(cached, "base64"))
+		if (typeof cached === "string")
+			return deserialize(Buffer.from(cached, "base64"))
 	} catch {
 		// Redis and corrupt cache entries must not turn a working query into an error.
 		key = undefined

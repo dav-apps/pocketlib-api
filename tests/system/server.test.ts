@@ -103,7 +103,7 @@ afterAll(async () => {
 		if (redis.isOpen) await clearTestCache(redis)
 	} finally {
 		await prisma.$disconnect()
-		if (redis.isOpen) await redis.quit()
+		if (redis.isOpen) await redis.close()
 	}
 })
 async function graphql(query: string) {

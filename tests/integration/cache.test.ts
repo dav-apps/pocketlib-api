@@ -42,7 +42,7 @@ afterAll(async () => {
 	await prisma.publisher.deleteMany()
 	await prisma.$disconnect()
 	await clearTestCache(redis)
-	await redis.quit()
+	await redis.close()
 })
 async function keys() {
 	return (await redis.keys("pocketlib:cache:v2:*")).filter(

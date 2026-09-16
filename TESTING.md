@@ -27,6 +27,21 @@ GraphQL bleibt auf der neuesten 16.x-Version: Apollo Server 5.5.1 und
 `graphql-request` 7.4.0 unterstützen laut ihren Peer-Abhängigkeiten GraphQL 17
 noch nicht. Vor einem Wechsel auf 17 müssen beide Pakete diese Version unterstützen.
 
+PDF.js 6 wird über den Node-kompatiblen Legacy-Build geladen. `withPdfDocument`
+verwendet die neue `{ data }`-/`{ url }`-API und gibt den Ladevorgang auch nach
+Parser- oder Validierungsfehlern frei. Die PDF.js-DOM-Typen benötigen TypeScript
+5.9; die Laufzeit wird weiterhin mit Node.js 24 getestet.
+
+Der Redis-6-Client verwendet standardmäßig RESP3 und ein Befehlszeitlimit von
+5 Sekunden. Die Integrationstests prüfen ihn gegen Redis 7, einschließlich
+Cache-TTL, Invalidierung und Datenbank-Fallback. Scan-Iteratoren liefern nun
+Schlüsselblöcke; Testclients werden mit `close()` geschlossen.
+
+React und React DOM verwenden gemeinsam Version 19.3.0. Die E-Mail-Vorschau
+wurde passend dazu aktualisiert; Resend verwendet den direkt installierten
+`@react-email/render`-Renderer. Die Adaptertests rendern die tatsächlichen
+E-Mail-Vorlagen über das Resend-SDK bei gesperrtem externen Netzwerk.
+
 ## Schnelle Tests
 
 ```sh

@@ -14,7 +14,7 @@ import { User } from "dav-js"
 
 export interface ResolverContext {
 	prisma: PrismaClient
-	redis: RedisClientType<any, any, any>
+	redis: RedisClientType
 	resend: Resend
 	accessToken?: string
 	user?: User

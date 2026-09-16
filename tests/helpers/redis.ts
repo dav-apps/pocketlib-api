@@ -10,9 +10,9 @@ export function testRedis() {
 
 export async function clearTestCache(redis: ReturnType<typeof testRedis>) {
 	// The connection has already been restricted to the isolated test Redis.
-	for await (const key of redis.scanIterator({
+	for await (const keys of redis.scanIterator({
 		MATCH: "pocketlib:cache:v2:*"
 	})) {
-		await redis.del(key)
+		if (keys.length > 0) await redis.del(keys)
 	}
 }

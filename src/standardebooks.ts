@@ -30,7 +30,7 @@ const baseUrl = "https://standardebooks.org"
 //#endregion
 
 //#region Redis client
-const redis = createClient<any, any, any>({
+const redis = createClient({
 	url: process.env.REDIS_URL,
 	database: process.env.ENV == "production" ? 5 : 4 // production: 5, staging: 4
 })

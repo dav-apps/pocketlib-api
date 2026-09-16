@@ -1,7 +1,7 @@
 import { Express, Request, Response, raw } from "express"
 import cors from "cors"
 import { PrismaClient } from "../generated/prisma/client.js"
-import { getDocument } from "pdfjs-dist"
+import { withPdfDocument } from "../services/pdfService.js"
 import {
 	isSuccessStatusCode,
 	TableObjectsController,
@@ -65,9 +65,10 @@ async function uploadStoreBookPrintFile(
 		let fileName = getFilename(contentDisposition)
 		if (fileName != null) fileName = decodeURI(fileName)
 
-		let pdf = await getDocument(new Uint8Array(req.body)).promise
-		const pages = pdf.numPages
-		await pdf.destroy()
+		const pages = await withPdfDocument(
+			{ data: new Uint8Array(req.body) },
+			pdf => pdf.numPages
+		)
 
 		if (release.status == "published") {
 			// Create a new release

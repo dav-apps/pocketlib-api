@@ -7,7 +7,7 @@ import {
 	it,
 	vi
 } from "vitest"
-import { getDocument } from "pdfjs-dist"
+import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs"
 import { createPrismaClient } from "../../src/prisma.js"
 import { TableObjectsController, type User } from "dav-js"
 import { createApp } from "../../src/app.js"
@@ -27,7 +27,7 @@ vi.mock("dav-js", async importOriginal => {
 	}
 })
 // PDF parsing is covered separately; these tests exercise publication and persistence.
-vi.mock("pdfjs-dist", () => ({
+vi.mock("pdfjs-dist/legacy/build/pdf.mjs", () => ({
 	getDocument: vi.fn(() => {
 		throw new Error("Unexpected PDF download")
 	})
@@ -282,6 +282,7 @@ describe("book release lifecycle", () => {
 		async pages => {
 			const { release } = await seedBook(prisma)
 			vi.mocked(getDocument).mockReturnValue({
+				destroy: vi.fn().mockResolvedValue(undefined),
 				promise: Promise.resolve({ numPages: pages })
 			} as never)
 			const before = await snapshot()
@@ -298,12 +299,11 @@ describe("book release lifecycle", () => {
 	it("rejects a PDF with one invalid interior page", async () => {
 		const { release } = await seedBook(prisma)
 		vi.mocked(getDocument).mockReturnValue({
+			destroy: vi.fn().mockResolvedValue(undefined),
 			promise: Promise.resolve({
 				numPages: 32,
 				getPage: async (page: number) => ({
-					_pageInfo: {
-						view: page === 32 ? [0, 0, 595, 842] : [0, 0, 396, 612]
-					}
+					view: page === 32 ? [0, 0, 595, 842] : [0, 0, 396, 612]
 				})
 			})
 		} as never)
@@ -321,16 +321,18 @@ describe("book release lifecycle", () => {
 		const { release } = await seedBook(prisma)
 		vi.mocked(getDocument)
 			.mockReturnValueOnce({
+				destroy: vi.fn().mockResolvedValue(undefined),
 				promise: Promise.resolve({
 					numPages: 100,
-					getPage: async () => ({ _pageInfo: { view: [0, 0, 396, 612] } })
+					getPage: async () => ({ view: [0, 0, 396, 612] })
 				})
 			} as never)
 			.mockReturnValueOnce({
+				destroy: vi.fn().mockResolvedValue(undefined),
 				promise: Promise.resolve({
 					numPages: 1,
 					getPage: async () => ({
-						_pageInfo: { view: [0, 0, 11.6 * 72, 8.8 * 72] }
+						view: [0, 0, 11.6 * 72, 8.8 * 72]
 					})
 				})
 			} as never)

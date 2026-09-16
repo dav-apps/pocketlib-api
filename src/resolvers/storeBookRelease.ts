@@ -5,7 +5,7 @@ import {
 	StoreBookPrintFile,
 	Category
 } from "../generated/prisma/client.js"
-import { getDocument } from "pdfjs-dist"
+import { withPdfDocument } from "../services/pdfService.js"
 import { ResolverContext, QueryResult, List, StoreBookCover } from "../types.js"
 import {
 	throwApiError,
@@ -120,32 +120,28 @@ export async function publishStoreBookRelease(
 		)
 
 		// Validate printFile pdf
-		let printFilePdf = await getDocument(printFileUrl).promise
-		const printFilePages = printFilePdf.numPages
-
-		throwValidationError(validateStoreBookPrintFilePages(printFilePages))
-
-		for (let i = 1; i <= printFilePages; i++) {
-			let page = await printFilePdf.getPage(i)
-
-			// Validate the page size
-			const [x, y, w, h] = page._pageInfo.view
-			throwValidationError(validateStoreBookPrintFilePageSize(w, h))
-		}
+		const printFilePages = await withPdfDocument(
+			{ url: printFileUrl },
+			async pdf => {
+				throwValidationError(validateStoreBookPrintFilePages(pdf.numPages))
+				for (let i = 1; i <= pdf.numPages; i++) {
+					const page = await pdf.getPage(i)
+					const [x, y, w, h] = page.view
+					throwValidationError(validateStoreBookPrintFilePageSize(w, h))
+				}
+				return pdf.numPages
+			}
+		)
 
 		// Validate printCover pdf
-		let printCoverPdf = await getDocument(printCoverUrl).promise
-		const printCoverPages = printCoverPdf.numPages
-
-		throwValidationError(validateStoreBookPrintCoverPages(printCoverPages))
-
-		let printCoverFirstPage = await printCoverPdf.getPage(1)
-
-		// Validate the page size
-		const [x, y, w, h] = printCoverFirstPage._pageInfo.view
-		throwValidationError(
-			validateStoreBookPrintCoverPageSize(w, h, printFilePdf.numPages)
-		)
+		await withPdfDocument({ url: printCoverUrl }, async pdf => {
+			throwValidationError(validateStoreBookPrintCoverPages(pdf.numPages))
+			const page = await pdf.getPage(1)
+			const [x, y, w, h] = page.view
+			throwValidationError(
+				validateStoreBookPrintCoverPageSize(w, h, printFilePages)
+			)
+		})
 	}
 
 	// The conditional write also rejects concurrent publication attempts.
