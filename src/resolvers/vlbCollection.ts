@@ -1,4 +1,4 @@
-import { VlbCollection, VlbItem } from "@prisma/client"
+import { VlbCollection, VlbItem } from "../generated/prisma/client.js"
 import validator from "validator"
 import { getCollection } from "../services/vlbApiService.js"
 import { List, QueryResult, ResolverContext } from "../types.js"

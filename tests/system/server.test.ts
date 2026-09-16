@@ -2,14 +2,14 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { spawn, type ChildProcess } from "node:child_process"
 import { once } from "node:events"
 import { fileURLToPath } from "node:url"
-import { PrismaClient } from "@prisma/client"
+import { createPrismaClient } from "../../src/prisma.js"
 import { getTestDatabaseUrl } from "../../scripts/test-database.mjs"
 import { getTestRedisUrl } from "../../scripts/test-redis.mjs"
 import { testRedis, clearTestCache } from "../helpers/redis.js"
 
 const databaseUrl = getTestDatabaseUrl()
 const redisUrl = getTestRedisUrl()
-const prisma = new PrismaClient({ datasources: { db: { url: databaseUrl } } })
+const prisma = createPrismaClient(databaseUrl)
 const redis = testRedis()
 let child: ChildProcess
 let baseUrl: string

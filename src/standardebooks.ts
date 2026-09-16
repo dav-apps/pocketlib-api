@@ -1,4 +1,5 @@
-import { PrismaClient } from "@prisma/client"
+import "dotenv/config"
+import { createPrismaClient } from "./prisma.js"
 import { createClient } from "redis"
 import readline from "readline"
 import axios from "axios"
@@ -22,7 +23,7 @@ import {
 import { appId } from "./constants.js"
 
 //#region Constants
-const prisma = new PrismaClient()
+const prisma = createPrismaClient()
 const perPage = 12
 const apiBaseUrl = "http://localhost:4001"
 const baseUrl = "https://standardebooks.org"

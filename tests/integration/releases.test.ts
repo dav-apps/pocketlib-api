@@ -8,7 +8,7 @@ import {
 	vi
 } from "vitest"
 import { getDocument } from "pdfjs-dist"
-import { PrismaClient } from "@prisma/client"
+import { createPrismaClient } from "../../src/prisma.js"
 import { TableObjectsController, type User } from "dav-js"
 import { createApp } from "../../src/app.js"
 import { getLastReleaseOfStoreBook } from "../../src/utils.js"
@@ -33,9 +33,7 @@ vi.mock("pdfjs-dist", () => ({
 	})
 }))
 
-const prisma = new PrismaClient({
-	datasources: { db: { url: getTestDatabaseUrl() } }
-})
+const prisma = createPrismaClient(getTestDatabaseUrl())
 const dependencies = { ...testDependencies(), prisma }
 let app: Awaited<ReturnType<typeof createApp>>
 beforeAll(async () => {

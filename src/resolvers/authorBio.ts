@@ -1,4 +1,4 @@
-import { Author, AuthorBio } from "@prisma/client"
+import { Author, AuthorBio } from "../generated/prisma/client.js"
 import * as crypto from "crypto"
 import { ResolverContext } from "../types.js"
 import { throwApiError, throwValidationError } from "../utils.js"

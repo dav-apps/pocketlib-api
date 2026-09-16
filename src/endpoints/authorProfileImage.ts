@@ -1,6 +1,6 @@
 import { Express, Request, Response, raw } from "express"
 import cors from "cors"
-import { Author } from "@prisma/client"
+import { Author } from "../generated/prisma/client.js"
 import {
 	isSuccessStatusCode,
 	TableObjectsController,

@@ -10,7 +10,7 @@ import {
 	VlbItem as VlbItemModel,
 	VlbAuthor,
 	VlbCollection
-} from "@prisma/client"
+} from "./generated/prisma/client.js"
 import {
 	UsersController,
 	TableObjectsController,

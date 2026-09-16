@@ -9,7 +9,7 @@ import {
 	StoreBookPrintFile,
 	StoreBookSeries,
 	Category
-} from "@prisma/client"
+} from "../generated/prisma/client.js"
 import * as crypto from "crypto"
 import validator from "validator"
 import {

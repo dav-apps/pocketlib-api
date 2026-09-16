@@ -1,5 +1,5 @@
 import { Html, Body, Heading } from "@react-email/components"
-import { VlbItem } from "@prisma/client"
+import { VlbItem } from "../generated/prisma/client.js"
 import { OrderResource } from "dav-js"
 
 const pStyles = {

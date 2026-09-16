@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto"
-import type { PrismaClient } from "@prisma/client"
+import type { PrismaClient } from "../../src/generated/prisma/client.js"
 
 export async function clearBooks(prisma: PrismaClient) {
 	await prisma.printOrder.deleteMany()

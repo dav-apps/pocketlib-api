@@ -1,4 +1,4 @@
-import { Category, CategoryName } from "@prisma/client"
+import { Category, CategoryName } from "../generated/prisma/client.js"
 import { ResolverContext, QueryResult, List } from "../types.js"
 
 export async function retrieveCategory(

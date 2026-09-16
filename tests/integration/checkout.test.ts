@@ -7,7 +7,7 @@ import {
 	it,
 	vi
 } from "vitest"
-import { PrismaClient } from "@prisma/client"
+import { createPrismaClient } from "../../src/prisma.js"
 import {
 	CheckoutSessionsController,
 	ShippingAddressesController,
@@ -47,9 +47,7 @@ vi.mock("../../src/services/fileService.js", () => ({
 	getFileLink: (key: string) => `https://files.example.test/${key}`
 }))
 
-const prisma = new PrismaClient({
-	datasources: { db: { url: getTestDatabaseUrl() } }
-})
+const prisma = createPrismaClient(getTestDatabaseUrl())
 const dependencies = { ...testDependencies(), prisma }
 let app: Awaited<ReturnType<typeof createApp>>
 const checkout = vi.mocked(

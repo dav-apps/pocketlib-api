@@ -1,4 +1,4 @@
-import { Prisma, Publisher, Author } from "@prisma/client"
+import { Prisma, Publisher, Author } from "../generated/prisma/client.js"
 import * as crypto from "crypto"
 import validator from "validator"
 import { ResolverContext, QueryResult, List, PublisherLogo } from "../types.js"

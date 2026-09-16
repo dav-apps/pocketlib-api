@@ -1,13 +1,11 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { randomUUID } from "node:crypto"
-import { PrismaClient } from "@prisma/client"
+import { createPrismaClient } from "../../src/prisma.js"
 import { createApp } from "../../src/app.js"
 import { testDependencies } from "../helpers/dependencies.js"
 import { clearBooks, seedBook } from "../helpers/books.js"
 import { getTestDatabaseUrl } from "../../scripts/test-database.mjs"
-const prisma = new PrismaClient({
-	datasources: { db: { url: getTestDatabaseUrl() } }
-})
+const prisma = createPrismaClient(getTestDatabaseUrl())
 const context = { ...testDependencies(), prisma }
 let app: Awaited<ReturnType<typeof createApp>>
 let german: Awaited<ReturnType<typeof seedBook>>,

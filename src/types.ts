@@ -7,7 +7,7 @@ import {
 	VlbItem as VlbItemModel,
 	VlbAuthor,
 	VlbCollection
-} from "@prisma/client"
+} from "./generated/prisma/client.js"
 import { RedisClientType } from "redis"
 import { Resend } from "resend"
 import { User } from "dav-js"

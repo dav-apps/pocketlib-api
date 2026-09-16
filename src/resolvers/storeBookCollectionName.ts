@@ -1,4 +1,4 @@
-import { StoreBookCollectionName } from "@prisma/client"
+import { StoreBookCollectionName } from "../generated/prisma/client.js"
 import * as crypto from "crypto"
 import { ResolverContext, QueryResult } from "../types.js"
 import { throwApiError, throwValidationError } from "../utils.js"

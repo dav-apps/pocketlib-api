@@ -1,4 +1,4 @@
-import type { PrismaClient, Prisma } from "@prisma/client"
+import type { PrismaClient, Prisma } from "../generated/prisma/client.js"
 
 // PostgreSQL locks also serialize deliveries handled by different API processes.
 export async function withWebhookLock<T>(

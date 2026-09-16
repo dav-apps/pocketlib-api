@@ -1,5 +1,5 @@
 import "dotenv/config"
-import { PrismaClient } from "@prisma/client"
+import { createPrismaClient } from "./src/prisma.js"
 import { createClient } from "redis"
 import Stripe from "stripe"
 import { Resend } from "resend"
@@ -7,7 +7,7 @@ import { Dav, Environment } from "dav-js"
 import { createApp } from "./src/app.js"
 
 const port = process.env.PORT || 4001
-const prisma = new PrismaClient()
+const prisma = createPrismaClient()
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const resend = new Resend(process.env.RESEND_API_KEY)
 const redis = createClient({

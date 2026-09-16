@@ -3,6 +3,25 @@
 Voraussetzung: Node.js 24 und `npm ci`. Nach der Installation einmal
 `npx prisma generate` ausführen. Tests laden die lokale `.env` nicht.
 
+Prisma CLI, Client und PostgreSQL-Adapter verwenden Version 7.10.0.
+`prisma.config.ts` lädt für CLI-Befehle die `.env` und konfiguriert `DATABASE_URL`.
+Die Client-Generierung benötigt keine Datenbankverbindung und erzeugt die nicht
+eingecheckten TypeScript-Dateien unter `src/generated/prisma`.
+Nach `npm ci` und Schemaänderungen muss `npx prisma generate` vor Typecheck,
+Tests und Build ausgeführt werden; `prisma db push` generiert den Client nicht mehr.
+Beim Deployment wird der generierte Client mit nach `dist` kompiliert.
+
+Alle Anwendungseinstiege und Datenbanktests verwenden `createPrismaClient` aus
+`src/prisma.ts` mit dem PostgreSQL-Adapter. Die Laufzeit benötigt eine direkte
+PostgreSQL-URL in `DATABASE_URL`; Tests übergeben ausdrücklich die validierte
+Test-URL. Der URL-Parameter `schema` wird übernommen. Der Adapter verwendet den
+`pg`-Pool (standardmäßig maximal 10 Verbindungen), mit einem Verbindungs- und
+Pool-Wartezeitlimit von 5 Sekunden. Prisma-6-spezifische URL-Parameter wie
+`connection_limit` und `pool_timeout` konfigurieren diesen Pool nicht mehr;
+abweichende Pool-Einstellungen müssen in der Factory gesetzt werden.
+TLS wird durch `pg` geprüft; private Zertifizierungsstellen müssen im
+Deployment als vertrauenswürdig konfiguriert sein.
+
 Apollo Server 5 verwendet `@as-integrations/express4` für die Express-Anbindung.
 GraphQL bleibt auf der neuesten 16.x-Version: Apollo Server 5.5.1 und
 `graphql-request` 7.4.0 unterstützen laut ihren Peer-Abhängigkeiten GraphQL 17

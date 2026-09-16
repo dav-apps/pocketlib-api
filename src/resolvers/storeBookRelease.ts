@@ -4,7 +4,7 @@ import {
 	StoreBookPrintCover,
 	StoreBookPrintFile,
 	Category
-} from "@prisma/client"
+} from "../generated/prisma/client.js"
 import { getDocument } from "pdfjs-dist"
 import { ResolverContext, QueryResult, List, StoreBookCover } from "../types.js"
 import {

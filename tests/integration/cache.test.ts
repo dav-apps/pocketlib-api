@@ -8,7 +8,7 @@ import {
 	it,
 	vi
 } from "vitest"
-import { PrismaClient } from "@prisma/client"
+import { createPrismaClient } from "../../src/prisma.js"
 import {
 	cachingResolver,
 	invalidateCache
@@ -20,9 +20,7 @@ import { getTestDatabaseUrl } from "../../scripts/test-database.mjs"
 import type { User } from "dav-js"
 
 const redis = testRedis()
-const prisma = new PrismaClient({
-	datasources: { db: { url: getTestDatabaseUrl() } }
-})
+const prisma = createPrismaClient(getTestDatabaseUrl())
 const context = { ...testDependencies(), redis, prisma }
 const info = {
 	parentType: { name: "Query" },

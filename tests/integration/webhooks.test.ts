@@ -8,7 +8,7 @@ import {
 	vi
 } from "vitest"
 import { createHmac } from "node:crypto"
-import { PrismaClient } from "@prisma/client"
+import { createPrismaClient } from "../../src/prisma.js"
 import { OrdersController, type OrderResource } from "dav-js"
 import request from "supertest"
 import { createApp } from "../../src/app.js"
@@ -27,9 +27,7 @@ vi.mock("dav-js", async importOriginal => {
 		}
 	}
 })
-const prisma = new PrismaClient({
-	datasources: { db: { url: getTestDatabaseUrl() } }
-})
+const prisma = createPrismaClient(getTestDatabaseUrl())
 const send = vi.fn()
 const paymentIntent = vi.fn()
 const dependencies = {

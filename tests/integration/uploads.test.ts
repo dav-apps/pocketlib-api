@@ -8,7 +8,7 @@ import {
 	vi
 } from "vitest"
 import { randomUUID } from "node:crypto"
-import { PrismaClient } from "@prisma/client"
+import { createPrismaClient } from "../../src/prisma.js"
 import { Plan, TableObjectsController, UsersController } from "dav-js"
 import request from "supertest"
 import nock from "nock"
@@ -32,9 +32,7 @@ vi.mock("dav-js", async importOriginal => {
 		}
 	}
 })
-const prisma = new PrismaClient({
-	datasources: { db: { url: getTestDatabaseUrl() } }
-})
+const prisma = createPrismaClient(getTestDatabaseUrl())
 const dependencies = { ...testDependencies(), prisma }
 let app: Awaited<ReturnType<typeof createApp>>
 const create = vi.mocked(TableObjectsController.createTableObject)

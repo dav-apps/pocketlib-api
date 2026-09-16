@@ -1,13 +1,14 @@
+import type { PrismaClient } from "../generated/prisma/client.js"
 import "dotenv/config"
 import fs from "fs"
-import { PrismaClient } from "@prisma/client"
+import { createPrismaClient } from "../prisma.js"
 import {
 	websiteBaseUrlDevelopment,
 	websiteBaseUrlStaging,
 	websiteBaseUrlProduction
 } from "../constants.js"
 
-export const prisma = new PrismaClient()
+export const prisma = createPrismaClient()
 
 generateSitemaps(prisma)
 

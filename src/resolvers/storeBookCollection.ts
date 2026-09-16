@@ -2,7 +2,7 @@ import {
 	Author,
 	StoreBookCollection,
 	StoreBookCollectionName
-} from "@prisma/client"
+} from "../generated/prisma/client.js"
 import { ResolverContext, QueryResult, List, StoreBook } from "../types.js"
 import { loadStoreBookData } from "../utils.js"
 

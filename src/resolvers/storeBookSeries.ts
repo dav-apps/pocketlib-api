@@ -1,4 +1,4 @@
-import { PrismaClient, Author, StoreBookSeries } from "@prisma/client"
+import { PrismaClient, Author, StoreBookSeries } from "../generated/prisma/client.js"
 import * as crypto from "crypto"
 import { ResolverContext, QueryResult, List, StoreBook } from "../types.js"
 import {

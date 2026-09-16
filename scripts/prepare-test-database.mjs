@@ -12,7 +12,6 @@ const result = spawnSync(
 		),
 		"db",
 		"push",
-		"--skip-generate",
 		"--schema",
 		fileURLToPath(new URL("../prisma/schema.prisma", import.meta.url))
 	],

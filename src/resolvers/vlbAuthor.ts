@@ -1,4 +1,4 @@
-import { VlbAuthor } from "@prisma/client"
+import { VlbAuthor } from "../generated/prisma/client.js"
 import validator from "validator"
 import { List, QueryResult, ResolverContext } from "../types.js"
 

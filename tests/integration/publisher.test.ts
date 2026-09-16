@@ -1,14 +1,12 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
-import { PrismaClient } from "@prisma/client"
+import { createPrismaClient } from "../../src/prisma.js"
 import type { User } from "dav-js"
 import { createApp } from "../../src/app.js"
 import { testDependencies } from "../helpers/dependencies.js"
 import { getTestDatabaseUrl } from "../../scripts/test-database.mjs"
 import { admins } from "../../src/constants.js"
 
-const prisma = new PrismaClient({
-	datasources: { db: { url: getTestDatabaseUrl() } }
-})
+const prisma = createPrismaClient(getTestDatabaseUrl())
 const dependencies = { ...testDependencies(), prisma }
 let application: Awaited<ReturnType<typeof createApp>>
 const publisherUuid = "a745a998-df99-4c75-b074-8ad32f434be1"
