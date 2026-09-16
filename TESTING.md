@@ -42,6 +42,14 @@ wurde passend dazu aktualisiert; Resend verwendet den direkt installierten
 `@react-email/render`-Renderer. Die Adaptertests rendern die tatsächlichen
 E-Mail-Vorlagen über das Resend-SDK bei gesperrtem externen Netzwerk.
 
+Stripe 22.6.2 verwendet standardmäßig die API-Version `2026-08-26.dahlia`.
+Der Rechnungslink für Bestellbestätigungen wird über `invoicePayments.list`
+mit PaymentIntent-Filter und expandierter Rechnung gelesen. Das frühere Feld
+`PaymentIntent.invoice` wurde von Stripe entfernt. Die Adaptertests prüfen
+Anfrageparameter, API-Version, fehlende/gelöschte Rechnungen und Fehlerantworten;
+die Webhook-Tests prüfen weiterhin Wiederholungen ohne doppelte E-Mails.
+Grundlage ist die [Stripe-Migration zu Invoice Payments](https://docs.stripe.com/changelog/basil/2025-03-31/add-support-for-multiple-partial-payments-on-invoices).
+
 ## Schnelle Tests
 
 ```sh

@@ -1,6 +1,6 @@
 import { Express, Request, Response, json } from "express"
 import cors from "cors"
-import Stripe from "stripe"
+import { getInvoiceUrl } from "../services/stripeService.js"
 import { runWebhookEffectOnce } from "../services/webhookService.js"
 import { Auth, OrdersController, OrderResource } from "dav-js"
 import type { AppDependencies } from "../appDependencies.js"
@@ -103,17 +103,7 @@ async function davWebhook(
 			coverUrl: getVlbItemCoverUrl(vlbItem.mvbId)
 		}
 
-		// Get the invoice link of the payment intent
-		let paymentIntent = await stripe.paymentIntents.retrieve(
-			order.paymentIntentId,
-			{ expand: ["invoice"] }
-		)
-		let invoiceUrl: string = null
-
-		if (paymentIntent != null) {
-			invoiceUrl = (paymentIntent.invoice as Stripe.Invoice)
-				?.hosted_invoice_url
-		}
+		const invoiceUrl = await getInvoiceUrl(stripe, order.paymentIntentId)
 
 		// Send order email to admin
 		await runWebhookEffectOnce(

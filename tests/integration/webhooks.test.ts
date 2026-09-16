@@ -29,7 +29,7 @@ vi.mock("dav-js", async importOriginal => {
 })
 const prisma = createPrismaClient(getTestDatabaseUrl())
 const send = vi.fn()
-const paymentIntent = vi.fn()
+const invoicePayments = vi.fn()
 const dependencies = {
 	...testDependencies(),
 	prisma,
@@ -38,7 +38,7 @@ const dependencies = {
 		typeof testDependencies
 	>["resend"],
 	stripe: {
-		paymentIntents: { retrieve: paymentIntent }
+		invoicePayments: { list: invoicePayments }
 	} as unknown as ReturnType<typeof testDependencies>["stripe"]
 }
 let apps: Awaited<ReturnType<typeof createApp>>[] = []
@@ -72,8 +72,8 @@ beforeEach(async () => {
 		return { uuid: order.uuid } as OrderResource
 	})
 	send.mockResolvedValue({ data: { id: "email-id" }, error: null })
-	paymentIntent.mockResolvedValue({
-		invoice: { hosted_invoice_url: "https://invoice.example.test" }
+	invoicePayments.mockResolvedValue({
+		data: [{ invoice: { hosted_invoice_url: "https://invoice.example.test" } }]
 	})
 })
 afterAll(async () => {
@@ -199,7 +199,7 @@ describe("DAV order webhook", () => {
 		expect(send.mock.calls[0][1]).toEqual(send.mock.calls[1][1])
 	})
 	it("does not send emails when Stripe fails", async () => {
-		paymentIntent.mockRejectedValueOnce(new Error("Timeout"))
+		invoicePayments.mockRejectedValueOnce(new Error("Timeout"))
 		expect((await dav()).status).toBe(502)
 		expect(send).not.toHaveBeenCalled()
 		expect(await prisma.webhookEffect.count()).toBe(0)
