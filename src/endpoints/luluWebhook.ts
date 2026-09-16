@@ -1,9 +1,13 @@
 import { Express, Request, Response, json } from "express"
 import cors from "cors"
 import { Auth, OrdersController, OrderResource, OrderStatus } from "dav-js"
-import { prisma } from "../../server.js"
+import type { AppDependencies } from "../appDependencies.js"
 
-async function luluWebhook(req: Request, res: Response) {
+async function luluWebhook(
+	req: Request,
+	res: Response,
+	{ prisma }: Pick<AppDependencies, "prisma">
+) {
 	const externalId = req.body.data.external_id
 	const status = req.body.data.status.name
 	const lineItems = req.body.data.line_items
@@ -70,6 +74,11 @@ async function luluWebhook(req: Request, res: Response) {
 	res.send()
 }
 
-export function setup(app: Express) {
-	app.post("/webhooks/lulu", json(), cors(), luluWebhook)
+export function setup(
+	app: Express,
+	dependencies: Pick<AppDependencies, "prisma">
+) {
+	app.post("/webhooks/lulu", json(), cors(), (req, res) =>
+		luluWebhook(req, res, dependencies)
+	)
 }

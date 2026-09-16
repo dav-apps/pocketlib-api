@@ -18,9 +18,13 @@ import {
 import { storeBookFileTableId } from "../constants.js"
 import { apiErrors } from "../errors.js"
 import { validateEbookContentType } from "../services/validationService.js"
-import { prisma } from "../../server.js"
+import type { AppDependencies } from "../appDependencies.js"
 
-export async function uploadStoreBookFile(req: Request, res: Response) {
+export async function uploadStoreBookFile(
+	req: Request,
+	res: Response,
+	{ prisma }: Pick<AppDependencies, "prisma">
+) {
 	try {
 		const uuid = req.params.uuid
 		const accessToken = req.headers.authorization
@@ -159,12 +163,15 @@ export async function uploadStoreBookFile(req: Request, res: Response) {
 	}
 }
 
-export function setup(app: Express) {
+export function setup(
+	app: Express,
+	dependencies: Pick<AppDependencies, "prisma">
+) {
 	app.put(
 		"/storeBooks/:uuid/file",
 		raw({ type: "*/*", limit: "100mb" }),
 		cors(),
-		uploadStoreBookFile
+		(req, res) => uploadStoreBookFile(req, res, dependencies)
 	)
 }
 

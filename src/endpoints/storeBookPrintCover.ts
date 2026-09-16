@@ -18,9 +18,13 @@ import {
 import { storeBookPrintCoverTableId } from "../constants.js"
 import { apiErrors } from "../errors.js"
 import { validatePdfContentType } from "../services/validationService.js"
-import { prisma } from "../../server.js"
+import type { AppDependencies } from "../appDependencies.js"
 
-async function uploadStoreBookPrintCover(req: Request, res: Response) {
+async function uploadStoreBookPrintCover(
+	req: Request,
+	res: Response,
+	{ prisma }: Pick<AppDependencies, "prisma">
+) {
 	try {
 		const uuid = req.params.uuid
 		const accessToken = req.headers.authorization
@@ -150,12 +154,15 @@ async function uploadStoreBookPrintCover(req: Request, res: Response) {
 	}
 }
 
-export function setup(app: Express) {
+export function setup(
+	app: Express,
+	dependencies: Pick<AppDependencies, "prisma">
+) {
 	app.put(
 		"/storeBooks/:uuid/printCover",
 		raw({ type: "*/*", limit: "100mb" }),
 		cors(),
-		uploadStoreBookPrintCover
+		(req, res) => uploadStoreBookPrintCover(req, res, dependencies)
 	)
 }
 

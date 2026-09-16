@@ -16,9 +16,13 @@ import {
 import { admins, authorProfileImageTableId } from "../constants.js"
 import { apiErrors } from "../errors.js"
 import { validateImageContentType } from "../services/validationService.js"
-import { prisma } from "../../server.js"
+import type { AppDependencies } from "../appDependencies.js"
 
-async function uploadAuthorProfileImage(req: Request, res: Response) {
+async function uploadAuthorProfileImage(
+	req: Request,
+	res: Response,
+	{ prisma }: Pick<AppDependencies, "prisma">
+) {
 	try {
 		const uuid = req.params.uuid
 		const accessToken = req.headers.authorization
@@ -159,11 +163,14 @@ async function uploadAuthorProfileImage(req: Request, res: Response) {
 	}
 }
 
-export function setup(app: Express) {
+export function setup(
+	app: Express,
+	dependencies: Pick<AppDependencies, "prisma">
+) {
 	app.put(
 		"/authors/:uuid/profileImage",
 		raw({ type: "*/*", limit: "100mb" }),
 		cors(),
-		uploadAuthorProfileImage
+		(req, res) => uploadAuthorProfileImage(req, res, dependencies)
 	)
 }

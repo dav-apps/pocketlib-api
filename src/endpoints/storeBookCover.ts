@@ -19,9 +19,13 @@ import {
 import { storeBookCoverTableId } from "../constants.js"
 import { apiErrors } from "../errors.js"
 import { validateImageContentType } from "../services/validationService.js"
-import { prisma } from "../../server.js"
+import type { AppDependencies } from "../appDependencies.js"
 
-export async function uploadStoreBookCover(req: Request, res: Response) {
+export async function uploadStoreBookCover(
+	req: Request,
+	res: Response,
+	{ prisma }: Pick<AppDependencies, "prisma">
+) {
 	try {
 		const uuid = req.params.uuid
 		const accessToken = req.headers.authorization
@@ -169,12 +173,15 @@ export async function uploadStoreBookCover(req: Request, res: Response) {
 	}
 }
 
-export function setup(app: Express) {
+export function setup(
+	app: Express,
+	dependencies: Pick<AppDependencies, "prisma">
+) {
 	app.put(
 		"/storeBooks/:uuid/cover",
 		raw({ type: "*/*", limit: "100mb" }),
 		cors(),
-		uploadStoreBookCover
+		(req, res) => uploadStoreBookCover(req, res, dependencies)
 	)
 }
 

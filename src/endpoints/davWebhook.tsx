@@ -2,15 +2,22 @@ import { Express, Request, Response, json } from "express"
 import cors from "cors"
 import Stripe from "stripe"
 import { Auth, OrdersController, OrderResource } from "dav-js"
-import { prisma, stripe, resend } from "../../server.js"
+import type { AppDependencies } from "../appDependencies.js"
 import OrderEmail from "../emails/order.js"
 import OrderConfirmationEmail from "../emails/orderConfirmation.js"
 import { getVlbItemCoverUrl } from "../utils.js"
 import { noReplyEmailAddress } from "../constants.js"
 
-const webhookKey = process.env.WEBHOOK_KEY
-
-async function davWebhook(req: Request, res: Response) {
+async function davWebhook(
+	req: Request,
+	res: Response,
+	{
+		prisma,
+		stripe,
+		resend,
+		webhookKey
+	}: Pick<AppDependencies, "prisma" | "stripe" | "resend" | "webhookKey">
+) {
 	// Check the authorization header
 	if (req.headers["authorization"] != webhookKey) {
 		return res.sendStatus(400)
@@ -114,6 +121,14 @@ async function davWebhook(req: Request, res: Response) {
 	res.send()
 }
 
-export function setup(app: Express) {
-	app.post("/webhooks/dav", json(), cors(), davWebhook)
+export function setup(
+	app: Express,
+	dependencies: Pick<
+		AppDependencies,
+		"prisma" | "stripe" | "resend" | "webhookKey"
+	>
+) {
+	app.post("/webhooks/dav", json(), cors(), (req, res) =>
+		davWebhook(req, res, dependencies)
+	)
 }

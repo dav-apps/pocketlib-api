@@ -5,12 +5,20 @@
 	"type": "module",
 	"scripts": {
 		"start": "node dist/server.js",
-		"dev": "concurrently \"npm:*:watch\"",
+		"dev": "concurrently \"npm:build:watch\" \"npm:serve:watch\"",
 		"dev:email": "email dev --dir src/emails",
 		"build": "tsc",
 		"build:watch": "tsc -w",
 		"serve:watch": "nodemon dist/server.js",
-		"generateSitemaps": "tsc && node dist/src/scripts/generateSitemaps.js"
+		"generateSitemaps": "tsc && node dist/src/scripts/generateSitemaps.js",
+		"typecheck": "tsc --noEmit && tsc -p tsconfig.test.json",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:coverage": "vitest run --coverage",
+		"test:db:up": "docker compose -f compose.test.yml up -d --wait",
+		"test:db:down": "docker compose -f compose.test.yml down",
+		"test:db:prepare": "node scripts/prepare-test-database.mjs",
+		"test:integration": "npm run test:db:prepare && vitest run --config vitest.integration.config.ts"
 	},
 	"license": "MIT",
 	"dependencies": {
@@ -42,10 +50,15 @@
 	},
 	"devDependencies": {
 		"@types/react": "^18.3.12",
+		"@types/supertest": "^7.2.1",
 		"@types/validator": "^13.12.2",
+		"@vitest/coverage-v8": "^5.0.1",
 		"concurrently": "^8.2.0",
+		"nock": "^14.0.17",
 		"prisma": "^6.0.1",
 		"react-email": "3.0.3",
-		"typescript": "^5.3.3"
+		"supertest": "^7.2.2",
+		"typescript": "^5.3.3",
+		"vitest": "^5.0.1"
 	}
 }
