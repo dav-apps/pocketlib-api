@@ -7,7 +7,7 @@
 		"start": "node dist/server.js",
 		"dev": "concurrently \"npm:build:watch\" \"npm:serve:watch\"",
 		"dev:email": "email dev --dir src/emails",
-		"build": "tsc",
+		"build": "prisma generate && tsc",
 		"build:watch": "tsc -w",
 		"serve:watch": "nodemon dist/server.js",
 		"generateSitemaps": "tsc && node dist/src/scripts/generateSitemaps.js",

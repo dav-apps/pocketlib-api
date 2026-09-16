@@ -7,9 +7,13 @@ Prisma CLI, Client und PostgreSQL-Adapter verwenden Version 7.10.0.
 `prisma.config.ts` lädt für CLI-Befehle die `.env` und konfiguriert `DATABASE_URL`.
 Die Client-Generierung benötigt keine Datenbankverbindung und erzeugt die nicht
 eingecheckten TypeScript-Dateien unter `src/generated/prisma`.
-Nach `npm ci` und Schemaänderungen muss `npx prisma generate` vor Typecheck,
-Tests und Build ausgeführt werden; `prisma db push` generiert den Client nicht mehr.
-Beim Deployment wird der generierte Client mit nach `dist` kompiliert.
+`npm run build` führt zuerst `prisma generate` und danach TypeScript aus.
+Damit genügt dieser Build-Befehl auch beim Deployment aus einem frischen Checkout;
+der generierte Client wird mit nach `dist` kompiliert. Die CI prüft diesen Ablauf
+direkt nach `npm ci`, ohne vorherige separate Generierung.
+Vor eigenständigen Typechecks, Tests oder dem Watch-Modus muss nach `npm ci`
+und Schemaänderungen weiterhin `npx prisma generate` ausgeführt werden;
+`prisma db push` generiert den Client nicht mehr.
 
 Alle Anwendungseinstiege und Datenbanktests verwenden `createPrismaClient` aus
 `src/prisma.ts` mit dem PostgreSQL-Adapter. Die Laufzeit benötigt eine direkte
