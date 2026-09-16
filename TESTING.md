@@ -22,7 +22,7 @@ abweichende Pool-Einstellungen müssen in der Factory gesetzt werden.
 TLS wird durch `pg` geprüft; private Zertifizierungsstellen müssen im
 Deployment als vertrauenswürdig konfiguriert sein.
 
-Apollo Server 5 verwendet `@as-integrations/express4` für die Express-Anbindung.
+Apollo Server 5 verwendet `@as-integrations/express5` für die Express-5-Anbindung.
 GraphQL bleibt auf der neuesten 16.x-Version: Apollo Server 5.5.1 und
 `graphql-request` 7.4.0 unterstützen laut ihren Peer-Abhängigkeiten GraphQL 17
 noch nicht. Vor einem Wechsel auf 17 müssen beide Pakete diese Version unterstützen.

@@ -22,7 +22,7 @@ import { invalidateCache } from "../services/cachingService.js"
 import type { AppDependencies } from "../appDependencies.js"
 
 export async function uploadStoreBookFile(
-	req: Request,
+	req: Request<{ uuid: string }>,
 	res: Response,
 	{ prisma, redis }: Pick<AppDependencies, "prisma" | "redis">
 ) {
