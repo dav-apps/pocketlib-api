@@ -7,6 +7,7 @@ import cors from "cors"
 import { User, UsersController, convertUserResourceToUser } from "dav-js"
 import { throwApiError } from "./utils.js"
 import { apiErrors } from "./errors.js"
+import { invalidateCache } from "./services/cachingService.js"
 import { createSchema } from "./schema.js"
 import type { AppDependencies } from "./appDependencies.js"
 import type { ResolverContext } from "./types.js"
@@ -30,7 +31,19 @@ export async function createApp(dependencies: AppDependencies) {
 	const httpServer = http.createServer(app)
 	const server = new ApolloServer<ResolverContext>({
 		schema: createSchema(),
-		plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+		plugins: [
+			ApolloServerPluginDrainHttpServer({ httpServer }),
+			{
+				async requestDidStart() {
+					return {
+						async willSendResponse({ operation }) {
+							if (operation?.operation === "mutation")
+								await invalidateCache(dependencies.redis)
+						}
+					}
+				}
+			}
+		],
 		introspection: true
 	})
 	await server.start()

@@ -12,7 +12,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const resend = new Resend(process.env.RESEND_API_KEY)
 const redis = createClient({
 	url: process.env.REDIS_URL,
-	database: process.env.ENV == "production" ? 5 : 4
+	database:
+		process.env.ENV == "production" ? 5 : process.env.ENV == "test" ? 15 : 4
 })
 redis.on("error", err => console.log("Redis Client Error", err))
 await redis.connect()
@@ -49,4 +50,7 @@ const { httpServer } = await createApp({
 })
 
 await new Promise<void>(resolve => httpServer.listen({ port }, resolve))
-console.log(`🚀 Server ready at http://localhost:${port}/`)
+const address = httpServer.address()
+const listeningPort =
+	typeof address === "object" && address ? address.port : port
+console.log(`🚀 Server ready at http://localhost:${listeningPort}/`)

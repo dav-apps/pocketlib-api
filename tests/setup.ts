@@ -5,6 +5,8 @@ import nock from "nock"
 process.env.ENV = "test"
 process.env.CACHING = "false"
 // Dummy credentials allow the real DAV Auth value object to construct its token.
+process.env.SPACES_ACCESS_KEY = "test-access-key"
+process.env.SPACES_SECRET = "test-secret"
 process.env.DAV_API_KEY = "test-api-key"
 process.env.DAV_SECRET_KEY = "test-secret"
 process.env.DAV_UUID = "00000000-0000-4000-8000-000000000042"

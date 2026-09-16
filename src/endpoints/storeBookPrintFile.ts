@@ -19,12 +19,13 @@ import {
 import { storeBookPrintFileTableId } from "../constants.js"
 import { apiErrors } from "../errors.js"
 import { validatePdfContentType } from "../services/validationService.js"
+import { invalidateCache } from "../services/cachingService.js"
 import type { AppDependencies } from "../appDependencies.js"
 
 async function uploadStoreBookPrintFile(
 	req: Request,
 	res: Response,
-	{ prisma }: Pick<AppDependencies, "prisma">
+	{ prisma, redis }: Pick<AppDependencies, "prisma" | "redis">
 ) {
 	try {
 		const uuid = req.params.uuid
@@ -43,6 +44,8 @@ async function uploadStoreBookPrintFile(
 		let storeBook = (await prisma.storeBook.findFirst({
 			where: { uuid }
 		})) as StoreBook
+
+		if (storeBook == null) throwEndpointError(apiErrors.storeBookDoesNotExist)
 
 		// Check if the store book belongs to the user
 		if (storeBook.userId != BigInt(user.Id)) {
@@ -64,6 +67,7 @@ async function uploadStoreBookPrintFile(
 
 		let pdf = await getDocument(new Uint8Array(req.body)).promise
 		const pages = pdf.numPages
+		await pdf.destroy()
 
 		if (release.status == "published") {
 			// Create a new release
@@ -110,11 +114,8 @@ async function uploadStoreBookPrintFile(
 				)
 			} else {
 				// Update the existing printFile
-				let printFile = await prisma.storeBookPrintFile.update({
-					where: { id: release.printFileId },
-					data: {
-						fileName
-					}
+				let printFile = await prisma.storeBookPrintFile.findUnique({
+					where: { id: release.printFileId }
 				})
 
 				printFileUuid = printFile.uuid
@@ -147,6 +148,13 @@ async function uploadStoreBookPrintFile(
 				if (!isSuccessStatusCode(setTableObjectFileResponse.status)) {
 					throwEndpointError(apiErrors.unexpectedError)
 				}
+				await prisma.storeBookPrintFile.update({
+					where: { id: release.printFileId },
+					data: {
+						pages,
+						fileName
+					}
+				})
 			}
 		}
 
@@ -155,6 +163,7 @@ async function uploadStoreBookPrintFile(
 			fileName
 		}
 
+		await invalidateCache(redis)
 		res.status(200).json(result)
 	} catch (error) {
 		handleEndpointError(res, error)
@@ -163,7 +172,7 @@ async function uploadStoreBookPrintFile(
 
 export function setup(
 	app: Express,
-	dependencies: Pick<AppDependencies, "prisma">
+	dependencies: Pick<AppDependencies, "prisma" | "redis">
 ) {
 	app.put(
 		"/storeBooks/:uuid/printFile",
@@ -206,19 +215,6 @@ async function createPrintFile(
 		createPrintFileResponse as TableObjectResource
 	const printFileUuid = createPrintFileResponseData.uuid
 
-	// Create the printFile
-	await prisma.storeBookPrintFile.create({
-		data: {
-			uuid: printFileUuid,
-			userId,
-			releases: {
-				connect: [{ id: releaseId }]
-			},
-			pages,
-			fileName
-		}
-	})
-
 	// Upload the data
 	let setTableObjectFileResponse =
 		await TableObjectsController.uploadTableObjectFile({
@@ -231,6 +227,19 @@ async function createPrintFile(
 	if (!isSuccessStatusCode(setTableObjectFileResponse.status)) {
 		throwEndpointError(apiErrors.unexpectedError)
 	}
+
+	// Create the printFile
+	await prisma.storeBookPrintFile.create({
+		data: {
+			uuid: printFileUuid,
+			userId,
+			releases: {
+				connect: [{ id: releaseId }]
+			},
+			pages,
+			fileName
+		}
+	})
 
 	return printFileUuid
 }

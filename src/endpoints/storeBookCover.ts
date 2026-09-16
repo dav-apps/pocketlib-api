@@ -19,12 +19,13 @@ import {
 import { storeBookCoverTableId } from "../constants.js"
 import { apiErrors } from "../errors.js"
 import { validateImageContentType } from "../services/validationService.js"
+import { invalidateCache } from "../services/cachingService.js"
 import type { AppDependencies } from "../appDependencies.js"
 
 export async function uploadStoreBookCover(
 	req: Request,
 	res: Response,
-	{ prisma }: Pick<AppDependencies, "prisma">
+	{ prisma, redis }: Pick<AppDependencies, "prisma" | "redis">
 ) {
 	try {
 		const uuid = req.params.uuid
@@ -43,6 +44,8 @@ export async function uploadStoreBookCover(
 		let storeBook = (await prisma.storeBook.findFirst({
 			where: { uuid }
 		})) as StoreBook
+
+		if (storeBook == null) throwEndpointError(apiErrors.storeBookDoesNotExist)
 
 		// Check if the store book belongs to the user
 		if (storeBook.userId != BigInt(user.Id)) {
@@ -119,12 +122,8 @@ export async function uploadStoreBookCover(
 				)
 			} else {
 				// Update the existing cover
-				let cover = await prisma.storeBookCover.update({
-					where: { id: release.coverId },
-					data: {
-						blurhash: encodeResult.blurhash,
-						aspectRatio
-					}
+				let cover = await prisma.storeBookCover.findUnique({
+					where: { id: release.coverId }
 				})
 
 				coverUuid = cover.uuid
@@ -157,6 +156,13 @@ export async function uploadStoreBookCover(
 				if (!isSuccessStatusCode(setTableObjectFileResponse.status)) {
 					throwEndpointError(apiErrors.unexpectedError)
 				}
+				await prisma.storeBookCover.update({
+					where: { id: release.coverId },
+					data: {
+						blurhash: encodeResult.blurhash,
+						aspectRatio
+					}
+				})
 			}
 		}
 
@@ -167,6 +173,7 @@ export async function uploadStoreBookCover(
 			blurhash: encodeResult.blurhash
 		}
 
+		await invalidateCache(redis)
 		res.status(200).json(result)
 	} catch (error) {
 		handleEndpointError(res, error)
@@ -175,7 +182,7 @@ export async function uploadStoreBookCover(
 
 export function setup(
 	app: Express,
-	dependencies: Pick<AppDependencies, "prisma">
+	dependencies: Pick<AppDependencies, "prisma" | "redis">
 ) {
 	app.put(
 		"/storeBooks/:uuid/cover",
@@ -219,19 +226,6 @@ async function createCover(
 	const createCoverResponseData = createCoverResponse as TableObjectResource
 	const coverUuid = createCoverResponseData.uuid
 
-	// Create the cover
-	await prisma.storeBookCover.create({
-		data: {
-			uuid: coverUuid,
-			userId,
-			releases: {
-				connect: [{ id: releaseId }]
-			},
-			blurhash,
-			aspectRatio
-		}
-	})
-
 	// Upload the data
 	let setTableObjectFileResponse =
 		await TableObjectsController.uploadTableObjectFile({
@@ -244,6 +238,19 @@ async function createCover(
 	if (!isSuccessStatusCode(setTableObjectFileResponse.status)) {
 		throwEndpointError(apiErrors.unexpectedError)
 	}
+
+	// Create the cover
+	await prisma.storeBookCover.create({
+		data: {
+			uuid: coverUuid,
+			userId,
+			releases: {
+				connect: [{ id: releaseId }]
+			},
+			blurhash,
+			aspectRatio
+		}
+	})
 
 	return coverUuid
 }

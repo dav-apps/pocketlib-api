@@ -71,6 +71,7 @@ export async function listPublishers(
 	const [total, items] = await context.prisma.$transaction([
 		context.prisma.publisher.count(),
 		context.prisma.publisher.findMany({
+			orderBy: { id: "asc" },
 			take,
 			skip
 		})

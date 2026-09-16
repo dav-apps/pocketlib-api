@@ -1,5 +1,6 @@
 import { Express, Request, Response, raw } from "express"
 import cors from "cors"
+import { getDocument } from "pdfjs-dist"
 import { PrismaClient } from "@prisma/client"
 import {
 	isSuccessStatusCode,
@@ -18,12 +19,13 @@ import {
 import { storeBookPrintCoverTableId } from "../constants.js"
 import { apiErrors } from "../errors.js"
 import { validatePdfContentType } from "../services/validationService.js"
+import { invalidateCache } from "../services/cachingService.js"
 import type { AppDependencies } from "../appDependencies.js"
 
 async function uploadStoreBookPrintCover(
 	req: Request,
 	res: Response,
-	{ prisma }: Pick<AppDependencies, "prisma">
+	{ prisma, redis }: Pick<AppDependencies, "prisma" | "redis">
 ) {
 	try {
 		const uuid = req.params.uuid
@@ -43,6 +45,8 @@ async function uploadStoreBookPrintCover(
 			where: { uuid }
 		})) as StoreBook
 
+		if (storeBook == null) throwEndpointError(apiErrors.storeBookDoesNotExist)
+
 		// Check if the store book belongs to the user
 		if (storeBook.userId != BigInt(user.Id)) {
 			throwEndpointError(apiErrors.actionNotAllowed)
@@ -60,6 +64,9 @@ async function uploadStoreBookPrintCover(
 		let contentDisposition = req.headers["content-disposition"]
 		let fileName = getFilename(contentDisposition)
 		if (fileName != null) fileName = decodeURI(fileName)
+
+		const pdf = await getDocument(new Uint8Array(req.body)).promise
+		await pdf.destroy()
 
 		if (release.status == "published") {
 			// Create a new release
@@ -104,11 +111,8 @@ async function uploadStoreBookPrintCover(
 				)
 			} else {
 				// Update the existing printCover
-				let printCover = await prisma.storeBookPrintCover.update({
-					where: { id: release.printCoverId },
-					data: {
-						fileName
-					}
+				let printCover = await prisma.storeBookPrintCover.findUnique({
+					where: { id: release.printCoverId }
 				})
 
 				printCoverUuid = printCover.uuid
@@ -140,6 +144,12 @@ async function uploadStoreBookPrintCover(
 				if (!isSuccessStatusCode(setTableObjectFileResponse.status)) {
 					throwEndpointError(apiErrors.unexpectedError)
 				}
+				await prisma.storeBookPrintCover.update({
+					where: { id: release.printCoverId },
+					data: {
+						fileName
+					}
+				})
 			}
 		}
 
@@ -148,6 +158,7 @@ async function uploadStoreBookPrintCover(
 			fileName
 		}
 
+		await invalidateCache(redis)
 		res.status(200).json(result)
 	} catch (error) {
 		handleEndpointError(res, error)
@@ -156,7 +167,7 @@ async function uploadStoreBookPrintCover(
 
 export function setup(
 	app: Express,
-	dependencies: Pick<AppDependencies, "prisma">
+	dependencies: Pick<AppDependencies, "prisma" | "redis">
 ) {
 	app.put(
 		"/storeBooks/:uuid/printCover",
@@ -195,18 +206,6 @@ async function createPrintCover(
 		createPrintCoverResponse as TableObjectResource
 	const printCoverUuid = createPrintCoverResponseData.uuid
 
-	// Create the printCover
-	await prisma.storeBookPrintCover.create({
-		data: {
-			uuid: printCoverUuid,
-			userId,
-			releases: {
-				connect: [{ id: releaseId }]
-			},
-			fileName
-		}
-	})
-
 	// Upload the data
 	let setTableObjectFileResponse =
 		await TableObjectsController.uploadTableObjectFile({
@@ -219,6 +218,18 @@ async function createPrintCover(
 	if (!isSuccessStatusCode(setTableObjectFileResponse.status)) {
 		throwEndpointError(apiErrors.unexpectedError)
 	}
+
+	// Create the printCover
+	await prisma.storeBookPrintCover.create({
+		data: {
+			uuid: printCoverUuid,
+			userId,
+			releases: {
+				connect: [{ id: releaseId }]
+			},
+			fileName
+		}
+	})
 
 	return printCoverUuid
 }

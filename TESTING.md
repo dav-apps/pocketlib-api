@@ -11,7 +11,7 @@ npm run typecheck
 npm run build
 ```
 
-`npm test` führt Validierungs-, GraphQL-Berechtigungs- und HTTP-Tests aus.
+`npm test` führt Validierungs-, GraphQL-Berechtigungs-, HTTP- und Adaptertests aus.
 Es werden weder PostgreSQL noch Redis oder Zugangsdaten benötigt. HTTP-Tests
 öffnen kurzlebige lokale Ports. Externe HTTP-Verbindungen sind durch Nock
 gesperrt; DAV-Antworten werden in den betreffenden Tests kontrolliert ersetzt.
@@ -24,18 +24,21 @@ npm run test:coverage
 Der Coverage-Bericht liegt unter `coverage/index.html`. Es gibt zunächst keine
 globale Mindestquote; entscheidend sind die getesteten Geschäftsregeln.
 
-## Integrationstests mit PostgreSQL
+## Vollständiger Testlauf mit PostgreSQL und Redis
 
 Mit Docker und Docker Compose:
 
 ```sh
-npm run test:db:up
-npm run test:integration
-npm run test:db:down
+npm run test:services:up
+npm run test:all
+npm run test:services:down
 ```
 
 Die PostgreSQL-16-Testinstanz lauscht ausschließlich auf `127.0.0.1:55432`.
-Ihre Daten liegen im temporären Dateisystem des Containers. Es wird kein
+Redis 7 lauscht auf `127.0.0.1:56379`, verwendet Datenbank 15 und das
+Testpasswort `pocketlib_test`. Beide Dienste sind ausschließlich für Tests
+bestimmt. PostgreSQL-Daten liegen im temporären Dateisystem des Containers;
+Redis-Persistenz ist deaktiviert. Es wird kein
 persistentes Volume angelegt. Die Hauptversion sollte später mit der
 Deployment-Datenbank abgestimmt werden.
 
@@ -55,6 +58,11 @@ Die Vorbereitung und die Tests ignorieren `DATABASE_URL`. Sie akzeptieren nur
 lokale URLs mit Datenbank **und Benutzer** `pocketlib_test`, ohne URL-Parameter.
 Diese Datenbank muss ausschließlich für Tests reserviert sein: Die Suiten löschen
 ihre Verlags-, Buch-, VLB- und Webhook-Testdaten vor und nach den Tests.
+Redis lässt sich über `TEST_REDIS_URL` konfigurieren; erlaubt sind nur lokale
+Adressen, Datenbank 15, das Testpasswort und keine URL-Parameter. Cachetests
+löschen Schlüssel unter `pocketlib:cache:v2:*`. Die Dienste dürfen nicht von
+mehreren Testläufen gleichzeitig verwendet werden.
+
 Integrationstestdateien laufen sequenziell; neue Suiten müssen ihre eigenen
 Testdaten ebenfalls zurücksetzen und dabei Fremdschlüssel berücksichtigen.
 
@@ -79,9 +87,54 @@ GraphQL-Fehler anhand von `errors[].extensions.code` prüfen, nicht nur anhand
 des HTTP-Status. Bei abgelehnten Schreibzugriffen zusätzlich den unveränderten
 Datenbankzustand prüfen.
 
-Weitere Ausbaustufen: Upload-Verarbeitung, Redis-Caching, übrige Abfragen und
-Systemtests. Die erste Stufe verwendet deaktiviertes
-Caching; Redis-Verhalten ist dadurch noch nicht abgedeckt.
+## Uploads, Cache, Abfragen und Systemtests (dritte Stufe)
+
+-  `tests/integration/uploads.test.ts`: echte PNG-, JPEG- und PDF-Dateien,
+   Abmessungen, Blurhash, Seitenzahlen, beschädigte Dateien, Berechtigungen,
+   Entwürfe und fehlgeschlagene Dateiübertragungen. DAV bleibt simuliert.
+-  `tests/integration/cache.test.ts`: echtes Redis, Schlüsselbildung, TTL,
+   BigInt/Date, öffentliche und authentifizierte Zugriffe, Fehlerbehandlung
+   und Invalidierung nach GraphQL-Mutationen.
+-  `tests/integration/queries.test.ts`: Buchsuche, kombinierte Filter,
+   Sichtbarkeit, Review-Rechte, Pagination sowie Verlags- und Kategorieabfragen.
+-  `tests/adapters`: echte DAV-, Lulu-, VLB- und S3-Clients gegen kontrollierte
+   HTTP-Antworten. Diese Vertragstests ersetzen keine Tests gegen Live-Anbieter.
+-  `tests/system`: startet den gebauten `dist/server.js` als separaten Prozess
+   mit echter Testdatenbank und Redis. Prüft GraphQL, Cache und die registrierten
+   Upload-/Webhook-Routen. Ausgehende HTTP-Aufrufe des Prozesses sind gesperrt.
+
+Einzelne Stufen:
+
+```sh
+npm run test:integration
+npm run test:system
+```
+
+`test:all` umfasst Typecheck, schnelle Tests, Integrationstests und Systemtests
+inklusive Build. Docker stellt die beiden Datendienste bereit; Node.js und die
+Tests laufen auf dem Host. Unter Linux benötigt `canvas` gegebenenfalls die
+nativen Build-Pakete aus `.github/workflows/tests.yml`.
+
+Der öffentliche Cache verwendet versionierte Schlüssel und eine Laufzeit von
+24 Stunden. Authentifizierte Zugriffe umgehen ihn. GraphQL-Mutationen und
+Uploads invalidieren den Cache. Bei Redis-Fehlern werden Abfragen weiterhin aus
+der Datenbank beantwortet. Schlägt eine Invalidierung fehl, können alte Einträge
+nach Wiederherstellung bis zum Ablauf ihrer Laufzeit bestehen bleiben.
+
+Dateidatensätze werden erst nach erfolgreicher Übertragung angelegt oder
+aktualisiert. Remote-Dateispeicher und PostgreSQL bleiben getrennte Systeme:
+Ein Datenbankfehler nach erfolgreicher Übertragung kann eine Remote-Datei
+zurücklassen. Bei fehlgeschlagenem Upload für ein veröffentlichtes Buch kann
+bereits ein neuer Entwurf existieren; die veröffentlichte Version bleibt erhalten.
+
+## Continuous Integration
+
+`.github/workflows/tests.yml` führt bei Pull Requests, Pushes auf `dev`, `main`,
+`master` und `test/**` sowie manuell alle Stufen mit Node.js 24 aus. Der Workflow
+installiert aus dem Lockfile, generiert Prisma, startet die Compose-Dienste und
+lädt den Coverage-Bericht als Artefakt hoch. Die Coverage umfasst die schnelle
+Suite; Integration und System werden separat ausgeführt. Der erste tatsächliche
+GitHub-Lauf erfolgt nach dem Push dieser Konfiguration.
 
 ## Kritische Geschäftsabläufe (zweite Stufe)
 
@@ -98,8 +151,8 @@ Caching; Redis-Verhalten ist dadurch noch nicht abgedeckt.
    verspätete Lulu-Statusmeldungen.
 
 DAV, Lulu, Stripe, VLB, Dateispeicher und E-Mail-Versand werden in diesen
-Integrationstests kontrolliert ersetzt. Die PDF-Tests verwenden simulierte
-Parserergebnisse; tatsächliche PDF-Dateiverarbeitung folgt in der Upload-Stufe.
+Integrationstests kontrolliert ersetzt. Die gezielten Veröffentlichungs-Grenzfalltests verwenden simulierte
+Parserergebnisse; die Upload-Suite ergänzt Tests mit tatsächlichen PDF-Dateien.
 Ein separater Adaptertest prüft mit dem echten Resend-SDK, dass der
 Idempotenzschlüssel im ausgehenden HTTP-Header ankommt.
 

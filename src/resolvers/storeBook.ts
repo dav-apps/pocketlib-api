@@ -97,220 +97,103 @@ export async function listStoreBooks(
 	},
 	context: ResolverContext
 ): Promise<QueryResult<List<StoreBook>>> {
-	let take = args.limit || 10
-	if (take <= 0) take = 10
+	const take = args.limit != null && args.limit > 0 ? args.limit : 10
+	const skip = Math.max(args.offset ?? 0, 0)
+	const inReview = args.inReview === true
 
-	let skip = args.offset || 0
-	if (skip < 0) skip = 0
-
-	let inReview = args.inReview || false
-	let random = args.random || false
-	let query = args.query?.toLowerCase() || ""
-
-	if (args.categories != null) {
-		let storeBookIds: bigint[] = []
-		let storeBooks: StoreBook[] = []
-
-		for (let key of args.categories) {
-			// Find the category table object
-			let category = await context.prisma.category.findFirst({
-				where: { key },
-				include: { releases: true }
-			})
-
-			if (category == null) continue
-
-			for (let storeBookRelease of category.releases) {
-				if (
-					!storeBookIds.includes(storeBookRelease.storeBookId) &&
-					storeBookRelease.status == "published"
-				) {
-					storeBookIds.push(storeBookRelease.storeBookId)
-				}
-			}
-		}
-
-		for (let id of storeBookIds) {
-			let storeBook = (await context.prisma.storeBook.findFirst({
-				where: { id }
-			})) as StoreBook
-
-			if (storeBook != null) {
-				await loadStoreBookData(context.prisma, storeBook)
-				storeBooks.push(storeBook)
-			}
-		}
-
-		return {
-			caching: true,
-			data: {
-				total: storeBooks.length,
-				items: storeBooks.slice(skip, skip + take)
-			}
-		}
-	} else if (inReview) {
-		// Check if the user is an admin
-		const user = context.user
-
-		if (user == null) {
-			throwApiError(apiErrors.notAuthenticated)
-		} else if (!admins.includes(user.Id)) {
+	if (inReview) {
+		if (context.user == null) throwApiError(apiErrors.notAuthenticated)
+		if (!admins.includes(context.user.Id))
 			throwApiError(apiErrors.actionNotAllowed)
-		}
-
-		// Get the StoreBooks in review
-		let where = { userId: user.Id, status: "review" }
-
-		let total = await context.prisma.storeBook.count({ where })
-
-		let items = (await context.prisma.storeBook.findMany({
-			where,
-			take,
-			skip
-		})) as StoreBook[]
-
-		for (let storeBook of items) {
-			await loadStoreBookData(context.prisma, storeBook, false)
-		}
-
-		return {
-			caching: false,
-			data: {
-				total,
-				items
-			}
-		}
-	} else if (random) {
-		let total = await context.prisma.storeBook.count()
-		if (take > total) take = total
-
-		let indices = []
-		let items = []
-
-		while (indices.length < take) {
-			let i = randomNumber(0, total - 1)
-
-			if (!indices.includes(i)) {
-				indices.push(i)
-			}
-		}
-
-		for (let i of indices) {
-			let storeBook = (await context.prisma.storeBook.findFirst({
-				skip: i
-			})) as StoreBook
-
-			await loadStoreBookData(context.prisma, storeBook)
-
-			items.push(storeBook)
-		}
-
-		return {
-			caching: true,
-			data: {
-				total,
-				items
-			}
-		}
-	} else if (query.length > 0) {
-		let where = {
-			AND: [
-				{ status: { equals: "published" } },
-				{
-					OR: [
-						{
-							releases: {
-								some: {
-									OR: [
-										{
-											title: {
-												contains: query,
-												mode: Prisma.QueryMode.insensitive
-											}
-										},
-										{
-											description: {
-												contains: query,
-												mode: Prisma.QueryMode.insensitive
-											}
-										},
-										{
-											isbn: {
-												contains: query,
-												mode: Prisma.QueryMode.insensitive
-											}
-										}
-									]
-								}
-							}
-						},
-						{
-							collection: {
-								author: {
-									OR: [
-										{
-											firstName: {
-												in: query.split(" "),
-												mode: Prisma.QueryMode.insensitive
-											}
-										},
-										{
-											lastName: {
-												in: query.split(" "),
-												mode: Prisma.QueryMode.insensitive
-											}
-										}
-									]
-								}
-							}
-						}
-					]
-				}
-			]
-		}
-
-		let total = await context.prisma.storeBook.count({ where })
-
-		let items = (await context.prisma.storeBook.findMany({
-			where,
-			take,
-			skip
-		})) as StoreBook[]
-
-		for (let storeBook of items) {
-			await loadStoreBookData(context.prisma, storeBook)
-		}
-
-		return {
-			caching: true,
-			data: {
-				total,
-				items
-			}
-		}
-	} else {
-		let where = { status: { equals: "published" } }
-		let total = await context.prisma.storeBook.count({ where })
-
-		let items = (await context.prisma.storeBook.findMany({
-			where,
-			orderBy: { id: "desc" },
-			take,
-			skip
-		})) as StoreBook[]
-
-		for (let storeBook of items) {
-			await loadStoreBookData(context.prisma, storeBook)
-		}
-
-		return {
-			caching: true,
-			data: {
-				total,
-				items
-			}
-		}
 	}
+
+	const where: Prisma.StoreBookWhereInput = {
+		status: inReview ? "review" : "published"
+	}
+	if (args.languages?.length) where.language = { in: args.languages }
+
+	const releaseFilter: Prisma.StoreBookReleaseWhereInput = inReview
+		? {}
+		: { status: "published" }
+
+	if (args.categories != null)
+		releaseFilter.categories = { some: { key: { in: args.categories } } }
+
+	where.releases = { some: releaseFilter }
+
+	const query = args.query?.trim() ?? ""
+	if (query) {
+		where.OR = [
+			{
+				releases: {
+					some: {
+						...releaseFilter,
+						OR: [
+							{ title: { contains: query, mode: "insensitive" } },
+							{ description: { contains: query, mode: "insensitive" } },
+							{ isbn: { contains: query, mode: "insensitive" } }
+						]
+					}
+				}
+			},
+			{
+				collection: {
+					author: {
+						OR: [
+							{
+								firstName: {
+									in: query.split(/\s+/),
+									mode: "insensitive"
+								}
+							},
+							{
+								lastName: {
+									in: query.split(/\s+/),
+									mode: "insensitive"
+								}
+							}
+						]
+					}
+				}
+			}
+		]
+	}
+
+	let total: number
+	let items: StoreBook[]
+
+	if (args.random) {
+		total = await context.prisma.storeBook.count({ where })
+
+		const indices = new Set<number>()
+		while (indices.size < Math.min(take, total))
+			indices.add(randomNumber(0, total - 1))
+
+		items = (await Promise.all(
+			[...indices].map(skip =>
+				context.prisma.storeBook.findFirst({
+					where,
+					skip,
+					orderBy: { id: "desc" }
+				})
+			)
+		)) as StoreBook[]
+	} else {
+		;[total, items] = (await context.prisma.$transaction([
+			context.prisma.storeBook.count({ where }),
+			context.prisma.storeBook.findMany({
+				where,
+				take,
+				skip,
+				orderBy: { id: "desc" }
+			})
+		])) as [number, StoreBook[]]
+	}
+
+	for (const book of items)
+		await loadStoreBookData(context.prisma, book, !inReview)
+
+	return { caching: !inReview && !args.random, data: { total, items } }
 }
 
 export async function createStoreBook(

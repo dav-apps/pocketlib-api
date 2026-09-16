@@ -28,6 +28,7 @@ export async function listCategories(
 	let [total, items] = await context.prisma.$transaction([
 		context.prisma.category.count(),
 		context.prisma.category.findMany({
+			orderBy: { id: "asc" },
 			take,
 			skip
 		})

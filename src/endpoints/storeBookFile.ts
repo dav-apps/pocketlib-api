@@ -18,12 +18,13 @@ import {
 import { storeBookFileTableId } from "../constants.js"
 import { apiErrors } from "../errors.js"
 import { validateEbookContentType } from "../services/validationService.js"
+import { invalidateCache } from "../services/cachingService.js"
 import type { AppDependencies } from "../appDependencies.js"
 
 export async function uploadStoreBookFile(
 	req: Request,
 	res: Response,
-	{ prisma }: Pick<AppDependencies, "prisma">
+	{ prisma, redis }: Pick<AppDependencies, "prisma" | "redis">
 ) {
 	try {
 		const uuid = req.params.uuid
@@ -113,11 +114,8 @@ export async function uploadStoreBookFile(
 				)
 			} else {
 				// Update the existing file
-				let file = await prisma.storeBookFile.update({
-					where: { id: release.fileId },
-					data: {
-						fileName
-					}
+				let file = await prisma.storeBookFile.findUnique({
+					where: { id: release.fileId }
 				})
 
 				fileUuid = file.uuid
@@ -149,6 +147,12 @@ export async function uploadStoreBookFile(
 				if (!isSuccessStatusCode(setTableObjectFileResponse.status)) {
 					throwEndpointError(apiErrors.unexpectedError)
 				}
+				await prisma.storeBookFile.update({
+					where: { id: release.fileId },
+					data: {
+						fileName
+					}
+				})
 			}
 		}
 
@@ -157,6 +161,7 @@ export async function uploadStoreBookFile(
 			fileName
 		}
 
+		await invalidateCache(redis)
 		res.status(200).json(result)
 	} catch (error) {
 		handleEndpointError(res, error)
@@ -165,7 +170,7 @@ export async function uploadStoreBookFile(
 
 export function setup(
 	app: Express,
-	dependencies: Pick<AppDependencies, "prisma">
+	dependencies: Pick<AppDependencies, "prisma" | "redis">
 ) {
 	app.put(
 		"/storeBooks/:uuid/file",
@@ -207,18 +212,6 @@ async function createFile(
 	const createFileResponseData = createFileResponse as TableObjectResource
 	const fileUuid = createFileResponseData.uuid
 
-	// Create the file
-	await prisma.storeBookFile.create({
-		data: {
-			uuid: fileUuid,
-			userId,
-			releases: {
-				connect: [{ id: releaseId }]
-			},
-			fileName
-		}
-	})
-
 	// Upload the data
 	let setTableObjectFileResponse =
 		await TableObjectsController.uploadTableObjectFile({
@@ -231,6 +224,18 @@ async function createFile(
 	if (!isSuccessStatusCode(setTableObjectFileResponse.status)) {
 		throwEndpointError(apiErrors.unexpectedError)
 	}
+
+	// Create the file
+	await prisma.storeBookFile.create({
+		data: {
+			uuid: fileUuid,
+			userId,
+			releases: {
+				connect: [{ id: releaseId }]
+			},
+			fileName
+		}
+	})
 
 	return fileUuid
 }
