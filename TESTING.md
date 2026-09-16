@@ -3,6 +3,11 @@
 Voraussetzung: Node.js 24 und `npm ci`. Nach der Installation einmal
 `npx prisma generate` ausführen. Tests laden die lokale `.env` nicht.
 
+Apollo Server 5 verwendet `@as-integrations/express4` für die Express-Anbindung.
+GraphQL bleibt auf der neuesten 16.x-Version: Apollo Server 5.5.1 und
+`graphql-request` 7.4.0 unterstützen laut ihren Peer-Abhängigkeiten GraphQL 17
+noch nicht. Vor einem Wechsel auf 17 müssen beide Pakete diese Version unterstützen.
+
 ## Schnelle Tests
 
 ```sh
