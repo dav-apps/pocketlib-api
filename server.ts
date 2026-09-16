@@ -38,7 +38,14 @@ const { httpServer } = await createApp({
 	stripe,
 	resend,
 	redis,
-	webhookKey: process.env.WEBHOOK_KEY
+	webhookKey: process.env.WEBHOOK_KEY,
+	luluWebhookSecret:
+		process.env.LULU_WEBHOOK_SECRET ||
+		Buffer.from(process.env.LULU_AUTH_KEY || "", "base64")
+			.toString("utf8")
+			.split(":")
+			.slice(1)
+			.join(":")
 })
 
 await new Promise<void>(resolve => httpServer.listen({ port }, resolve))

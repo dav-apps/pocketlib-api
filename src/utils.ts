@@ -201,18 +201,16 @@ export async function createNewStoreBookRelease(
 		data.categories.connect.push({ id: category.id })
 	}
 
-	const storeBookRelease = await prisma.storeBookRelease.create({
-		data
-	})
-
-	// Create the StoreBookRelease table object
-	await TableObjectsController.createTableObject(`uuid`, {
+	// Create the remote object before persisting the draft; a rejected DAV request
+	// must not leave a local release behind.
+	const response = await TableObjectsController.createTableObject(`uuid`, {
 		accessToken,
 		uuid,
 		tableId: storeBookReleaseTableId
 	})
-
-	return storeBookRelease
+	if (response == null || Array.isArray(response))
+		throwApiError(apiErrors.unexpectedError)
+	return prisma.storeBookRelease.create({ data })
 }
 
 export async function blurhashEncode(data: Buffer): Promise<{

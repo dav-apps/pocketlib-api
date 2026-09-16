@@ -5,4 +5,5 @@ export interface AppDependencies
 	extends Pick<ResolverContext, "prisma" | "redis" | "resend"> {
 	stripe: Stripe
 	webhookKey: string
+	luluWebhookSecret?: string
 }

@@ -55,16 +55,31 @@ export async function createCheckoutSessionForStoreBook(
 		!userIsAuthor
 	)
 
+	if (
+		storeBookRelease == null ||
+		(!userIsAuthor && storeBookRelease.status !== "published")
+	) {
+		throwApiError(apiErrors.storeBookReleaseDoesNotExist)
+	}
+	if (storeBookRelease.coverId == null)
+		throwApiError(apiErrors.unexpectedError)
+
 	let cover = await context.prisma.storeBookCover.findFirst({
 		where: { id: storeBookRelease.coverId }
 	})
 
+	if (cover == null) throwApiError(apiErrors.unexpectedError)
+
 	let price = null
 
 	if (userIsAuthor) {
+		if (storeBookRelease.printFileId == null)
+			throwApiError(apiErrors.unexpectedError)
 		let printFile = await context.prisma.storeBookPrintFile.findFirst({
 			where: { id: storeBookRelease.printFileId }
 		})
+
+		if (printFile == null) throwApiError(apiErrors.unexpectedError)
 
 		const auth = new Auth({
 			apiKey: process.env.DAV_API_KEY,
@@ -97,7 +112,11 @@ export async function createCheckoutSessionForStoreBook(
 				}
 			)
 
-		if (Array.isArray(listShippingAddressesResponse)) {
+		if (
+			listShippingAddressesResponse == null ||
+			Array.isArray(listShippingAddressesResponse) ||
+			listShippingAddressesResponse.items.length === 0
+		) {
 			// Get the shipping address of the first user
 			listShippingAddressesResponse =
 				await ShippingAddressesController.listShippingAddresses(
@@ -105,7 +124,11 @@ export async function createCheckoutSessionForStoreBook(
 					{ auth, userId: 1, limit: 1 }
 				)
 
-			if (Array.isArray(listShippingAddressesResponse)) {
+			if (
+				listShippingAddressesResponse == null ||
+				Array.isArray(listShippingAddressesResponse) ||
+				listShippingAddressesResponse.items.length === 0
+			) {
 				throwApiError(apiErrors.unexpectedError)
 			}
 		}
@@ -116,6 +139,9 @@ export async function createCheckoutSessionForStoreBook(
 
 		// Get the cost for printing the book & charge that instead of the given price
 		let luluAuthenticationResponse = await authenticate()
+
+		if (!luluAuthenticationResponse?.access_token)
+			throwApiError(apiErrors.unexpectedError)
 
 		const costCalculationResponse = await createPrintJobCostCalculation(
 			luluAuthenticationResponse.access_token,
@@ -129,7 +155,7 @@ export async function createCheckoutSessionForStoreBook(
 			throwApiError(apiErrors.unexpectedError)
 		}
 
-		price = Number(costCalculationResponse.total_cost_incl_tax) * 100
+		price = toCents(costCalculationResponse.total_cost_incl_tax)
 	}
 
 	let createCheckoutSessionResponse =
@@ -145,7 +171,11 @@ export async function createCheckoutSessionForStoreBook(
 			cancelUrl: args.cancelUrl
 		})
 
-	if (Array.isArray(createCheckoutSessionResponse)) {
+	if (
+		createCheckoutSessionResponse == null ||
+		Array.isArray(createCheckoutSessionResponse) ||
+		!createCheckoutSessionResponse.url
+	) {
 		throwApiError(apiErrors.unexpectedError)
 	} else {
 		return { url: createCheckoutSessionResponse.url }
@@ -181,13 +211,23 @@ export async function createCheckoutSessionForVlbItem(
 		throwApiError(apiErrors.vlbItemDoesNotExist)
 	}
 
+	let title = result.titles?.find(t => t.titleType == "01")
+	let price = result.prices?.find(
+		p =>
+			(p.priceType == "02" || p.priceType == "04") &&
+			p.countriesIncluded == "DE"
+	)
+
+	if (!title?.title || price == null) throwApiError(apiErrors.unexpectedError)
+	const priceInCents = toCents(price.priceAmount)
+
 	// Check if the cover was already uploaded
 	const coverKey = `vlb-covers/${vlbItem.mvbId}.jpg`
 	let coverLink = getFileLink(coverKey)
 
 	if (!(await check(coverKey))) {
 		// Get the cover
-		let cover = result.supportingResources.find(
+		let cover = result.supportingResources?.find(
 			r => r.resourceContentType == "01"
 		)
 
@@ -196,7 +236,9 @@ export async function createCheckoutSessionForVlbItem(
 			let link = `${cover.exportedLink}?access_token=${process.env.VLB_COVER_TOKEN}`
 			let coverData = await downloadFile(link)
 
-			await upload(coverKey, coverData, "image/jpeg")
+			if ((await upload(coverKey, coverData, "image/jpeg")) == null) {
+				throwApiError(apiErrors.unexpectedError)
+			}
 		}
 	}
 
@@ -231,13 +273,6 @@ export async function createCheckoutSessionForVlbItem(
 		throwApiError(apiErrors.unexpectedError)
 	}
 
-	let title = result.titles.find(t => t.titleType == "01")
-	let price = result.prices.find(
-		p =>
-			(p.priceType == "02" || p.priceType == "04") &&
-			p.countriesIncluded == "DE"
-	)
-
 	let shippingRate = null
 
 	if (user.Plan != Plan.Pro) {
@@ -253,7 +288,7 @@ export async function createCheckoutSessionForVlbItem(
 			accessToken,
 			tableObjectUuid: vlbItem.uuid,
 			type: TableObjectPriceType.Order,
-			price: Math.round(price.priceAmount * 100),
+			price: priceInCents,
 			currency: "EUR",
 			productName: title.title,
 			productImage: coverLink,
@@ -262,9 +297,25 @@ export async function createCheckoutSessionForVlbItem(
 			cancelUrl: args.cancelUrl
 		})
 
-	if (Array.isArray(createCheckoutSessionResponse)) {
+	if (
+		createCheckoutSessionResponse == null ||
+		Array.isArray(createCheckoutSessionResponse) ||
+		!createCheckoutSessionResponse.url
+	) {
 		throwApiError(apiErrors.unexpectedError)
 	} else {
 		return { url: createCheckoutSessionResponse.url }
 	}
+}
+
+function toCents(amount: number | string): number {
+	if (amount == null || (typeof amount === "string" && amount.trim() === "")) {
+		throwApiError(apiErrors.unexpectedError)
+	}
+	const value = Number(amount)
+	const cents = Math.round(value * 100)
+	if (!Number.isFinite(value) || value < 0 || !Number.isSafeInteger(cents)) {
+		throwApiError(apiErrors.unexpectedError)
+	}
+	return cents
 }

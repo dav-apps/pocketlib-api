@@ -148,15 +148,25 @@ export async function publishStoreBookRelease(
 		)
 	}
 
-	// Publish the release
-	return await context.prisma.storeBookRelease.update({
-		where: { id: storeBookRelease.id },
-		data: {
-			status: "published",
-			releaseName: args.releaseName,
-			releaseNotes: args.releaseNotes,
-			publishedAt: new Date()
-		}
+	// The conditional write also rejects concurrent publication attempts.
+	return context.prisma.$transaction(async tx => {
+		const updated = await tx.storeBookRelease.updateMany({
+			where: {
+				id: storeBookRelease.id,
+				OR: [{ status: null }, { status: { not: "published" } }]
+			},
+			data: {
+				status: "published",
+				releaseName: args.releaseName,
+				releaseNotes: args.releaseNotes,
+				publishedAt: new Date()
+			}
+		})
+		if (updated.count !== 1)
+			throwApiError(apiErrors.storeBookReleaseAlreadyPublished)
+		return tx.storeBookRelease.findUnique({
+			where: { id: storeBookRelease.id }
+		})
 	})
 }
 

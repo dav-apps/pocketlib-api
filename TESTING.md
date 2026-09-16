@@ -53,8 +53,8 @@ TEST_DATABASE_URL=postgresql://pocketlib_test:pocketlib_test@127.0.0.1:55433/poc
 
 Die Vorbereitung und die Tests ignorieren `DATABASE_URL`. Sie akzeptieren nur
 lokale URLs mit Datenbank **und Benutzer** `pocketlib_test`, ohne URL-Parameter.
-Diese Datenbank muss ausschließlich für Tests reserviert sein: Die aktuelle
-Suite löscht ihre Publisher-Datensätze vor und nach den Tests.
+Diese Datenbank muss ausschließlich für Tests reserviert sein: Die Suiten löschen
+ihre Verlags-, Buch-, VLB- und Webhook-Testdaten vor und nach den Tests.
 Integrationstestdateien laufen sequenziell; neue Suiten müssen ihre eigenen
 Testdaten ebenfalls zurücksetzen und dabei Fremdschlüssel berücksichtigen.
 
@@ -79,6 +79,69 @@ GraphQL-Fehler anhand von `errors[].extensions.code` prüfen, nicht nur anhand
 des HTTP-Status. Bei abgelehnten Schreibzugriffen zusätzlich den unveränderten
 Datenbankzustand prüfen.
 
-Weitere Ausbaustufen: Release-Statuswechsel, Checkout, Webhook-Wiederholungen,
-Upload-Verarbeitung und Redis-Caching. Die erste Stufe verwendet deaktiviertes
+Weitere Ausbaustufen: Upload-Verarbeitung, Redis-Caching, übrige Abfragen und
+Systemtests. Die erste Stufe verwendet deaktiviertes
 Caching; Redis-Verhalten ist dadurch noch nicht abgedeckt.
+
+## Kritische Geschäftsabläufe (zweite Stufe)
+
+`npm run test:integration` umfasst zusätzlich:
+
+-  Buchstatuswechsel, Eigentümer-/Adminrechte und Ablehnung ohne Änderungen;
+-  Entwürfe bei Änderungen veröffentlichter Bücher und fehlgeschlagene DAV-Anlage;
+-  Veröffentlichungen mit PDF-Metadaten, ungültige Seitenzahlen/-maße und
+   konkurrierende Veröffentlichungsversuche;
+-  Checkout für Käufer und Autoren, Centbeträge, Versandregeln, fehlende Daten
+   und Fehlerantworten von DAV, VLB und Lulu;
+-  Webhooks über HTTP mit echtem PostgreSQL: Signaturen, fehlerhafte Payloads,
+   doppelte und parallele Zustellungen, App-Neustart, E-Mail-Teilausfälle und
+   verspätete Lulu-Statusmeldungen.
+
+DAV, Lulu, Stripe, VLB, Dateispeicher und E-Mail-Versand werden in diesen
+Integrationstests kontrolliert ersetzt. Die PDF-Tests verwenden simulierte
+Parserergebnisse; tatsächliche PDF-Dateiverarbeitung folgt in der Upload-Stufe.
+Ein separater Adaptertest prüft mit dem echten Resend-SDK, dass der
+Idempotenzschlüssel im ausgehenden HTTP-Header ankommt.
+
+## Deployment der Webhook-Korrekturen
+
+Vor dem Deployment muss die additive Tabelle `WebhookEffect` angelegt werden.
+Für die derzeitige Datenbankverwaltung ohne Prisma-Migrationshistorie liegt die
+SQL-Datei `prisma/changes/20260916_webhook_effect.sql` bei. Sie ist im bestehenden
+Deployment-Prozess gegen die beabsichtigte Datenbank anzuwenden; anschließend
+muss der Prisma-Client aus dem aktualisierten Schema generiert werden.
+Die Testdatenbank erhält die Tabelle automatisch über `test:db:prepare`.
+
+DAV verlangt weiterhin `WEBHOOK_KEY`; fehlt der konfigurierte Schlüssel, werden
+Requests jetzt abgelehnt. Lulu prüft `Lulu-HMAC-SHA256` gegen die unveränderten
+Request-Bytes. Dafür kann `LULU_WEBHOOK_SECRET` auf das **rohe Lulu-API-Secret**
+gesetzt werden. Ohne diese Variable extrahiert der Server das Secret aus dem
+bereits verwendeten `LULU_AUTH_KEY` (Base64 von `client_id:client_secret`). Ohne
+verfügbares Secret werden Lulu-Requests abgelehnt. Grundlage ist die
+[offizielle Lulu-Spezifikation](https://api.lulu.com/api-docs/openapi-specs/openapi_public.yml).
+
+Erfolgreich versendete DAV-E-Mails werden einzeln dauerhaft in PostgreSQL
+vermerkt. Transaktionsgebundene Advisory Locks serialisieren parallele
+Zustellungen auch über mehrere API-Prozesse. Erst nach erfolgreichem Versand
+wird die jeweilige Markierung geschrieben. Bei Teilausfällen wird beim nächsten
+Webhook nur die fehlende E-Mail erneut gesendet. Die Tabelle darf nicht wie ein
+Cache geleert werden, da sonst der dauerhafte Wiederholungsschutz entfällt.
+
+Zusätzlich erhalten E-Mails stabile Resend-Idempotenzschlüssel. Resend hält diese
+laut [Dokumentation](https://resend.com/docs/dashboard/emails/idempotency-keys)
+24 Stunden vor. Das deckt auch den Fall ab, dass Resend eine E-Mail angenommen
+hat, aber die lokale Bestätigung wegen eines Absturzes fehlt. **Eine absolute
+Exactly-once-Garantie besteht nicht:** Bleibt dieser unklare Zustand länger als
+24 Stunden bestehen, muss vor einer erneuten Zustellung der Versandstatus
+geprüft werden. Ändert sich während eines unklaren Versands der E-Mail-Inhalt,
+kann Resend die Wiederholung mit demselben Schlüssel ablehnen; auch dann ist
+Abgleich nötig.
+
+Lulu-Statusänderungen werden pro Bestellung serialisiert. Ein bereits als
+`SHIPPED` gemeldeter Auftrag wird durch verspätete Produktionsmeldungen nicht
+auf `PREPARATION` zurückgesetzt. Nicht unterstützte Statuswerte werden ohne
+Statusänderung quittiert. Die Locks haben ein Transaktionszeitlimit von 30
+Sekunden; Providerfehler führen zu HTTP 502, damit der Absender erneut zustellen
+kann. Externe API-Schreibzugriffe und PostgreSQL bilden keine gemeinsame
+Transaktion: Bei DAV-Anlage eines Release-Objekts mit anschließendem lokalen
+Datenbankfehler kann beispielsweise ein externes Objekt zurückbleiben.

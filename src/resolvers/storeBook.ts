@@ -612,6 +612,10 @@ export async function updateStoreBook(
 		where: { uuid: args.uuid }
 	})) as StoreBook
 
+	if (storeBook == null) {
+		throwApiError(apiErrors.storeBookDoesNotExist)
+	}
+
 	// Check if the store book belongs to the user
 	if (!isAdmin && storeBook.userId != BigInt(user.Id)) {
 		throwApiError(apiErrors.actionNotAllowed)
@@ -687,6 +691,66 @@ export async function updateStoreBook(
 		throwApiError(apiErrors.cannotUpdateStoreBookLanguage)
 	}
 
+	let newStoreBookStatus: string = null
+	// Check if the new status is compatible with the old status
+	if (args.status != null) {
+		let oldStatus = storeBookRelease.status
+
+		if (isAdmin) {
+			if (
+				((oldStatus == null ||
+					oldStatus == "unpublished" ||
+					oldStatus == "review") &&
+					args.status == "hidden") ||
+				args.status == "published"
+			) {
+				checkPropertiesForPublishing({
+					...storeBookRelease,
+					description: args.description ?? storeBookRelease.description,
+					printPrice: args.printPrice ?? storeBookRelease.printPrice
+				})
+			}
+
+			// Update the status
+			newStoreBookStatus = args.status
+		} else {
+			if (
+				(storeBook.status == null || storeBook.status == "unpublished") &&
+				args.status == "review"
+			) {
+				// Check if the store book can be published
+				checkPropertiesForPublishing({
+					...storeBookRelease,
+					description: args.description ?? storeBookRelease.description,
+					printPrice: args.printPrice ?? storeBookRelease.printPrice
+				})
+
+				// Change the status of the store book to "review"
+				newStoreBookStatus = "review"
+			} else if (
+				storeBook.status == "review" &&
+				args.status == "unpublished"
+			) {
+				// Change the status of the book to "unpublished"
+				newStoreBookStatus = "unpublished"
+			} else if (
+				storeBook.status == "hidden" &&
+				args.status == "published"
+			) {
+				// Change the status of the book to "published"
+				newStoreBookStatus = "published"
+			} else if (
+				storeBook.status == "published" &&
+				args.status == "hidden"
+			) {
+				// Change the status of the book to "hidden"
+				newStoreBookStatus = "hidden"
+			} else {
+				throwApiError(apiErrors.actionNotAllowed)
+			}
+		}
+	}
+
 	// Check if the store book release is already published
 	if (storeBookRelease.status == "published") {
 		// Create a new release
@@ -732,71 +796,16 @@ export async function updateStoreBook(
 		newReleaseProperties["isbn"] = args.isbn.length == 0 ? null : args.isbn
 	}
 
-	// Check if the new status is compatible with the old status
-	if (args.status != null) {
-		let oldStatus = storeBookRelease.status
-		let newStoreBookStatus = null
-
-		if (isAdmin) {
-			if (
-				((oldStatus == null ||
-					oldStatus == "unpublished" ||
-					oldStatus == "review") &&
-					args.status == "hidden") ||
-				args.status == "published"
-			) {
-				checkPropertiesForPublishing(storeBookRelease)
-			}
-
-			// Update the status
-			newStoreBookStatus = args.status
-
-			if (args.status == "published") {
-				// Set the status of the release to "published"
-				newReleaseProperties["status"] = "published"
-			}
-		} else {
-			if (
-				(storeBook.status == null || storeBook.status == "unpublished") &&
-				args.status == "review"
-			) {
-				// Check if the store book can be published
-				checkPropertiesForPublishing(storeBookRelease)
-
-				// Change the status of the store book to "review"
-				newStoreBookStatus = "review"
-			} else if (
-				storeBook.status == "review" &&
-				args.status == "unpublished"
-			) {
-				// Change the status of the book to "unpublished"
-				newStoreBookStatus = "unpublished"
-			} else if (
-				storeBook.status == "hidden" &&
-				args.status == "published"
-			) {
-				// Change the status of the book to "published"
-				newStoreBookStatus = "published"
-			} else if (
-				storeBook.status == "published" &&
-				args.status == "hidden"
-			) {
-				// Change the status of the book to "hidden"
-				newStoreBookStatus = "hidden"
-			} else {
-				throwApiError(apiErrors.actionNotAllowed)
-			}
-		}
-
-		if (newStoreBookStatus != null) {
-			// Update the store book with the new status
-			await context.prisma.storeBook.update({
-				where: { id: storeBook.id },
-				data: {
-					status: newStoreBookStatus
-				}
-			})
-		}
+	if (newStoreBookStatus != null) {
+		await context.prisma.storeBook.update({
+			where: { id: storeBook.id },
+			data: { status: newStoreBookStatus }
+		})
+		storeBook.status = newStoreBookStatus
+	}
+	if (isAdmin && args.status == "published") {
+		newReleaseProperties["status"] = "published"
+		newReleaseProperties["publishedAt"] = new Date()
 	}
 
 	if (args.categories != null) {

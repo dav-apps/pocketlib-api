@@ -280,3 +280,9 @@ model VlbCollection {
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @default(now()) @updatedAt
 }
+
+// Successful webhook side effects survive retries and API restarts.
+model WebhookEffect {
+  key         String   @id
+  completedAt DateTime @default(now())
+}
