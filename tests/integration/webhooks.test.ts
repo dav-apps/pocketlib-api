@@ -91,7 +91,7 @@ function dav(
 	payload: object = { type: "order.completed", uuid: "order-uuid" }
 ) {
 	return request(apps[index].app)
-		.post("/webhooks/dav")
+		.put("/webhooks/dav")
 		.set("Authorization", "test-webhook-key")
 		.send(payload)
 }
@@ -124,7 +124,7 @@ function lulu(
 describe("DAV order webhook", () => {
 	it("rejects absent credentials before external calls", async () => {
 		const result = await request(apps[0].app)
-			.post("/webhooks/dav")
+			.put("/webhooks/dav")
 			.send({ type: "order.completed", uuid: "order-uuid" })
 		expect(result.status).toBe(400)
 		expect(retrieve).not.toHaveBeenCalled()
@@ -136,7 +136,7 @@ describe("DAV order webhook", () => {
 			expect(
 				(
 					await request(app.app)
-						.post("/webhooks/dav")
+						.put("/webhooks/dav")
 						.send({ type: "order.completed", uuid: "order-uuid" })
 				).status
 			).toBe(400)

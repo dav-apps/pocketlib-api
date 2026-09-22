@@ -131,7 +131,7 @@ describe("application HTTP boundary", () => {
 		expect(
 			(
 				await request(first.app)
-					.post("/webhooks/dav")
+					.put("/webhooks/dav")
 					.set("Authorization", "test-webhook-key")
 					.send(payload)
 			).status
@@ -139,7 +139,7 @@ describe("application HTTP boundary", () => {
 		expect(
 			(
 				await request(second.app)
-					.post("/webhooks/dav")
+					.put("/webhooks/dav")
 					.set("Authorization", "test-webhook-key")
 					.send(payload)
 			).status
@@ -147,7 +147,7 @@ describe("application HTTP boundary", () => {
 		expect(
 			(
 				await request(second.app)
-					.post("/webhooks/dav")
+					.put("/webhooks/dav")
 					.set("Authorization", "second-key")
 					.send(payload)
 			).status

@@ -159,7 +159,7 @@ export function setup(
 		"prisma" | "stripe" | "resend" | "webhookKey"
 	>
 ) {
-	app.post("/webhooks/dav", json(), cors(), (req, res) =>
+	app.put("/webhooks/dav", json(), cors(), (req, res) =>
 		davWebhook(req, res, dependencies).catch(() => res.sendStatus(502))
 	)
 }

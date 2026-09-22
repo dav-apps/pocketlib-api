@@ -150,7 +150,7 @@ describe("built production entry point", () => {
 		})
 		expect(upload.status).toBe(401)
 		const webhook = await fetch(`${baseUrl}/webhooks/dav`, {
-			method: "POST",
+			method: "PUT",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ type: "order.completed", uuid: "ignored" })
 		})
