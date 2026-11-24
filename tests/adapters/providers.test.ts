@@ -73,6 +73,38 @@ describe("VLB HTTP adapter", () => {
 			expect(scope.isDone()).toBe(true)
 		}
 	)
+	it("retries once after a reset connection", async () => {
+		const scope = nock("https://api.vlb.de")
+			.get("/api/v2/product/r1")
+			.replyWithError(
+				Object.assign(new Error("socket hang up"), { code: "ECONNRESET" })
+			)
+			.get("/api/v2/product/r1")
+			.reply(200, { productId: "r1" })
+		expect(await vlb.getProduct("r1")).toEqual({ productId: "r1" })
+		expect(scope.isDone()).toBe(true)
+	})
+	it("retries once after a 503 but not after a 500", async () => {
+		const retried = nock("https://api.vlb.de")
+			.get("/api/v2/product/s1")
+			.reply(503, {})
+			.get("/api/v2/product/s1")
+			.reply(200, { productId: "s1" })
+		expect(await vlb.getProduct("s1")).toEqual({ productId: "s1" })
+		expect(retried.isDone()).toBe(true)
+		const single = nock("https://api.vlb.de")
+			.get("/api/v2/product/s2")
+			.reply(500, {})
+		expect(await vlb.getProduct("s2")).toBeNull()
+		expect(single.isDone()).toBe(true)
+		expect(nock.pendingMocks()).toEqual([])
+	})
+	it("never logs the bearer token", async () => {
+		nock("https://api.vlb.de").get("/api/v2/product/t1").reply(500, {})
+		await vlb.getProduct("t1")
+		const logged = JSON.stringify(vi.mocked(console.error).mock.calls)
+		expect(logged).not.toContain("test-vlb-token")
+	})
 	it("returns null on transport failure", async () => {
 		const scope = nock("https://api.vlb.de")
 			.get("/api/v2/publisher/p1")

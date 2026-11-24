@@ -76,6 +76,9 @@ export async function listVlbItems(
 			active: true
 		})
 
+		if (result == null)
+			return { caching: false, data: { total: 0, items: [] } }
+
 		total = result.totalElements
 
 		for (let product of result.content) {
@@ -107,6 +110,9 @@ export async function listVlbItems(
 				sort: "publicationDate"
 			})
 
+			if (result == null)
+				return { caching: false, data: { total: 0, items: [] } }
+
 			total = result.totalElements
 
 			for (let product of result.content) {
@@ -125,6 +131,9 @@ export async function listVlbItems(
 			size: take,
 			active: true
 		})
+
+		if (result == null)
+			return { caching: false, data: { total: 0, items: [] } }
 
 		total = result.totalElements
 
@@ -156,6 +165,9 @@ export async function listVlbItems(
 				size: take,
 				active: true
 			})
+
+			if (result == null)
+				return { caching: false, data: { total: 0, items: [] } }
 
 			total = result.totalElements
 

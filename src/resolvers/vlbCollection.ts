@@ -113,6 +113,8 @@ export async function vlbItems(
 		size: take
 	})
 
+	if (result == null) return { caching: false, data: { total: 0, items: [] } }
+
 	let total = result.totalElements
 	let items: VlbItem[] = []
 
